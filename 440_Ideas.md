@@ -1,5 +1,16 @@
 440 Ideas:
 
+MultiD Distribution Comparison
+==============================
+
+In 1d, there's qqplots and the k-s test,
+but how do we do something like eg test
+that the InvWishart code is behaving?
+
+ -> plot a scatterplot matrix?
+ -> plot ????????????????
+
+
 Corpus Management by Machine Learning
 =====================================
  - a tool for dealing with large heterogenous corpii
@@ -7,6 +18,7 @@ Corpus Management by Machine Learning
    - music (taking music similarities)
    - epubs (taking text similarities)
    - 
+
 
 InvWishart Project
 ==================
@@ -48,6 +60,22 @@ Multinomial Project
       the latter is more tractable: it's easy to do the mapping, easy to estimate frequencies of the multi, but loses a lot of information in the process; 
         because of the curse of dimensionality it is typical that a sample with n >> k (so n/k >> 1) 
         becomes n/k << 1    
+   
+   How do we define correlation between tags? --> tags are uncorrelated when P(t1, t2) = P(t1)P(t2). So, you can use bayes rule:
+     P(t1|t2) = P(t1, t2)/P(t2).
+     If P(t1|t2) = P(t1) then t1 is uncorrelated with
+     (and this implies t2 is uncorrelated with t1 because
+         P(t2|t1) = P(t1|t2)P(t2)/P(t1) = P(t1)P(t2)/P(t1) = P(t2))
+     ( interestingly, we don't have reflexivity because P(t1|t1) = P(t1, t1)/P(t1) = 1
+          intuitively, correlated means "as you change t2 you change t1" and uncorrelated is "as you change t2 you don't change t1" 
+           and in P(t1|t1) = 1 we do have that: as you change t1 it's still 1
+         ---huh, does this contradict the other def'n of uncorrelated (which is cov(x,y)=0) or the def'n of indepedent (which is p(a,b) = p(a)p(b) 
+ 
+     P(t1,t1) != P(t1)P(t1) --- the right side is smaller (unless P(t1)=1)
+     )
+
+   --> some work to relax the condition from strict independence to near independence
+     and to 
 
    Is there something in between?
         
