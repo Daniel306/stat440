@@ -60,14 +60,16 @@ pInvWishart <- function(X, V, df) {
   # so, say we know how to compute P(W(V,n) = X)
   # from that, we can compute P(inv(W)(Q, n) = M) because if M ~ inv(W)(Q, n) then inv(M) ~ W(inv(Q), n) so we ask pWishart(inv(M), inv(Q), n)
   # TODO: derive this more clearly/formally/in latex-ly
+  #  ---like, perhaps it is true that these two dists are equidistributed, but does that mean that the PDFs are the same??
   
-  
-  pWishart(
+  pWishart(solve(X), solve(V), df);
 }
 
 # multivariate cdfs don't make much sense, because you would
 # need to specify what direction you're integrating in
 # and more critically because they need to take a ~boundary~ to integrate up to, they can't just take a single ~point~.
+# so we don't provide one
+# you can use integrate() to approximate a region of interest.
 
 rInvWishart <- function(n, df, Sigma) {
   rWishart(n, df, solve(Sigma));
