@@ -36,15 +36,16 @@ plotit <- function(thunk, n) {
 
 #####################3 test
 
-#require("Matrix")
+
 
 #n = 2411; #this number doesn't actually matter that much except for stabilizing chol()
-d = 333;
+d = 501;
 
 # bah, this code is clever but does not work because I don't have a way
 # to generate invertible upper triangular matrices.
 
 b = rnorm(d); #target vector: the test task is solving y such that Uy = b (ie compute inv(U)*b)
+
 
 make_upper_triangle <- function() {
   # alg3: <http://www.ams.org/notices/200705/fea-mezzadri-web.pdf>
@@ -83,25 +84,41 @@ make_upper_triangle <- function() {
 
 triangular.regular.regular <- function() {
   U = make_upper_triangle();
-  solve(U, b)
+  base::solve(U, b) #
 }
 
 triangular.regular.backsolve <- function() {
   U = make_upper_triangle();
-  backsolve(U, b)
+  base::backsolve(U, b)
 }
 
 triangular.regular.blas <- function() {
+  U = make_upper_triangle();
+  U = as(U, "dtCMatrix")
+  Matrix::solve(U, b)
+}
 
+triangular.regular.blas <- function() {
+  U = make_upper_triangle();
+  Matrix::solve(U, b) #huh. this one is decidedly ~slower~
+}
+
+
+triangular.sparse.blas <- function() {
+  U = make_upper_triangle();
+  U = as(U, "dtCMatrix")
+  Matrix::solve(U, b) #huh. this one too. it's faster than regular.blas, but slower than the built in defaults; is the as() step killing us?
 }
 
 triangular.sparse.blas <- function() {
-
+ #..generate U as a sparse matrix and solve on that
 }
 
 n = 250
 #plotit(make_upper_triangle, n)
-plotit(triangular.regular.regular, n)
-plotit(triangular.regular.backsolve, n)
+#plotit(triangular.regular.regular, n)
+#plotit(triangular.regular.backsolve, n)
+require("Matrix")
+plotit(triangular.regular.blas, n)
 
 warnings()
