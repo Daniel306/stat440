@@ -1,0 +1,25 @@
+
+Validation testing
+ - Moments 
+   - derive (in math and latex) the expected moments, check if we get them o
+     (moments are handy because they are all expectations, which can be tested--by the law of large numbers--with taking sample means)
+ - Marginals
+   - k-s test?
+ - 
+
+Performance testing
+ - cases: algorithm X impl
+   
+   impl: (
+   python
+   cython
+   scipy with explicitly marking matrices as upper/lower triangular (see: ...)
+   R
+   R with explicitly marking matrices as upper/lower triangular (the functions 'backsolve' and 'forwardsolve' do this)
+   Rcpp
+   )
+   algorithm: (
+   naive
+   snappysample
+   factoredsnappysample (in which we only compute chol(Psi) once)
+   )
