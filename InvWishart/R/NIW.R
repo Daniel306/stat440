@@ -76,6 +76,26 @@ rNIW.snappysample <- function(Mu, kappa, Psi, df) {
   #  and thus V = inv(inv(gamma)' * U' * U * inv(gamma)) = {note the reversal in order} gamma * inv(U) * inv(U)' * gamma'
   # i'm making some really simple mistake here.. maybe gamma isn't supposed to be lower on the left?
   # yes! that's it! gamma is supposed to be UPPER on the left
+  #
+  # --> redefine gamma = chol(Psi) (UPPER now)
+  #   we want to scale the Bartlett factor LL' so that W(I, df) -> W(inv(Psi), df)
+  #      which we do by taking the square root of inv(Psi) = inv(gamma'*gamma) = inv(gamma) * inv(gamma)'  [form: UL]
+  #           stop and observe: chol(Psi) is upper so  inv(chol(Psi)) is **upper**; this factorization of inv(Psi) is NOT Cholesky: it's UL instead of LU
+  #      however we don't care for that, because we want to immediately invert this:
+  #    inv(V) = inv(chol(Psi)) * L * L' chol(Psi)')    ; (U LU L)  --{inv}-> (L UL U)
+  #           = inv(chol(Psi))' *inv(L')  * inv(L) *  inv(chol(Psi)))   
+  # hm. this is bad. we either need form LLUU or UULL so that we can do things efficiently
+  
+  # maybe the problem is with taking gamma = chol(Psi)? what if we take gamma = chol(inv(Psi))? does that fix it?
+  #
+  
+  # hurp
+  # can we convince the Bartlett factor to come out UL instead of LU?
+  
+  #   
+  #  --- why did i insist on Bartlett being given as LU
+  # --..hm.
+  # well, anyway, there might still be some savings by doing invL first 
   
   U_i = gamma%*%t(solve(L_i)) #hmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
   print(U_i)
