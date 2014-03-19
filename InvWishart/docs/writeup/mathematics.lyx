@@ -60,6 +60,24 @@
 \begin_body
 
 \begin_layout Subsection*
+The Wishart Distribution
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+.....occurrence, uses..
+ relation to Chi2 etc
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection*
 The Bartlett Decomposition
 \end_layout
 
@@ -140,7 +158,11 @@ and
 \begin_inset Formula $d\times d$
 \end_inset
 
- matrix with entries defined by the random variables
+ matrix with entries defined by the 
+\series bold
+independent 
+\series default
+random variables
 \end_layout
 
 \begin_layout Standard
@@ -170,7 +192,7 @@ TODO: is that+or-1?
 \begin{align*}
 \mathbf{A_{\text{row},\text{column}}}\sim & \begin{cases}
 0 & \text{row}>\text{column}\\
-\chi_{\text{df}-\text{row}+1}^{2} & \text{row}=\text{column}\\
+\chi_{\text{df}-(\text{row}-1)}^{2} & \text{row}=\text{column}\\
 N(0,1) & \text{row}<\text{column}
 \end{cases}
 \end{align*}
@@ -386,10 +408,10 @@ a desired Wishart distribution: if you want to generate not-quite-covariance
 \noun off
 \color none
 
-\begin_inset Formula $\Gamma$
+\begin_inset Formula $\Gamma\leftarrow chol(V)$
 \end_inset
 
- (using
+
 \family default
 \series default
 \shape default
@@ -401,11 +423,7 @@ a desired Wishart distribution: if you want to generate not-quite-covariance
 \uwave default
 \noun default
 \color inherit
- 
-\begin_inset Formula $chol(V)$
-\end_inset
-
-), scale 
+, scale 
 \begin_inset Formula $A$
 \end_inset
 
@@ -418,9 +436,189 @@ a desired Wishart distribution: if you want to generate not-quite-covariance
 \end_inset
 
 .
+ The only stochastic part is the generation of 
+\begin_inset Formula $A$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsubsection*
+Runtimes
 \end_layout
 
 \begin_layout Standard
+We traced R's ```rWishart.c``` and worked out that it uses precisely this
+ algorithm.
+ Translating that R/C/Fortran mixture into pseudocode:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+def std_bartlett_factor(d, df): #named std_rWishart_factor in the C
+\end_layout
+
+\begin_layout Plain Layout
+
+  A = matrix(d,d)
+\end_layout
+
+\begin_layout Plain Layout
+
+  for i in [0 to d-1]:  #note that the matrices are 0-indexed here
+\end_layout
+
+\begin_layout Plain Layout
+
+    A[i,i] = sqrt(rchisq(df - i)) #generate X^2_df-(row-1) variates
+\end_layout
+
+\begin_layout Plain Layout
+
+    for j in [j+1 to d-1]: #TODO: (d-1 - j+1) = how many elements?
+\end_layout
+
+\begin_layout Plain Layout
+
+      A[i,j] = rnorm()            #generate N(0,1) 
+\end_layout
+
+\begin_layout Plain Layout
+
+      
+\end_layout
+
+\begin_layout Plain Layout
+
+  return A
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+def rWishart(n, df, V):
+\end_layout
+
+\begin_layout Plain Layout
+
+  d = dim(V)[0]
+\end_layout
+
+\begin_layout Plain Layout
+
+  assert d == dim(V)[1], "Psi must be square"
+\end_layout
+
+\begin_layout Plain Layout
+
+  #Unchecked: Psi must be positive definite
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+  gamma = chol(V) #(cache the upper triangular cholesky factor) #lines [...]
+\end_layout
+
+\begin_layout Plain Layout
+
+  V = new matrix(d,d,n)
+\end_layout
+
+\begin_layout Plain Layout
+
+  for k in [1 to n]:   #(loop to take samples)
+\end_layout
+
+\begin_layout Plain Layout
+
+    A = std_bartlett_factor(d, df) #sample A
+\end_layout
+
+\begin_layout Plain Layout
+
+    U = A*gamma           #scale the sample
+\end_layout
+
+\begin_layout Plain Layout
+
+    V[n] = U'*U           #construct V
+\end_layout
+
+\begin_layout Plain Layout
+
+  return V
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+std_Wishart_factor takes 
+\begin_inset Formula $O(\frac{d(d+1)}{2})=O(d^{2})$
+\end_inset
+
+ time, since it has to operate on half the matrix.
+ From Wikipedia 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+todo: better cite
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset Formula $chol()$
+\end_inset
+
+ takes 
+\begin_inset Formula $d^{2}/3$
+\end_inset
+
+ time.
+ Matrix multiplication, in general, takes 
+\begin_inset Formula $O(d^{3})$
+\end_inset
+
+ time but the authors of this code use specialized Fortran BLAS routines
+ that exploit a) the upper triangularness of U b) the symmetry of U'U so
+ that the first matrix multiply only takes [...] and the secondtakes [...].
+ I won't count the time for memory allocation because that is much more
+ dependent how on the 
+\begin_inset Formula $malloc$
+\end_inset
+
+ in use, how fragmented RAM is, whether a cache is involved, and whether
+ 
+\begin_inset Formula $d^{2}>\text{\ensuremath{malloc} page size}$
+\end_inset
+
+.
+ Adding this all up, we see that run time of rWishart is O(1) + d^2/3 +
+ n
+\backslash
+cdotO() 
 \begin_inset Formula 
 \begin{align*}
 \mathbf{W} & \sim W(\Gamma\Gamma^{T},df)\\
@@ -434,6 +632,14 @@ a desired Wishart distribution: if you want to generate not-quite-covariance
 \end_inset
 
 
+\end_layout
+
+\begin_layout Subsection*
+The Inverse Wishart Distribution
+\end_layout
+
+\begin_layout Subsection*
+Generating Inverse Wishart Variates
 \end_layout
 
 \end_body
