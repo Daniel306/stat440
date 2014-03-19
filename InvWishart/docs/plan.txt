@@ -23,3 +23,11 @@ Performance testing
    snappysample
    factoredsnappysample (in which we only compute chol(Psi) once)
    )
+   
+   for each case, do a parameter sweep on:
+   ( d, df, n )
+   and measure
+   ( runtime )
+
+Stability Testing
+ - at what point do the algorithms get numerically unstable?
