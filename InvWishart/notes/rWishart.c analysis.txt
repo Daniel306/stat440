@@ -1,0 +1,65 @@
+
+
+tidied rWishart algorithm:
+
+def rWishart(n, df, Psi):
+  d = dim(Psi)[0]
+  assert d == dim(Psi)[1], "Psi must be square"
+  #Unchecked: Psi must be positive definite
+  
+  gamma = chol(Psi)' #(the upper triangular cholesky factor)
+  for k in range(n): #(loop to take samples)
+    sample U[n] = Bartlett_factor(d, df) #in R's impl, this gives the upper triangle
+                  #nb: W[n] := U[n]'*U[n] ~ W(I_d, df) 
+    define U_s[n] = gamma*L[n] #scale L[n]; this makes  
+    set V[n] = 
+  return V
+
+analysis of <http://svn.r-project.org/R/trunk/src/library/stats/src/rWishart.c>:
+rWishart(n, df, Psi) :
+ -> a terrible mixture of R, C and FORTRAN (from using LAPACK)
+
+###XXX what order does C use? row-major or column-major? fortran and R use column-major order (R probably bc most of it was written against ancient fortran routines in the first place)
+
+1) typechecks and declarations (in particular, ans is the 3d (d,d,n) array)
+2) copy scCp = Psi (into a C/fortran array)
+3) redefine scCp = chol(Psi)'  (by dpotrf.f with option "U" which makes it give the UPPER triangle)
+4) for j = 1:n {
+  
+  4.1) std_rWishart_factor:
+     construct tmp, the Bartlett's Method Factor  (this is what  does)
+     
+  4.2)  
+  redefine tmp = scCp * tmp 
+    ->(ie scale the Bartlett's factor from a W(I, df) dist to a W(Psi, df) dist)
+
+  4.3) dsyrk(U,T) + for loops to fill in the gaps left by dsyrk
+    construct ans[j] = tmp'*tmp   (NB: tmp = chol(psi)')
+    
+     (line by line: 
+        construct ans[j] = dsyrk(T)(U)(tmp) (dsyrk(T)(U) gives a function that, give M, computes M'M ((if given N instead of T, instead computes MM')) is defined to give the upper part of tmp'*tmp)
+        copy out lower triangle: for(i=1:d) { for(k=1:i) { .. }} 
+  
+       --> dsyrk.f doesn't bother to fill in the other triangle because that would be redundant because it knows this matrix is symmetric
+        which is nice but like, you could give that as an option
+         > 
+         """
+*  Further Details
+*  ===============
+*
+*  Level 3 Blas routine.
+*
+*  -- Written on 8-February-1989.
+*     Jack Dongarra, Argonne National Laboratory.
+*     Iain Duff, AERE Harwell.
+*     Jeremy Du Croz, Numerical Algorithms Group Ltd.
+*     Sven Hammarling, Numerical Algorithms Group Ltd.
+*"""
+       and  then the nested for loops
+     fill in the lower triangle of ansj by copying the symmetric bits
+   )    
+  }
+}
+
+5) clean up
+6) return all the sampled V_n matrices in ans
