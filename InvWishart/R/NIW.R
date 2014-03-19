@@ -59,8 +59,27 @@ rNIW.snappysample <- function(Mu, kappa, Psi, df) {
   message("Lower triangular bartlett factor")
   print(L_i)
   
+  # so we have that LL' ~ W(I, df) (or, alternately, U'U = LL')
+  # we *want* V ~ W^-1(Psi, df)
+  #          <=> inv(V) ~ W(inv(Psi), df)
+  #              inv(V) ~ W(chol(inv(Psi))' * chol(inv(Psi))), df)
+  #         if we define inv(V) = [ chol(inv(Psi))' * U' ] * [ U * chol(inv(Psi)) ] then inv(V) ~ W(inv(Psi), df)
+  #                  so  inv(inv(V)) ~ inv(W)(Psi, df)
+  #           hurrah!
+  #         now how to actually ~use~ this...
+  # 
+  #
+  # we have gamma = chol(Psi)'; #lower triangular
+  #       chol(inv(Psi))' = inv(chol(Psi)) = inv(gamma') = inv(gamma)'
+  #  and  chol(inv(Psi))  = inv(chol(Psi))'= inv(gamma')'= inv(gamma)'' = inv(gamma)
+  #   so inv(V) = inv(gamma)' * U' * U * inv(gamma)
+  #  and thus V = inv(inv(gamma)' * U' * U * inv(gamma)) = {note the reversal in order} gamma * inv(U) * inv(U)' * gamma'
+  # i'm making some really simple mistake here.. maybe gamma isn't supposed to be lower on the left?
+  # yes! that's it! gamma is supposed to be UPPER on the left
+  
   U_i = gamma%*%t(solve(L_i)) #hmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
   print(U_i)
+  si
   
   # 
   # now, Sb%*%t(Sb) ~ W(I, n) according to Bartlett's Method according to the assignment
