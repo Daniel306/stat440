@@ -14,10 +14,15 @@ Performance testing
    python
    cython
    scipy with explicitly marking matrices as upper/lower triangular (see: ...)
+   scipy with vectorized ops (eg. can we vectorize adding mu to all samples or is that no better than a for loop?)
+   scipy with for loops
    R
    R with explicitly marking matrices as upper/lower triangular (the functions 'backsolve' and 'forwardsolve' do this)
+   R with vectorized ops
+   R with for loops
    Rcpp
    )
+
    algorithm: (
    naive
    snappysample
