@@ -64,7 +64,31 @@ Under a given variance matrix
 \begin_inset Formula $V$
 \end_inset
 
-, the Bartlett Decomposition [cite] is the equation.
+, 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+is this 
+\begin_inset Quotes eld
+\end_inset
+
+Given a Wishart Matrix W or given A we get a Wishart??
+\end_layout
+
+\end_inset
+
+the Bartlett Decomposition
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+ [cite]
+\end_layout
+
+\end_inset
+
+ is the equation.
 \end_layout
 
 \begin_layout Standard
@@ -109,7 +133,7 @@ and
 \end_inset
 
  is a 
-\begin_inset Formula $dxd$
+\begin_inset Formula $d\times d$
 \end_inset
 
  matrix with entries defined by the random variables
@@ -140,10 +164,10 @@ TODO: is that+or-1?
 
 \begin_inset Formula 
 \begin{align*}
-\mathbf{A_{row,column}}\sim & \begin{cases}
-0 & row>column\\
-\chi_{df-row+1}^{2} & row=column\\
-N(0,1) & row<column
+\mathbf{A_{\text{row},\text{column}}}\sim & \begin{cases}
+0 & \text{row}>\text{column}\\
+\chi_{\text{df}-\text{row}+1}^{2} & \text{row}=\text{column}\\
+N(0,1) & \text{row}<\text{column}
 \end{cases}
 \end{align*}
 
@@ -153,7 +177,7 @@ N(0,1) & row<column
 \end_layout
 
 \begin_layout Standard
-Which is upper triangular since everything below the diagonal (
+which is upper triangular since everything below the diagonal 
 \family roman
 \series medium
 \shape up
@@ -165,11 +189,7 @@ Which is upper triangular since everything below the diagonal (
 \uwave off
 \noun off
 \color none
-
-\begin_inset Formula $row>column$
-\end_inset
-
-) is null.
+is 0.
 
 \family default
 \series default
@@ -182,12 +202,59 @@ Which is upper triangular since everything below the diagonal (
 \uwave default
 \noun default
 \color inherit
- And ).
+ All this means that 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+[cite: Bartlett's Theorem, or whatever]
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset Formula $\mathbf{W}$
+\end_inset
+
+ is Wishart-distributed with 
+\begin_inset Formula $df$
+\end_inset
+
+ 
+\begin_inset Quotes eld
+\end_inset
+
+degrees of freedom
+\begin_inset Quotes erd
+\end_inset
+
+:
 \end_layout
 
 \begin_layout Standard
-Note that the Bartlett decomposition is also an LU decomposition, since
- the form of the terms in 
+\begin_inset Formula 
+\begin{align*}
+\mathbf{W} & \sim W(\Gamma^{T}\Gamma,df)
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset space ~
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Note that the Bartlett decomposition is also the LU decomposition of 
+\begin_inset Formula $\mathbf{W}$
+\end_inset
+
+, since the form of the terms in 
 \begin_inset Formula $\mathbf{W}=\Gamma^{T}A^{T}A\Gamma$
 \end_inset
 
@@ -199,8 +266,8 @@ LLUU
 \begin_inset Quotes erd
 \end_inset
 
-, and since the product of two lower (or upper) triangular matrices is lower
- (or upper) triangular
+, the product of two lower (or upper) triangular matrices is lower (or upper)
+ triangular
 \begin_inset Note Note
 status open
 
@@ -210,8 +277,28 @@ status open
 
 \end_inset
 
+ and the LU decomposition, if it exists, is unique
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+([todo: proof]) 
+\end_layout
+
+\end_inset
+
 .
- This decomposition actually gives a useful way to 
+\end_layout
+
+\begin_layout Standard
+\begin_inset space ~
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This decomposition actually gives a useful way to 
 \emph on
 generate 
 \emph default
@@ -238,17 +325,6 @@ this decomposition
 \\
 \\
 \\
-\end{align*}
-
-\end_inset
-
-which means that ..
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\begin{align*}
-\mathbf{W} & \sim W(\Gamma\Gamma^{T},df)
 \end{align*}
 
 \end_inset

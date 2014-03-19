@@ -4,8 +4,10 @@ Proofs
 We require derivations (or maybe refutations) of these facts:
 
 * Bartlett's Theorem: if A[i,i] ~ sqrt(X^2_{df-{i-1}}) && A[i,j] ~ N(0,1) and A[j,i] = 0 (i>j) then AA' ~ W(I, df)
-* The Wishart linearity lemma: if M ~ W(V,df) then CWC' ~ W(CVC', df) (but only when squared like this)
-* Facts about symmetric matrices
+  * The Wishart linearity lemma: if M ~ W(V,df) then CMC' ~ W(CVC', df) (but only when squared like this and when C is full fank)
+  * the equivalent for inverse wisharts:
+    * if M ~ W^-1(V, df), then CMC' ~ W^-1(???, df)
+* Facts about symmetric matrices?
 * Facts about positive definite matrices
 * Fact about the Cholesky Decomposition and Upper/Lower Triangles
   * Uniqueness(??)
