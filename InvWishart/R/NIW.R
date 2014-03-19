@@ -1,19 +1,10 @@
 
-require("matrixcalc")
 require(MASS); #for rmvnorm
-rmvnorm <- mvrnorm #why
-mvrnorm <- NULL
+rmvnorm <- mvrnorm; mvrnorm <- NULL; #repair naming convention
 
 
 rInvWishart <- function(n, df, Sigma) {
- # inverse wishart sampler
- message("rInvWishart")
- message("----------------------")
-
- print(Sigma)
- print(class(Sigma))
- print(is.square.matrix(Sigma))
- 
+ # inverse wishart sampler 
  W = rWishart(n, df, solve(Sigma));
  for(i in 1:n) {
    W[,,i] = solve(W[,,i]) 
@@ -23,15 +14,12 @@ rInvWishart <- function(n, df, Sigma) {
 
 rNIW.naivesample <- function(Mu, kappa, Psi, df) {
   # naive slow-as-mud Normal-Inverse-Wishart sampler
-  print(Psi)
-  V = rInvWishart(1, df, Psi)[,,1];
-  message("V is")
-  print(V)
+  V = rInvWishart(1, df, Psi)[,,1]; #sample only one 
   X = rmvnorm(1, Mu, V/kappa);
-  print(X)
-
+  
   list(X=X, V=V);
 }
+
 
 rNIW.snappysample <- function(Mu, kappa, Psi, df) {
 
@@ -51,7 +39,6 @@ list(X=X, V=V);
 rNIW.sample = rNIW.naivesample
 
 rNIW.wrapper <- function(n, Mu, kappa, Psi, df) {
-  message("hurp")
   # n: the desired number of sample points (X, V) ~ NIW(Mu, kappa, Psi, df)
   # df need not be integer; instead it can be anything in the domain of the gamma function
   
@@ -74,10 +61,15 @@ rNIW.wrapper <- function(n, Mu, kappa, Psi, df) {
   
   # generate the n samples
   for(i in 1:n) { 
-     message(i)
+     message(paste("sample #", i, sep=""))
      sample = rNIW.sample(Mu, kappa, Psi, df);
      X[,i] = sample$X
      V[,,i] = sample$V
+     message("X:")
+     print(sample$X)
+     message("V:")
+     print(sample$V)
+     message()
   }
   list(V=V, X=X)
 }
@@ -93,4 +85,4 @@ kDF = 3.3
 
 Z = rNIW(6, kMu, kKappa, kV, kDF)
 
-print(Z)
+#print(Z)
