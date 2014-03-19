@@ -1,0 +1,273 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+Under a given variance matrix 
+\begin_inset Formula $V$
+\end_inset
+
+, the Bartlett Decomposition [cite] is the equation.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+\mathbf{W} & =\Gamma^{T}A^{T}A\Gamma
+\end{align*}
+
+\end_inset
+
+in the context that 
+\begin_inset Formula $\Gamma$
+\end_inset
+
+ is the upper triangular part of the Cholesky decomposition
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+V= & \Gamma^{T}\Gamma
+\end{align*}
+
+\end_inset
+
+
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+((which is the variance matrix? which is the precision matrix?)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+and 
+\begin_inset Formula $A$
+\end_inset
+
+ is a 
+\begin_inset Formula $dxd$
+\end_inset
+
+ matrix with entries defined by the random variables
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+TODO: is that+or-1?
+\end_layout
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{align*}
+\mathbf{A_{row,column}}\sim & \begin{cases}
+0 & row>column\\
+\chi_{df-row+1}^{2} & row=column\\
+N(0,1) & row<column
+\end{cases}
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Which is upper triangular since everything below the diagonal (
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+
+\begin_inset Formula $row>column$
+\end_inset
+
+) is null.
+
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+ And ).
+\end_layout
+
+\begin_layout Standard
+Note that the Bartlett decomposition is also an LU decomposition, since
+ the form of the terms in 
+\begin_inset Formula $\mathbf{W}=\Gamma^{T}A^{T}A\Gamma$
+\end_inset
+
+ is 
+\begin_inset Quotes eld
+\end_inset
+
+LLUU
+\begin_inset Quotes erd
+\end_inset
+
+, and since the product of two lower (or upper) triangular matrices is lower
+ (or upper) triangular
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+ [TODO: proof]
+\end_layout
+
+\end_inset
+
+.
+ This decomposition actually gives a useful way to 
+\emph on
+generate 
+\emph default
+a desired Wishart distribution because .
+ LU decompositions are unique 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+([todo: proof]) 
+\end_layout
+
+\end_inset
+
+this decomposition 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+\mathbf{W} & \sim W(\Gamma\Gamma^{T},df)\\
+\\
+\\
+\\
+\\
+\\
+\end{align*}
+
+\end_inset
+
+which means that ..
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+\mathbf{W} & \sim W(\Gamma\Gamma^{T},df)
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This decomposition has a couple of equivalent forms.
+ We choose this one because the value of 
+\begin_inset Formula $chol()$
+\end_inset
+
+ in most libraries (certain, in R) is an 
+\series bold
+upper triangular matrix
+\series default
+ and following that lead shortens some of the notation.
+\end_layout
+
+\end_body
+\end_document
