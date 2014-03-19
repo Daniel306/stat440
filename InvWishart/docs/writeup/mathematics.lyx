@@ -59,6 +59,10 @@
 
 \begin_body
 
+\begin_layout Subsection*
+The Bartlett Decomposition
+\end_layout
+
 \begin_layout Standard
 Under a given variance matrix 
 \begin_inset Formula $V$
@@ -298,22 +302,122 @@ status open
 \end_layout
 
 \begin_layout Standard
-This decomposition actually gives a useful way to 
-\emph on
-generate 
-\emph default
-a desired Wishart distribution because .
- LU decompositions are unique 
+This theorem has a couple of equivalent forms (Wikipedia 
 \begin_inset Note Note
 status open
 
 \begin_layout Plain Layout
-([todo: proof]) 
+todo: [CITE]
 \end_layout
 
 \end_inset
 
-this decomposition 
+ for example, defines 
+\begin_inset Formula $\mathbf{W}=\Gamma AA^{T}\Gamma^{T}$
+\end_inset
+
+, or you could also start from the theorem that 
+\begin_inset Formula $A^{T}A\sim W(I,df)$
+\end_inset
+
+ and then prove that Wisharts can be scaled: 
+\begin_inset Formula $M\sim W(V,df)\wedge(C\text{ is invertible and square})\implies CMC^{T}\sim W(CVC^{T},df)$
+\end_inset
+
+ 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+TODO: proof
+\end_layout
+
+\end_inset
+
+).
+ We choose this form because the value of 
+\begin_inset Formula $chol()$
+\end_inset
+
+ in most libraries (certain, in R) is an 
+\series bold
+upper triangular matrix
+\series default
+ and following that lead clarifies our derivations and the programs built
+ on them.
+\end_layout
+
+\begin_layout Subsection*
+Generating Wishart Variates
+\end_layout
+
+\begin_layout Standard
+This decomposition actually gives a useful way to 
+\emph on
+generate 
+\emph default
+a desired Wishart distribution: if you want to generate not-quite-covariance
+ Wishart matrices and you know (or think you know) 
+\begin_inset Formula $V$
+\end_inset
+
+ and 
+\begin_inset Formula $df$
+\end_inset
+
+, you sample 
+\begin_inset Formula $A$
+\end_inset
+
+ according to the rule above (using 
+\begin_inset Formula $df$
+\end_inset
+
+), find 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+
+\begin_inset Formula $\Gamma$
+\end_inset
+
+ (using
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+ 
+\begin_inset Formula $chol(V)$
+\end_inset
+
+), scale 
+\begin_inset Formula $A$
+\end_inset
+
+ by 
+\begin_inset Formula $U\leftarrow A\Gamma$
+\end_inset
+
+, and square that: 
+\begin_inset Formula $\mathbf{W}\leftarrow U^{T}U$
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Standard
@@ -330,19 +434,6 @@ this decomposition
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
-This decomposition has a couple of equivalent forms.
- We choose this one because the value of 
-\begin_inset Formula $chol()$
-\end_inset
-
- in most libraries (certain, in R) is an 
-\series bold
-upper triangular matrix
-\series default
- and following that lead shortens some of the notation.
 \end_layout
 
 \end_body
