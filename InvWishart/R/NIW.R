@@ -5,6 +5,8 @@ rmvnorm <- mvrnorm; mvrnorm <- NULL; #repair naming convention
 
 rInvWishart <- function(n, df, Sigma) {
  # inverse wishart sampler 
+ stopifnot(nrow(Sigma) == ncol(Sigma))
+ stopifnot(df >= nrow(Sigma))
  W = rWishart(n, df, solve(Sigma));
  for(i in 1:n) {
    W[,,i] = solve(W[,,i]) 
@@ -39,87 +41,55 @@ BartlettFactor <- function(d, df) {
   diag(A) = sqrt(rchisq(d, df))
     
   # set the below-diagonals to N(0,1)s
-  i_lower = col(A) < row(A)
+  i_lower = col(A) > row(A) #XXX come out upper (EXPERIMENTAL)
   A[i_lower] = rnorm(sum(i_lower)) #sum() on a logical finds the len() of the lower triangle
   
   A
 }
+
+#require("Matrix") #for faster(?) solving routines
 
 rNIW.snappysample <- function(Mu, kappa, Psi, df) {
   d = length(Mu) #just shorthand, not for typechecking
   # attempt to write out the efficient algorithm (but in R, of course)
   
   
-  gamma = t(chol(Psi)) #t() because in R chol gives the upper triangle (the right term) and I wrote my derivations in terms of the lower
-  
+  gamma.inv = chol(Psi) # upper triangular #XXX this can be precomputed in .wrapper()
+  # note: actually getting gamma is expensive, so avoid computing it if possible
   # 
   
-     # construct L_i
-  L_i = BartlettFactor(d, df)
-  message("Lower triangular bartlett factor")
-  print(L_i)
+  # construct 
+  A = BartlettFactor(d, df)
+  #message("Upper triangular bartlett factor")
+  #print(A)
   
-  # so we have that LL' ~ W(I, df) (or, alternately, U'U = LL')
-  # we *want* V ~ W^-1(Psi, df)
-  #          <=> inv(V) ~ W(inv(Psi), df)
-  #              inv(V) ~ W(chol(inv(Psi))' * chol(inv(Psi))), df)
-  #         if we define inv(V) = [ chol(inv(Psi))' * U' ] * [ U * chol(inv(Psi)) ] then inv(V) ~ W(inv(Psi), df)
-  #                  so  inv(inv(V)) ~ inv(W)(Psi, df)
-  #           hurrah!
-  #         now how to actually ~use~ this...
+  # okay, well, it seems we're stuck with inverting A
+  U = gamma
+  # lawl wat: identity matrix in R is "diag(scalar)". wowwww.
+  U.inv = gamma.inv %*% backsolve(A, diag(d))
+  
+  V = U.inv %*% t(U.inv) #note well that this is not a LU decomposition -- it's UL
+  # what. wait.. is this a PRECISION matrix or a COVARIANCE matrix?
+  
+  # "he Wishart distribution arises as the distribution of the sample covariance matrix" <https://en.wikipedia.org/wiki/Wishart_distribution>
+  # "over the precision, \Lambda, is the Wishart distribution." <gaussian_prior_cheat_sheet.pdf>
+  #  -> and this pdf very clearly says that the normal is sampled
+  # but we SHOWED by experiment in HW1 that Wishart samples converge to the given COVARIANCE matrix, not its INVERSE
+  #   --> is there some magic going on with the priors where you flip a precision matrix to a covariance matrix and vice versa?	
   # 
-  #
-  # we have gamma = chol(Psi)'; #lower triangular
-  #       chol(inv(Psi))' = inv(chol(Psi)) = inv(gamma') = inv(gamma)'
-  #  and  chol(inv(Psi))  = inv(chol(Psi))'= inv(gamma')'= inv(gamma)'' = inv(gamma)
-  #   so inv(V) = inv(gamma)' * U' * U * inv(gamma)
-  #  and thus V = inv(inv(gamma)' * U' * U * inv(gamma)) = {note the reversal in order} gamma * inv(U) * inv(U)' * gamma'
-  # i'm making some really simple mistake here.. maybe gamma isn't supposed to be lower on the left?
-  # yes! that's it! gamma is supposed to be UPPER on the left
-  #
-  # --> redefine gamma = chol(Psi) (UPPER now)
-  #   we want to scale the Bartlett factor LL' so that W(I, df) -> W(inv(Psi), df)
-  #      which we do by taking the square root of inv(Psi) = inv(gamma'*gamma) = inv(gamma) * inv(gamma)'  [form: UL]
-  #           stop and observe: chol(Psi) is upper so  inv(chol(Psi)) is **upper**; this factorization of inv(Psi) is NOT Cholesky: it's UL instead of LU
-  #      however we don't care for that, because we want to immediately invert this:
-  #    inv(V) = inv(chol(Psi)) * L * L' chol(Psi)')    ; (U LU L)  --{inv}-> (L UL U)
-  #           = inv(chol(Psi))' *inv(L')  * inv(L) *  inv(chol(Psi)))   
-  # hm. this is bad. we either need form LLUU or UULL so that we can do things efficiently
   
-  # maybe the problem is with taking gamma = chol(Psi)? what if we take gamma = chol(inv(Psi))? does that fix it?
-  #
+  # now, to gen X, we need the factorization of V:
+  # U'U = W, which "sample" (actually we only sample A'A and then use hax)
+  # V = W^-1
+  # V = U^-1 * U'^-1
+  # so U^-1 * z ~ N(0, U^-1 * U'^-1) = N(0, V)
+  #  
   
-  # hurp
-  # can we convince the Bartlett factor to come out UL instead of LU?
+  # now we want X to follow some stuff
+  # one method (slow and numerically unstable)
+  z = rnorm(d); #sample N_d(0, I); since the covariance matrix is I, all draws are i.i.d. , so we can just sample d-univariates and reshape them into a vector
+  X = Mu + U.inv %*% z
   
-  #   
-  #  --- why did i insist on Bartlett being given as LU
-  # --..hm.
-  # well, anyway, there might still be some savings by doing invL first 
-  
-  U_i = gamma%*%t(solve(L_i)) #hmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
-  print(U_i)
-  si
-  
-  # 
-  # now, Sb%*%t(Sb) ~ W(I, n) according to Bartlett's Method according to the assignment
-  # but we want W(V, n-1)
-  # we can use part i), which says if S ~ W(I, n) then LSL' ~ W(LIL', n)  (NB, in case i forget: ' means "transpose")
-  # We want LIL' = LL' to be V, so we want to apply the choklesky decomposition to get square roots:
-  L = chol(V) # note: R's chol() gives an *upper* triangle... 
-    # and L'L = V; tho since the inner term of W(I, n) is I, it doesn't matter if we decompose the wrong way..
-    # since S ~ W(I, n) => L'SL ~ W(L'IL, n) ~ W(V, n)
-  # Sb%*%t(Sb) ~ W(I, n), so (L%*%Sb)%*%t(L%*%Sb) = L(SbSb')L' ~ W(LL', n)
-  # so we can build Sb subsequently by taking the lower triangular matrix, scaling, and squaring:
-  Sb = t(L)%*%Sb  #lower-triangular * lower triangular = lower-triangular
-  Sb = Sb%*%t(Sb)
-  Sb
-
-  
-     # construct W_i (?)
-     # construct U_i (?)
-     # construct V_i
-
 list(X=X, V=V);
 }
 
@@ -128,7 +98,7 @@ list(X=X, V=V);
 # 
 
 rNIW.sample = rNIW.naivesample
-rNIW.sample = rNIW.snappysample
+#rNIW.sample = rNIW.snappysample
 
 rNIW.wrapper <- function(n, Mu, kappa, Psi, df) {
   # n: the desired number of sample points (X, V) ~ NIW(Mu, kappa, Psi, df)
@@ -172,8 +142,8 @@ rNIW = rNIW.wrapper
 kMu = c(0.25, -1.5, 0.33, 9)
 kKappa = 1
 kV  = cbind(c(2.84, 0.43, 0.16, .5), c(0.43, 1.52, -0.24, -.73), c(.16, -.24, 4.49, 88), c(1,-2,3,4))
-kV  = t(kV)%*%kV
-kDF = 3.3
+kV  = t(kV)%*%kV #after I added digits at random, force kV to be some positive def matrix
+kDF = 7.32 # must be at least as large as the dimension of kV
 
 
 Z = rNIW(6, kMu, kKappa, kV, kDF)
