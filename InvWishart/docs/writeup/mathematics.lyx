@@ -787,6 +787,19 @@ omega or something
 
 \end_layout
 
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Insert Runtime Experiments Here
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Subsection*
 The Inverse Wishart Distribution
 \end_layout
@@ -816,6 +829,194 @@ CITE
 
 \begin_layout Subsection*
 Generating Inverse Wishart Variates
+\end_layout
+
+\begin_layout Standard
+The naive algorithm for generating inverse wisharts is:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+def rInvWishart(n, df, P):  #P for "precision"
+\end_layout
+
+\begin_layout Plain Layout
+
+  V = invert(P)
+\end_layout
+
+\begin_layout Plain Layout
+
+  return [invert(W) for W in rWishart(n, df, V)]
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+With identical runtime to 
+\begin_inset Formula $rWishart$
+\end_inset
+
+ plus 
+\begin_inset Formula $n+1$
+\end_inset
+
+ extra inversion operations.
+ According to Wikipedia, 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+https://en.wikipedia.org/wiki/Computational_complexity_of_mathematical_operations#
+Matrix_algebra
+\end_layout
+
+\end_inset
+
+ matrix inversion takes between 
+\begin_inset Formula $O(d^{2.3})$
+\end_inset
+
+ and 
+\begin_inset Formula $O(d^{3})$
+\end_inset
+
+.
+ So the total runtime is in 
+\begin_inset Formula $O(n\cdot d^{3})+(n+1)\cdot O(d^{3})=O((2n+1)\cdot d^{3})$
+\end_inset
+
+, or roughly twice as slow as 
+\begin_inset Formula $rWishart$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Insert Runtime Experiments Here
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset space ~
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+But we can do better (and when we get to the Normal-InverseWishart, the
+ same trick we use here will give us extra speedups there).
+\end_layout
+
+\begin_layout Standard
+\begin_inset space ~
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Let's take a look at what 
+\begin_inset Formula $invert(W)$
+\end_inset
+
+ 
+\series bold
+\emph on
+is
+\series default
+\emph default
+.
+ 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+TODO: state what conditions it takes for inv(W) to exist.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+\mathbf{W} & =\Gamma^{T}A^{T}A\Gamma\\
+ & =U^{T}U\\
+\mathbf{W}^{-1} & =\Gamma^{-1}A^{-1}\left(A^{-1}\right)^{T}\left(\Gamma^{-1}\right)^{T} & \text{invert swaps order, and is swappable with transpose}\\
+ & =\Gamma^{-1}A^{-1}\left(\Gamma^{-1}A^{-1}\right)^{T} & \text{transpose swaps order, too}\\
+ & =U^{-1}\left(U^{-1}\right)^{T}\\
+U^{-1} & =\Gamma^{-1}A^{-1}
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Now, recall what 
+\begin_inset Formula $\Gamma$
+\end_inset
+
+ is: 
+\begin_inset Formula $chol(V)=chol(P^{-1})$
+\end_inset
+
+.
+ Here, a lemma 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+TODO: prove
+\end_layout
+
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $chol(M^{-1})=chol(M)^{-1}$
+\end_inset
+
+, both sides upper triangular.
+ So 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+U^{-1} & =\Gamma^{-1}A^{-1}\\
+ & =chol(P^{-1})^{-1}A^{-1}\\
+ & =\left(chol(P)^{-1}\right)^{-1}A^{-1}\\
+ & =chol(P)A^{-1}
+\end{align*}
+
+\end_inset
+
+
 \end_layout
 
 \end_body
