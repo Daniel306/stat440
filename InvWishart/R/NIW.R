@@ -2,6 +2,8 @@
 require(MASS); #for rmvnorm
 rmvnorm <- mvrnorm; mvrnorm <- NULL; #repair naming convention
 
+require("Matrix") #for faster(?) solving routines (this package is very slow to load; comment this line out if you must)
+                  #WARNING: with this loaded the S4-methodlookup overhead seems to drastically slow down rNIW.extremelynaive, rNIW.naive and rNIW.snappy1
 ##################################
 ### Naive Sampling
 
@@ -71,8 +73,6 @@ BartlettFactor <- function(d, df) {
   
   A
 }
-
-#require("Matrix") #for faster(?) solving routines
 
 
 rNIW.snappy1.sample <- function(d, Mu, kappa, Psi, df) {
@@ -152,8 +152,8 @@ rNIW.snappy2 <- function(n, d, Mu, kappa, Psi, df, V, X) {
   # generate the n samples by n times doing: i) generate V, ii) generate X given V.
   # analogous to the difference between extremelynaive and naive,
   # the only difference from snappy1 is that we only factor Psi once
+  
   gamma.inv = chol(Psi) 
-
   kappy = sqrt(kappa)
   for(i in 1:n) {  #apply scaling after the fact
      sample = rNIW.snappy2.sample(d, df)
@@ -200,13 +200,57 @@ rNIW.snappy3 <- function(n, d, Mu, kappa, Psi, df, V, X) {
 # snappy 2.5 replaces %*% with appropriate slightly-more-efficient matrix multiplies:
 #      a "symmetrictriangularmultiply" (aka dsyrk.f, but if we can avoid using fortran that would be good)
 #      a "upper triangle times upper triangle" multiply
+# this requires using the Matrix package
 
+rNIW.snappy2.5.sample <- function(d, df) {
+  A = BartlettFactor(d, df)
+  A= as(A, "dtrMatrix") #cast so we can invoke LAPACK routines
+  A.inv = solve(A)  #Matrix knows how to invert itself by backsolving
+                    #help(Matrix::solve) --> '          all use LAPACK based versions of efficient triangular
+                    #                        'backsolve', or 'forwardsolve'.'
+  
+  z = rnorm(d); #sample N_d(0, I); since the covariance matrix is I, all draws are i.i.d. , so we can just sample d-univariates and reshape them into a vector
+  X = A.inv %*% z
+list(X=X, A.inv=A.inv);
+}
+
+
+rNIW.snappy2.5 <- function(n, d, Mu, kappa, Psi, df, V, X) {
+  Psi = Matrix(Psi); #cast to Matrix package matrices, which provide C/Fortran case-specific efficient matrix ops
+  Mu = Matrix(Mu);
+
+  gamma.inv = chol(Psi)
+  kappy = sqrt(kappa)
+  for(i in 1:n) {  #apply scaling after the fact
+     message(i)
+     sample = rNIW.snappy2.5.sample(d, df)
+     U.inv = gamma.inv %*% sample$A.inv   #this seems dumb. TWO multiplies by gamma? hm. 
+     V[,,i] = matrix(tcrossprod(U.inv)) #compute U.inv %*% t(U.inv)  
+     X[,i] = matrix(Mu + gamma.inv%*%sample$X/kappy )  #are the matrix() calls slowing us down??
+  }
+  list(V=V, X=X)
+}
+
+# TODO: only use U instead of using A in one place and U in another
+
+# TODO: try using all different types of triangular matrices and seeing how the speed changes:
+#  dtrMatrix - "dense" format (all values stored, but the matrix knows its a triangular matrix and ops will only operate on half of it)
+#  dtRMatrix - "sparse" format
+#  dtCMatrix - "compressed sparse" format
+#  dtpmatrix - "packed" format (only the d(d+1)/2 non-null values are stored in one long vector and indexing tricks are used to make this okay
+
+#TODO: try making the Bartlett factor matrix triangular from the get-go (we could even use a dtpMatrix..)
+
+# snappy 2.7 additionally uses a better backsolve
 
 # the diff with snappy4 is that it does
 # backsolve() + forwardtriangularmultiply(???) instead of computing U.inv
 
 
 ## snappy5 has figured out how to multiply gamma across things in one step
+
+## snappy6 eschews BartlettFactor and instead runs InverseBartlettFactor
+## (getting to this point will require some very very careful derivations that may be beyond us)
 
 #########################3
 ## Hosting code
@@ -251,6 +295,9 @@ kDF = 7.32 # must be at least as large as the dimension of kV
 
 
 test <- function(method, N=32324) {
+
+  tryCatch({ #wrapped in a tryCatch so that tests can fail and the code can plug along anyway
+
   name = deparse(substitute(method)) #LOL R
 
 
@@ -287,14 +334,19 @@ for(i in 1:4) {
 
 message()
 Samples #return for future use, in case you care
+}, 
+ error = function(e) { print(e); },
+ warning = function(e) { print(w); }
+ )
 }  
 
 
 message()
 message("Starting test runs")
 message("------------------")
-Baseline.Samples = test(rNIW.extremelynaive)
-ignored = test(rNIW.naive)
-ignored = test(rNIW.snappy1);
-ignored = test(rNIW.snappy2);
-ignored = test(rNIW.snappy3);
+#Baseline.Samples = test(rNIW.extremelynaive)
+#ignored = test(rNIW.naive)
+#ignored = test(rNIW.snappy1);
+#ignored = test(rNIW.snappy2);
+ignored = test(rNIW.snappy2.5);
+#ignored = test(rNIW.snappy3);
