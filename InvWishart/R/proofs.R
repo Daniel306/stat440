@@ -99,3 +99,9 @@ print(mean(na.omit(as.vector(R.cor > .10))))
 
 # ^ huh. 
 # the inverse is consistently LESS (linear-pearson) correlated than the original
+
+
+#-------------
+
+# demonstrating that R does not know about sparse matrices
+object.size(diag(1:43444))
