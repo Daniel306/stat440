@@ -21,3 +21,7 @@ We require derivations (or maybe refutations) of these facts:
 * Lower * Lower = Lower and Upper*Upper = Upper but Lower*Upper = anything ((so lower*t(lower) = anything))
 * inv(Lower) = Lower (corollary: inv(Upper) = Upper, since upper = lower' and inverse swaps with transposing: inv(Lower)' = Lower' = Upper = inv(Lower') = inv(Upper)       
 * solve(backsolve(M, solve(t(M)))) = M'M
+
+* In HW1 we showed that the mean of the Wishart distribution is the covariance matrix of the associated Normals (scaled by a constant: df).
+  In terms of types, that means the Wishart distribution has type "covariance matrix". And that should mean that the Inverse-Wishart has type "https://en.wikipedia.org/wiki/Precision_matrix".  All of the references I've seen elsewhere seem to treat the output of the Inverse-Wishart as another covariance matrix. Why is this?
+  What is up with this?
