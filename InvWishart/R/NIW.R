@@ -31,6 +31,8 @@ rNIW.extremelynaive <- function(n, d, Mu, kappa, Psi, df, V, X) {
 rNIW.naive <- function(n, d, Mu, kappa, Psi, df, V, X) {
   # generate the n samples
   # slightly less totally durpy implementation
+  # the main difference between this and extremelynaive is that this only inverts Psi once
+  
   V = rInvWishart(n, df, Psi);   #ignore the prealloc'd space
   
   # must be in a loop because each sample has a different distribution
