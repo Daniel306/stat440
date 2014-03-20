@@ -97,7 +97,7 @@ rNIW.snappy1.sample <- function(d, Mu, kappa, Psi, df) {
   A.inv = backsolve(A, diag(d))
   U.inv = gamma.inv %*% A.inv  #(U = AG and U'U = G'A'AG = W the Wishart-distributed matrix we never actually compute)
   
-  V = U.inv %*% t(U.inv) #note well that this is not a LU decomposition -- it's UL
+  V = tcrossprod(U.inv) #note well that this is not a LU decomposition -- it's UL
   # what. wait.. is this a PRECISION matrix or a COVARIANCE matrix?
   
   # "he Wishart distribution arises as the distribution of the sample covariance matrix" <https://en.wikipedia.org/wiki/Wishart_distribution>
@@ -161,7 +161,7 @@ rNIW.snappy2 <- function(n, d, Mu, kappa, Psi, df, V, X) {
   for(i in 1:n) {  #apply scaling after the fact
      sample = rNIW.snappy2.sample(d, df)
      U.inv = gamma.inv %*% sample$A.inv   #this seems dumb. TWO multiplies by gamma? hm. if 
-     V[,,i] = U.inv %*% t(U.inv)
+     V[,,i] = tcrossprod(U.inv)
      X[,i] = Mu + gamma.inv%*%sample$X/kappy 
   }
   list(V=V, X=X)
@@ -185,7 +185,7 @@ rNIW.snappy3 <- function(n, d, Mu, kappa, Psi, df, V, X) {
   for(i in 1:n) {  #apply scaling after the fact
      sample = rNIW.snappy2.sample(d, df) #USING SNAPPY2 STILL
      U.inv = gamma.inv %*% sample$A.inv
-     V[,,i] = U.inv %*% t(U.inv)
+     V[,,i] = tcrossprod(U.inv)
      X[,i] = sample$X
   }
   
@@ -337,6 +337,8 @@ rNIW.snappy2.5 <- function(n, d, Mu, kappa, Psi, df, V, X) {
   list(V=V, X=X)
 }
 
+
+
 # TODO: only use U instead of using A in one place and U in another
 
 # TODO: try using all different types of triangular matrices and seeing how the speed changes:
@@ -344,6 +346,13 @@ rNIW.snappy2.5 <- function(n, d, Mu, kappa, Psi, df, V, X) {
 #  dtRMatrix - "sparse" format
 #  dtCMatrix - "compressed sparse" format
 #  dtpmatrix - "packed" format (only the d(d+1)/2 non-null values are stored in one long vector and indexing tricks are used to make this okay
+
+
+
+rNIW.slam <-  function(n, d, Mu, kappa, Psi, df, V, X) {
+
+}
+
 
 #TODO: try making the Bartlett factor matrix triangular from the get-go (we could even use a dtpMatrix..)
 
@@ -450,10 +459,10 @@ Samples #return for future use, in case you care
 message()
 message("Starting test runs")
 message("------------------")
-#Baseline.Samples = test(rNIW.extremelynaive)
-#ignored = test(rNIW.naive)
-#ignored = test(rNIW.snappy1);
-#ignored = test(rNIW.snappy2);
+Baseline.Samples = test(rNIW.extremelynaive)
+ignored = test(rNIW.naive)
+ignored = test(rNIW.snappy1);
+ignored = test(rNIW.snappy2);
 Rprof()
 #ignored = test(rNIW.snappy2.5);
 Rprof(NULL)
