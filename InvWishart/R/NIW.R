@@ -88,7 +88,7 @@ rNIW.snappysample <- function(Mu, kappa, Psi, df) {
   # now we want X to follow some stuff
   # one method (slow and numerically unstable)
   z = rnorm(d); #sample N_d(0, I); since the covariance matrix is I, all draws are i.i.d. , so we can just sample d-univariates and reshape them into a vector
-  X = Mu + U.inv %*% z
+  X = Mu + U.inv %*% z/sqrt(kappa)
   
 list(X=X, V=V);
 }
@@ -98,7 +98,7 @@ list(X=X, V=V);
 # 
 
 rNIW.sample = rNIW.naivesample
-#rNIW.sample = rNIW.snappysample
+
 
 rNIW.wrapper <- function(n, Mu, kappa, Psi, df) {
   # n: the desired number of sample points (X, V) ~ NIW(Mu, kappa, Psi, df)
@@ -145,18 +145,36 @@ kV  = cbind(c(2.84, 0.43, 0.16, .5), c(0.43, 1.52, -0.24, -.73), c(.16, -.24, 4.
 kV  = t(kV)%*%kV #after I added digits at random, force kV to be some positive def matrix
 kDF = 7.32 # must be at least as large as the dimension of kV
 
+N = 324233
 
-Z = rNIW(5546, kMu, kKappa, kV, kDF)
+tic = proc.time()
+Baseline.Samples = rNIW(N, kMu, kKappa, kV, kDF)
+toc = proc.time()
+runtime1 = toc - tic
+
+
+# switch to using snappysample and redo
+rNIW.sample = rNIW.snappysample
+tic = proc.time()
+Snappy.Samples = rNIW(N, kMu, kKappa, kV, kDF)
+toc = proc.time()
+runtime2 = toc - tic
 
 
 par(mfrow=c(2,2))
 # plot it. plot it alllll.
 for(i in 1:4) { for(j in 1:4) {
-  hist(Z$V[i,j,], main=paste("Hist of ",i,",",j))
+  hist(Snappy.Samples$V[i,j,], main=paste("Hist of ",i,",",j),  probability=T, breaks=20, col='red')
+  lines(density(Snappy.Samples$V[i,j,]), col='steelblue')
+  lines(density(Baseline.Samples$V[i,j,]), col='black')
 }}
 
 for(i in 1:4) {
-  hist(Z$X[i,])
+  hist(Snappy.Samples$X[i,], probability=T, breaks=20, col='red')
+  lines(density(Snappy.Samples$X[i,]), col='steelblue')
+  lines(density(Baseline.Samples$X[i,]), col='black')
 }
 
 
+print(runtime1)
+print(runtime2)

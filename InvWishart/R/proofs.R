@@ -48,19 +48,54 @@ BartlettFactor <- function(d, df) {
   A
 }
 
-R = sapply(1:22222, function(i) { BartlettFactor(5, 6) })
+R = sapply(1:222, function(i) { solve(BartlettFactor(5, 6)) })
 # sapply flattens the results into a single vector
 # but we can put it back like this:
 dim(R) = c(sqrt(dim(R)[1]), sqrt(dim(R)[1]), dim(R)[2])
 
 # and now we can check out the univariate dist of any single BartlettFactor entry like..
 x = seq(-30, 30, 0.01)
-hist(R[1,1,]^2, probability=T)
+hist(R[1,1,], probability=T, breaks=20)
 lines(x, dchisq(x, 6), col='blue')
 
-hist(R[3,3,]^2, probability=T)
+hist(R[3,3,], probability=T, breaks=20)
 lines(x, dchisq(x, 6-3+1), col='blue')
 
 
-hist(R[2,5,], probability=T)
+hist(R[2,5,], probability=T, breaks=200)
 lines(x, dnorm(x), col='blue')
+
+
+R.cor = rep(NA, dim(R)[1]^4)
+dim(R.cor) = c(dim(R)[1], dim(R)[1], dim(R)[1], dim(R)[1])
+for( i in 1:dim(R)[1]) { for( j in 1:dim(R)[2]) {
+for(i2 in 1:dim(R)[1]) { for(j2 in 1:dim(R)[2]) {
+  R.cor[i,j,i2,j2] = cor(R[i,j,], R[i2,j2,])
+}}
+}}
+
+print(mean(na.omit(as.vector(R.cor > .10))))
+
+
+# okay, now what happens if we INVERT
+for(k in 1:dim(R)[3]) {
+  R[,,k] = solve(R[,,k])
+}
+
+# look for correlations by brute force
+# even though the inverse involves all columns,
+# maybe the entries are (effectively?) uncorrelated
+# and it is just as good to compute them directly
+# e.g. using F distributions and stuff
+R.cor = rep(NA, dim(R)[1]^4)
+dim(R.cor) = c(dim(R)[1], dim(R)[1], dim(R)[1], dim(R)[1])
+for( i in 1:dim(R)[1]) { for( j in 1:dim(R)[2]) {
+for(i2 in 1:dim(R)[1]) { for(j2 in 1:dim(R)[2]) {
+  R.cor[i,j,i2,j2] = cor(R[i,j,], R[i2,j2,])
+}}
+}}
+
+print(mean(na.omit(as.vector(R.cor > .10))))
+
+# ^ huh. 
+# the inverse is consistently LESS (linear-pearson) correlated than the original
