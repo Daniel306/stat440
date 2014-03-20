@@ -182,17 +182,18 @@ kV  = t(kV)%*%kV #after I added digits at random, force kV to be some positive d
 kDF = 7.32 # must be at least as large as the dimension of kV
 
 
-test <- function(method, N=32) {
+test <- function(method, N=32324) {
   name = deparse(substitute(method)) #LOL R
 
 
-message(paste("Beginning",name))
+message(paste("Beginning",name,"..."))
 tic = proc.time()
 Samples = rNIW.typechecks(method, N, kMu, kKappa, kV, kDF)
 toc = proc.time()
 runtime = toc - tic
 
-message(paste("Runtime for", name))
+# time it!
+message(paste("Runtime for", name,":"))
 print(runtime)
 
 
@@ -225,6 +226,6 @@ message()
 message("Starting test runs")
 message("------------------")
 Baseline.Samples = test(rNIW.extremelynaive)
-test(rNIW.naive)
-test(rNIW.snappy1)
+ignored = test(rNIW.naive)
+ignored = test(rNIW.snappy1);
 #test(rNIW.snappy2)
