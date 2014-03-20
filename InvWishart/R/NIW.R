@@ -123,15 +123,15 @@ rNIW.wrapper <- function(n, Mu, kappa, Psi, df) {
   
   # generate the n samples
   for(i in 1:n) { 
-     message(paste("sample #", i, sep=""))
+     #message(paste("sample #", i, sep=""))
      sample = rNIW.sample(Mu, kappa, Psi, df);
      X[,i] = sample$X
      V[,,i] = sample$V
-     message("X:")
-     print(sample$X)
-     message("V:")
-     print(sample$V)
-     message()
+     #message("X:")
+     #print(sample$X)
+     #message("V:")
+     #print(sample$V)
+     #message()
   }
   list(V=V, X=X)
 }
@@ -146,6 +146,17 @@ kV  = t(kV)%*%kV #after I added digits at random, force kV to be some positive d
 kDF = 7.32 # must be at least as large as the dimension of kV
 
 
-Z = rNIW(6, kMu, kKappa, kV, kDF)
+Z = rNIW(5546, kMu, kKappa, kV, kDF)
 
-#print(Z)
+
+par(mfrow=c(2,2))
+# plot it. plot it alllll.
+for(i in 1:4) { for(j in 1:4) {
+  hist(Z$V[i,j,], main=paste("Hist of ",i,",",j))
+}}
+
+for(i in 1:4) {
+  hist(Z$X[i,])
+}
+
+
