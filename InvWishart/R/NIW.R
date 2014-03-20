@@ -348,5 +348,8 @@ message("------------------")
 #ignored = test(rNIW.naive)
 #ignored = test(rNIW.snappy1);
 #ignored = test(rNIW.snappy2);
+Rprof()
 ignored = test(rNIW.snappy2.5);
+Rprof(NULL)
+summaryRprof()
 #ignored = test(rNIW.snappy3);
