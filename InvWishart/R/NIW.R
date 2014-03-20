@@ -2,10 +2,7 @@
 require(MASS); #for rmvnorm
 rmvnorm <- mvrnorm; mvrnorm <- NULL; #repair naming convention
 
-#require("Matrix") #for faster(?) solving routines (this package is very slow to load; comment this line out if you must)
-                  #WARNING: with this loaded the S4-methodlookup overhead seems to drastically slow down rNIW.extremelynaive, rNIW.naive and rNIW.snappy1
-
-require("slam")  #alternate sparse linalg package...
+#require("slam") #TODO: investigate this
 
 ##################################
 ### Naive Sampling
@@ -200,143 +197,6 @@ rNIW.snappy3 <- function(n, d, Mu, kappa, Psi, df, V, X) {
 }
 
 
-# snappy 2.5 replaces %*% with appropriate slightly-more-efficient matrix multiplies:
-#      a "symmetrictriangularmultiply" (aka dsyrk.f, but if we can avoid using fortran that would be good)
-#      a "upper triangle times upper triangle" multiply
-# this requires using the Matrix package
-# and the Matrix package uses S4 objects
-# and the use of S4 objects is slower (at least, for small matrices) than the time saved by getting to call LAPACK
-# but, we can precache the S4 gunk:
-
-
-
-
-#MUL.UPPER = selectMethod("%*%",c("dtrMatrix","dtrMatrix"))
-#MUL.UPPER_AND_VECTOR = selectMethod("%*%",c("dtrMatrix","dgeMatrix"))
-#CHOL.SY = selectMethod("chol",c("dsyMatrix"))
-#CHOL.POS = selectMethod("chol",c("dpoMatrix"))
-#TCROSSPROD = selectMethod("tcrossprod", c("dgeMatrix", "missing")) #just casts to a dgeMatrix and calls "dgeMatrix", "missing".. is that better or worse than:
-##TCROSSPROD = selectMethod("tcrossprod", c("dtrMatrix", "dtrMatrix"))
-#BACKSOLVE = selectMethod("solve", c("dtrMatrix", "missing"))
-#DGESOLVE = selectMethod("solve", c("dgeMatrix", "missing"))
-
-#SOLVE = function(A) {
-#  tryCatch({
-#    BACKSOLVE(A)
-#  },
-#  error = function(e) {
-#    DGESOLVE(A)
-#  }
-#  )
-#}
-
-# aha! it's 'as()'. 'coerce()' may complain that it is deprecated, but 'as()' is decimating my runtimes
-# and anyway, 'as()' just ends up calling out to instances of 'coerce()' in the Matrix package
-
-#MATRIX.AS.TRIANGULAR.MATRIX = selectMethod("coerce", c("matrix","dtrMatrix"))
-#TRIU = selectMethod("triu", "dsyMatrix") #also covers dsyMatrix, but only because the code is copypasted for both cases
-#MATRIX.AS.DENSE.MATRIX = selectMethod("coerce", c("matrix","dgeMatrix"))
-
-
-BartlettFactor.TRI <- function(d, df) {
-  # the Bartlett decomposition of X ~ W(V, df) is
-  # USING MATRIX PACKAGE
-  #   X = gamma*A*A'*gamma'
-  # where  L = chol(V) (lower-triangular chol) and
-  #        A is defined as A[i,i] ~ sqrt(X^2_{df-{i-1}}) && A[i,j] ~ N(0,1) and A[j,i] = 0 (i>j)
-  
-  # the base case (or a special case, depending on how you look at it) is
-  #  W = AA' which has W ~ W(I, df)  <-- this is the Bartlett Theorem
-  #  it's not hard to derive from linearity of Normals and the def'n of the Wishart Dist that
-  # CWC' ~ W(CIC', df), so you can get any Wishart you want from W(I, df)
-  # (tho maybe it is hard to see that with non-integer df. :shrug:)
-  
-  # we need to pass '2' here so that Matrix makes a dsyMatrix (symmetric) instead of a dsCMatrix (sparse)
-  A = Matrix(0, nrow=d, ncol=d) #what? if i don't have the 0 in there then the API BREAKS: in particular, diag() gets picky and when it does work, it assignments LOGICALS
-  stopifnot(class(A) == "dsyMatrix")
-  A = TRIU(A)
-  
-  #print(A)
-  #print(class(A))
-  df = df-(1:d)+1 #rchiqsq will vectorize over its DEGREES OF FREEDOM which is super clever
-  diag(A) = sqrt(rchisq(d, df))
-
-  # set the below-diagonals to N(0,1)s
-  i_lower = col(A) > row(A) #XXX come out upper (EXPERIMENTAL)
-
-  A[i_lower] = rnorm(sum(i_lower)) #sum() on a logical finds the len() of the lower triangle
-  
-  A
-}
-
-
-# hilarious fail:
-# i think that on large matrices, this version (or a patched one that actually works) would do the job
-# but getting Matrix instances in and out of matrix instances is very expensive
-# and much much much much much more expensive is doing method lookup in the first place: EVERY time you call a method it searches
-#  and the Matrix library tries to be clever and swap your particular matrix class out to the most specific kind it can
-#  which would seem to be a good idea: it means the most efficient BLAS routines always get called
-#  but
-#  the energy spent to walk the inheritence tree every time is completely, stupidly, dominant
-#   (what's different between R's inheritence and anyone else's? i feel like there's something notable here..
-#   (R's S4 inheritence doesn't keep the methods near the objects; instead it keeps them in global multiple-dispatch land
-#   ( and so any call has to look there
-#   ( instead of the objbects themselves holding pointers to their methods.
-#   but even that shouldn't be THIS slow. yet it is.
-rNIW.snappy2.5.sample <- function(d, df) {
-  A = BartlettFactor.TRI(d, df)
-  #print(A)
-  
-  A.inv = SOLVE(A)  #Matrix knows how to invert itself by backsolving
-                    #help(Matrix::solve) --> '          all use LAPACK based versions of efficient triangular
-                    #                        'backsolve', or 'forwardsolve'.'
-  #print(A.inv)
-  #z = c()
-  #z = rnorm(d); #sample N_d(0, I); since the covariance matrix is I, all draws are i.i.d. , so we can just sample d-univariates and reshape them into a vector
-  #z = matrix(z) #this gives a dgeMatrix, but we can't say 'as(, "dgeMatrix")' because the Matrix authors didn't write as.matrix() as one of the first lines (and it gets hung up on the fact that z is a vector instead of a matrix, gah
-  #z = MATRIX.AS.DENSE.MATRIX(z)
-  #
-  X = c()
-  #X = MUL.UPPER_AND_VECTOR(A.inv, z)
-
-list(X=X, A.inv=A.inv);
-}
-
-
-rNIW.snappy2.5 <- function(n, d, Mu, kappa, Psi, df, V, X) {
-  #cast to Matrix package matrices, which provide C/Fortran case-specific efficient matrix ops
-  Psi = as(Psi, "dpoMatrix"); #cast to a "Positive Semi-definite Dense"
-                              #or should we use "dsyMatrix" which is for symmetric matrices???
-  Mu = Matrix(Mu);            #cast to the generic form (this should take near zero time since it's just a copy)
-                        #AH. THIS STEP IS SO EXPENSIVE. IT INVOKES standardGeneric AND A BUNCH OF OTHER CRUD
-  
-  
-  gamma.inv = CHOL.POS(Psi)
-  kappy = sqrt(kappa)
-  X = list()
-  V = list()
-  for(i in 1:n) {  #apply scaling after the fact
-     message(i)
-     sample = rNIW.snappy2.5.sample(d, df)
-     #message("making U")
-     #U.inv = MUL.UPPER(gamma.inv, sample$A.inv)   #this seems dumb. TWO multiplies by gamma? hm. 
-     #message('making V')
-     #print(U.inv)
-     Vi = c() #TCROSSPROD(U.inv)
-     Xi = c() #Mu + MUL.UPPER_AND_VECTOR(gamma.inv, sample$X)/kappy
-     X[[i]] = Xi
-     V[[i]] = Vi
-     #V[,,i] = matrix(Vi) #compute U.inv %*% t(U.inv)  
-     #message("making X")
-     #print(gamma.inv)
-     #print(sample$X)
-     
-     #X[,i] = matrix(Xi)  #are the matrix() calls slowing us down??
-     #message("hatch")
-  }
-  list(V=V, X=X)
-}
-
 
 
 # TODO: only use U instead of using A in one place and U in another
@@ -349,10 +209,9 @@ rNIW.snappy2.5 <- function(n, d, Mu, kappa, Psi, df, V, X) {
 
 
 
-rNIW.slam <-  function(n, d, Mu, kappa, Psi, df, V, X) {
 
-}
-
+# TODO: find a way to access the 'plz only multiply the upper halves' operation that dsyrk.f provides.
+# --> backsolve is sorta like this. but not.
 
 #TODO: try making the Bartlett factor matrix triangular from the get-go (we could even use a dtpMatrix..)
 
