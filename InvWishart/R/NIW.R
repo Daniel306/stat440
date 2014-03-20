@@ -74,18 +74,14 @@ BartlettFactor <- function(d, df) {
 
 #require("Matrix") #for faster(?) solving routines
 
-# the diff with snappy2 is that it does a backsolve() and a ..forwardtriangularmultiply(???) to compute U.inv%*%z
-# otherwise it's identical
-# and the time is STILL dominated by the need to invert
-# and also snappy2 precomputes chol(Psi), because there's no need to be redoing that..
 
 rNIW.snappy1.sample <- function(d, Mu, kappa, Psi, df) {
   # attempt to write out the efficient algorithm (but in R, of course)
   
   
-  gamma.inv = chol(Psi) # upper triangular #XXX this can be precomputed in .wrapper()
-  # note: actually getting gamma is expensive, so avoid computing it if possible
-  # 
+  gamma.inv = chol(Psi) # upper triangular
+  # note: actually getting gamma = solve(gamma.inv) is expensive and numerically unstable,
+  #       so you should avoid computing it if possible
   
   # construct 
   A = BartlettFactor(d, df)
@@ -141,6 +137,76 @@ rNIW.snappy1 <- function(n, d, Mu, kappa, Psi, df, V, X) {
 
 
 
+
+
+rNIW.snappy2.sample <- function(d, df) {
+  A = BartlettFactor(d, df)
+  A.inv = backsolve(A, diag(d))
+    
+  z = rnorm(d); #sample N_d(0, I); since the covariance matrix is I, all draws are i.i.d. , so we can just sample d-univariates and reshape them into a vector
+  X = A.inv %*% z
+list(X=X, A.inv=A.inv);
+}
+
+rNIW.snappy2 <- function(n, d, Mu, kappa, Psi, df, V, X) {
+  # generate the n samples by n times doing: i) generate V, ii) generate X given V.
+  # analogous to the difference between extremelynaive and naive,
+  # the only difference from snappy1 is that we only factor Psi once
+  gamma.inv = chol(Psi) 
+
+  kappy = sqrt(kappa)
+  for(i in 1:n) {  #apply scaling after the fact
+     sample = rNIW.snappy2.sample(d, df)
+     U.inv = gamma.inv %*% sample$A.inv   #this seems dumb. TWO multiplies by gamma? hm. if 
+     V[,,i] = U.inv %*% t(U.inv)
+     X[,i] = Mu + gamma.inv%*%sample$X/kappy 
+  }
+  list(V=V, X=X)
+}
+
+
+# is it better to actually construct U than try to apply it after the fact?
+#   --> if all we wanted was X, then no, but we also need V, which means we MUST construct U somewhere
+# (notice: U is the factor that is necessary...)
+
+# snappy3: apply Mu, gamma and kappa after the generating loop
+#     hope: vectorization will kick in and make this superfast
+
+
+rNIW.snappy3 <- function(n, d, Mu, kappa, Psi, df, V, X) {
+  # generate the n samples by n times doing: i) generate V, ii) generate X given V.
+  # analogous to the difference between extremelynaive and naive,
+  # the only difference from snappy1 is that we only factor Psi once
+  gamma.inv = chol(Psi) 
+ 
+  for(i in 1:n) {  #apply scaling after the fact
+     sample = rNIW.snappy2.sample(d, df) #USING SNAPPY2 STILL
+     U.inv = gamma.inv %*% sample$A.inv
+     V[,,i] = U.inv %*% t(U.inv)
+     X[,i] = sample$X
+  }
+  
+  # now, how do I apply a matrix multiply to a whole vector at once?
+  # ..I should just be able to say
+  X = Mu + gamma.inv %*% X / sqrt(kappa) # because X has samples column-wise in this setup (the index i is in the last component)
+  
+  # is there a way to do the same for V?
+  # probably not... 
+  
+  list(V=V, X=X)
+}
+
+
+# snappy 2.5 replaces %*% with appropriate slightly-more-efficient matrix multiplies:
+#      a "symmetrictriangularmultiply" (aka dsyrk.f, but if we can avoid using fortran that would be good)
+#      a "upper triangle times upper triangle" multiply
+
+
+# the diff with snappy4 is that it does
+# backsolve() + forwardtriangularmultiply(???) instead of computing U.inv
+
+
+## snappy5 has figured out how to multiply gamma across things in one step
 
 #########################3
 ## Hosting code
@@ -230,4 +296,5 @@ message("------------------")
 Baseline.Samples = test(rNIW.extremelynaive)
 ignored = test(rNIW.naive)
 ignored = test(rNIW.snappy1);
-#test(rNIW.snappy2)
+ignored = test(rNIW.snappy2);
+ignored = test(rNIW.snappy3);

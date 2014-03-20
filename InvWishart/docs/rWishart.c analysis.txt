@@ -68,3 +68,7 @@ rWishart(n, df, Psi) :
 
 5) clean up
 6) return all the sampled V_n matrices in ans
+
+----------------------------------------------------------------
+
+note also that R's "backsolve" is indeed implemented in Fortran with 'dtrsm.f' (see http://svn.r-project.org/R/trunk/src/main/array.c)

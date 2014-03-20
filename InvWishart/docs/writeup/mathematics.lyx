@@ -719,7 +719,22 @@ in a d-length loop with itertor j do (a d-length loop and a j*d length loop)
 \begin_inset Formula $O(d\cdot(d+\sum_{j=1}^{d}j))=O(d\cdot(d+\frac{d(d+1)}{2}))=O(d^{2}+\frac{d^{3}+d^{2}}{2})=O(\frac{d^{3}+3d^{2}}{2})=O(d^{3})$
 \end_inset
 
- and the structure of dsyrk is almost identical.
+ and the structure of dsyrk is almost identical 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+TODO: fill in details
+\end_layout
+
+\end_inset
+
+ and then there's an extra 
+\begin_inset Formula $\frac{d(d+1)}{2}$
+\end_inset
+
+ loop in the C code to fill in the symmetric half of the matrix that dsyrk
+ doesn't do.
 \end_layout
 
 \begin_layout Standard
@@ -735,7 +750,7 @@ I won't count the time for memory allocation because that is much more dependent
 
 .
  Adding this all up, we see that run time of rWishart is 
-\begin_inset Formula $O(1)+d^{2}/3+n\cdot(O(\frac{d^{3}+3d^{2}}{2})+O(\frac{d^{3}+3d^{2}}{2}))=O(d^{2}/3+n\cdot(d^{3}+3d^{2}))=O(n\cdot d^{3}+3(n+\frac{1}{3})d^{2}))=O(n\cdot d^{3})$
+\begin_inset Formula $O(1)+d^{2}/3+n\cdot(O(\frac{d^{3}+3d^{2}}{2})+O(\frac{d^{3}+3d^{2}}{2}+\frac{d(d+1)}{2}))=O(d^{2}/3+n\cdot(d^{3}+3d^{2}+\frac{d(d+1)}{2}))=O(n\cdot d^{3}+3(n+\frac{1}{3})d^{2}))=O(n\cdot d^{3})$
 \end_inset
 
 .
@@ -780,6 +795,17 @@ THIS IS NOT THE CORRECT USE OF O.
  We should use o or 
 \backslash
 omega or something
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset space ~
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+also 
 \end_layout
 
 \end_inset
@@ -899,6 +925,11 @@ Matrix_algebra
 \end_inset
 
 .
+ This is also dangerous because raw 
+\begin_inset Formula $invert()$
+\end_inset
+
+ is the most numerically unstable operation around.
 \end_layout
 
 \begin_layout Standard
@@ -980,7 +1011,7 @@ Now, recall what
 \end_inset
 
  is: 
-\begin_inset Formula $chol(V)=chol(P^{-1})$
+\begin_inset Formula $chol(V)=chol(P^{-1})=chol(P)^{-1}$
 \end_inset
 
 .
@@ -1017,6 +1048,113 @@ U^{-1} & =\Gamma^{-1}A^{-1}\\
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+With 
+\begin_inset Formula $chol(P)$
+\end_inset
+
+ and 
+\begin_inset Formula $A$
+\end_inset
+
+ both upper triangular.
+\end_layout
+
+\begin_layout Standard
+We care about this because it lets us get samples 
+\begin_inset Formula $V$
+\end_inset
+
+ and 
+\begin_inset Formula $X$
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Is there a way to avoid inverting A? Can we ~generate~ A^-1 directly? 
+\end_layout
+
+\begin_layout Plain Layout
+we know A^TA ~ W(I, df)
+\end_layout
+
+\begin_layout Plain Layout
+therefore A^-1 A^-1^T ~ W^-1(I^-1, df)
+\end_layout
+
+\begin_layout Plain Layout
+what is W^-1(I, df)?? is it equidistributed as W(I,df)? -- no, it isn't.
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset space ~
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+no.
+ well.
+ lets think.
+ A[1,1] ~ sqrt(
+\backslash
+chi^2_df).
+ when we invert A, the first element becomes 1/A[1,1].
+ so A^-1[1,1] ~ 1/sqrt(
+\backslash
+chi^2_df).
+\end_layout
+
+\begin_layout Plain Layout
+the other elements aren't as simple bc they are sums
+\end_layout
+
+\begin_layout Plain Layout
+we can work it out by the inv(A) = inv(A)*I form + backsolving: column 1
+ of inv(A) is inv(A)*[1 0 0 0 ...].
+ col 2 is inv(A)*[0 1 0 0 ..] which means
+\end_layout
+
+\begin_layout Plain Layout
+the last element is 0, the second last is 0, the nthird las ti s 0, .....
+ the 2th element has = A[2,1]*S[1] + A[2,2] * S[2] + A[2,3]*S[3] + ...
+ = 1.
+ and A[2,1] = 0 and S[3] and all higher S are 0 from previousl;y so S[2]
+ = 1 / A[2,2].
+ And S[1] in col 2 has A[1,1]*S[1] + A[2,1]*S[2] + 0 = 0 => S[1] = -A[2,1]*S[2]/
+A[1,1] ~ -N(0,1)/X^2_{6-1} * X^2_{6} -- ..uh.
+ a normal times an F (times a scaling factor)??? 
+\end_layout
+
+\begin_layout Plain Layout
+okay, so this distribution sucks.
+\end_layout
+
+\begin_layout Plain Layout
+oh wait, no, that's totally fine what I have there: I could, in principle
+ (maybe), write.
+\end_layout
+
+\begin_layout Plain Layout
+except the inverse does NOT have independent columns? experiment
+\end_layout
+
+\end_inset
+
+So, for now, it looks like we're stuck inv
 \end_layout
 
 \end_body
