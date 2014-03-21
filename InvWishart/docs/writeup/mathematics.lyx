@@ -930,6 +930,27 @@ Matrix_algebra
 \end_inset
 
  is the most numerically unstable operation around.
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+ALSO .
+ triangular-solve (aka backsolve) takes O(d^???) per column
+\end_layout
+
+\begin_layout Standard
+and triangular-multiply is O(d^2)
+\end_layout
+
+\begin_layout Standard
+and triangular-inverse (a special case of backsolve) takes O(d^??)
 \end_layout
 
 \begin_layout Standard
@@ -1075,6 +1096,17 @@ We care about this because it lets us get samples
 \end_layout
 
 \begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+V & =U^{-1}\left(U^{-1}\right)^{T}\\
+\\
+X & =\mu+U^{-1}z & \text{where }z\sim N_{d}(0,I)\\
+ & =\mu+chol(P)A^{-1}z\\
+ & =\mu+\Gamma^{-1}A^{-1}z
+\end{align*}
+
+\end_inset
+
 
 \end_layout
 
