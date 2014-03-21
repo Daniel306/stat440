@@ -19,9 +19,11 @@ def matrix_multiply(A, B):
         for j in range(l): #columns of the output matrix
             S[(i,j)] = 0
             for k in range(n):
-               RUNTIME += 1
-               # compute
-    return RUNTIME*1.1 
+                RUNTIME += 1; #for the multiply A[i,k] * B[k, j]
+                RUNTIME += 1; # for the addition S[(i,j)] += {the above}
+            # S[(i,j)] /= A[(i,j)]
+            RUNTIME += 1 # for the division
+    return RUNTIME 
 
 
 # specializations on dense matrices:
@@ -40,7 +42,7 @@ D = list(range(32))
 naive_runtimes = [(d, matrix_multiply((d,d), (d,d))) for d in D]
 
 import matplotlib.pyplot as plt
-plt.plot(naive_runtimes, label="runtimes")
+plt.plot(naive_runtimes, label="naive dense multiply")
 plt.plot(D, [d**2 for d in D], label="d^2")
 plt.plot(D, [d**3 for d in D], label="d^3")
 plt.legend()
