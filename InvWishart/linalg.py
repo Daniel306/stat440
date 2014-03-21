@@ -1,11 +1,32 @@
 """
 linalg.py
 
-exploring the runtimes of various matrix operations by number crunching
+exploring the runtimes of various matrix operations by number crunching.
+
+Generic setup: two matrices of sizes (m,n) and (n,l).
+Both are dense: all entries are (or at least, can't be ruled out) filled with nonzero values.
+
+Basic matrix multiplication is at least O(m*l) (ie quadratic) because it must at least look at each index of the output matrix
+ and the schoolbook way is O(m*n*l) (ie cubic) because inside each output index it does a dot product, which is O(n)
+ and the best improvements we have on that use deep algebra cleverness which gives them absurdly huge hidden runtime constants.
+
+# variant algorithms on dense matrices:
+# upper triangle*upper triangle
+# lower triangle*lower triangle (can use the same alg as above; just need to transpose before and after)
+# forward solve
+# back solve (again, same alg)
+# inversion (in general: requires backsolving
+# inverting a triangle
+# inve
+
+# variants on spare matrices:
+# school book algorithm, but with skipping missing data
+
+We're only exploring dense algorithms here, because InvWishart depends on generating a Bartlett Factor which is dense in one triangle.
 """
 
 
-def matrix_multiply(A, B):
+def naive_dense_multiply(A, B):
     "naive matrix multiply"
     "compute how long it would take to multiply matrix A and B"
     "don't actually pass a matrix; just A = (m,n) and B = (n, l)"
@@ -26,17 +47,6 @@ def matrix_multiply(A, B):
     return RUNTIME 
 
 
-# specializations on dense matrices:
-# upper triangle*upper triangle
-# lower triangle*lower triangle (can use the same alg as above; just need to transpose before and after)
-# forward solve
-# back solve (again, same alg)
-# inversion (in general: requires backsolving
-# inverting a triangle
-# inve
-
-# specializations on spare matrices:
-# school book algorithm, but with skipping missing data
 
 D = list(range(32))
 naive_runtimes = [(d, matrix_multiply((d,d), (d,d))) for d in D]
