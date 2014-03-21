@@ -217,6 +217,74 @@ rNIW.snappy3 <- function(n, d, Mu, kappa, Psi, df, V, X) {
 
 # snappy 2.7 additionally uses a better backsolve
 
+rNIW.snappy3.5 <- function(n, d, Mu, kappa, Psi, df, V, X) {
+  # generate the n samples by n times doing: i) generate V, ii) generate X given V.
+  # analogous to the difference between extremelynaive and naive,
+  # the only difference from snappy1 is that we only factor Psi once
+  gamma.inv = chol(Psi) 
+  gamma = backsolve(gamma.inv, diag(d))
+  I = diag(d)
+  # this is WORSE than version 3
+  
+  for(i in 1:n) {  #apply scaling after the fact
+     A = BartlettFactor(d, df)
+    
+     z = rnorm(d); #sample N_d(0, I); since the covariance matrix is I, all draws are i.i.d. , so we can just sample d-univariates and reshape them into a vector
+     
+   # what order is it?
+   # t(U)%*%U = W; but we want W^-1 = V, so we need V = U^-1 
+     # --> construct U?
+     # --> U is
+     # gamma
+     
+     #
+     # and here's where this algorithm starts to look silly: we EITHER invert gamma and then invert it back, or we do two matrix multiplies
+     # both are ridiculous!
+ 
+     #there's too many choices!!
+     
+     # if we focus on U, then we can either:
+     
+     # to get V:
+     # -- compiute U.inv,  compute V = tcrossprod(U.inv)
+     # -- compute W = crossprod(U), V = solve(W)
+     # ^   IF we can find a way to do triangular-multiplies then the first should be cheaper by half a matrix; more numerically stable too
+     # to get X:
+     #  use backsolve
+     
+     U = A %*% gamma 
+     U.inv = backsolve(U, I)
+     V[,,i] = tcrossprod(U.inv) #or V[,,i] = solve(crossprod(U))
+     X[,i] = backsolve(U, z)
+     
+     # on the other hand, if we decide we want to focus on U^-1
+     #(assumption: no matter whether we use gamma or gamma.inv it isn't expensive because it isn't in the loop)
+     # then we could either:
+     #   -use U as above and invert
+     # find A.inv and use
+     #   - A.inv = backsolve(A, I)
+     #   - U.inv = gamma.inv %*% A.inv #this... or:
+     # then, to get V:
+     #   - ?
+     # to get X:
+     #
+     
+     
+     # on the other-other hand, we could
+  }
+  
+  # now, how do I apply a matrix multiply to a whole vector at once?
+  # ..I should just be able to say
+  X = Mu + gamma.inv %*% X / sqrt(kappa) # because X has samples column-wise in this setup (the index i is in the last component)
+  
+  # is there a way to do the same for V?
+  # probably not... 
+  
+  list(V=V, X=X)
+}
+
+
+
 # the diff with snappy4 is that it does
 # backsolve() + forwardtriangularmultiply(???) instead of computing U.inv
 
@@ -319,11 +387,8 @@ message()
 message("Starting test runs")
 message("------------------")
 Baseline.Samples = test(rNIW.extremelynaive)
-ignored = test(rNIW.naive)
-ignored = test(rNIW.snappy1);
-ignored = test(rNIW.snappy2);
-Rprof()
-#ignored = test(rNIW.snappy2.5);
-Rprof(NULL)
-summaryRprof()
+#ignored = test(rNIW.naive)
+#ignored = test(rNIW.snappy1);
+#ignored = test(rNIW.snappy2);
 ignored = test(rNIW.snappy3);
+ignored = test(rNIW.snappy3.5);
