@@ -37,7 +37,7 @@ We're only exploring dense algorithms here, because InvWishart depends on genera
 """
 
 
-def naive_dense_multiply(A, B):
+def schoolbook_multiply(A, B):
     "naive matrix multiply"
     "compute how long it would take to multiply matrix A and B"
     "don't actually pass a matrix; just A = (m,n) and B = (n, l)"
@@ -60,7 +60,7 @@ def naive_dense_multiply(A, B):
 
 
 D = list(range(32))
-naive_runtimes = [(d, matrix_multiply((d,d), (d,d))) for d in D]
+naive_runtimes = [(d, schoolbook_multiply((d,d), (d,d))) for d in D]
 
 import matplotlib.pyplot as plt
 plt.plot(naive_runtimes, label="naive dense multiply")
