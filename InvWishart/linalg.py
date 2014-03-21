@@ -60,11 +60,41 @@ def schoolbook_multiply(A, B):
 
 
 D = list(range(32))
-naive_runtimes = [(d, schoolbook_multiply((d,d), (d,d))) for d in D]
+
+runtimes = [schoolbook_multiply((d,d), (d,d)) for d in D]
 
 import matplotlib.pyplot as plt
-plt.plot(naive_runtimes, label="naive dense multiply")
+plt.plot(runtimes, label="naive dense multiply")
 plt.plot(D, [d**2 for d in D], label="d^2")
 plt.plot(D, [d**3 for d in D], label="d^3")
+
+
+
+def triangular_multiply(A, B):
+    "triangle-triangle multiply"
+    "compute how long it would take to multiply matrix A and B"
+    "WITH A and B both lower-triangular"
+    "don't actually pass a matrix; just A = (m,n) and B = (n, l)"
+    m, n = A
+    n2, l = B
+    assert n == n2, "Incompatible matrix dimensions"
+    
+    S = {}  #our output matrix: a dictionary (just to be super inefficient)
+    RUNTIME = 0  #TODO: break this into a dict counting muls, adds, and divides
+    # we know that the only points filled in are lower triangles
+    for i in range(0, m): #rows of the output matrix
+        for j in range(i-1, l): #columns of the output matrix
+            S[(i,j)] = 0
+            for k in range(n):
+                RUNTIME += 1; #for the multiply A[i,k] * B[k, j]
+                RUNTIME += 1; # for the addition S[(i,j)] += {the above}
+            # S[(i,j)] /= A[(i,j)]
+            RUNTIME += 1 # for the division
+    return RUNTIME 
+
+
+runtimes = [triangular_multiply((d,d), (d,d)) for d in D]
+plt.plot(D, runtimes, label="triangular multiply")
+
 plt.legend()
 plt.show()
