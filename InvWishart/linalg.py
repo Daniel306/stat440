@@ -10,19 +10,30 @@ Basic matrix multiplication is at least O(m*l) (ie quadratic) because it must at
  and the schoolbook way is O(m*n*l) (ie cubic) because inside each output index it does a dot product, which is O(n)
  and the best improvements we have on that use deep algebra cleverness which gives them absurdly huge hidden runtime constants.
 
+  for special cases where the matrices are square (which is the case that can be extended to all other cases),
+  I'll be loose and define d := m = n = l
+
 # variant algorithms on dense matrices:
 # upper triangle*upper triangle
 # lower triangle*lower triangle (can use the same alg as above; just need to transpose before and after)
-# forward solve
-# back solve (again, same alg)
-# inversion (in general: requires backsolving
-# inverting a triangle
-# inve
+# forward solve (on a triangular matrix)
+# backsolve (again, same alg as forwardsolve but with transposing before and after--which can be constant time, if you use numpy's array datastructure)
+  - against a vector  (d^2: proof [...])
+  - against a full matrix (same as as a vector, times a factor of d)
+  - against a triangular matrix (of the same sidedness) (????)
+  - against a triangular (of the opposite sidedness) (same as going against [...proof...])
+# inversion (in general very expensive and also numerically unstable; the best algorithm is to LU decompose and then do a forwardsolve on the L and then a backsolve on the U
+# inverting a triangle (
+  - naive: backsolve against the identity matrix
+  - more clever: only compute those points we know will e
+# inver
 
 # variants on spare matrices:
 # school book algorithm, but with skipping missing data
 
 We're only exploring dense algorithms here, because InvWishart depends on generating a Bartlett Factor which is dense in one triangle.
+
+
 """
 
 
