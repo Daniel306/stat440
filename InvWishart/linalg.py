@@ -1,5 +1,6 @@
 """
 linalg.py
+(this code is supersketchy; read it before you run it)
 
 exploring the runtimes of various matrix operations by number crunching.
 
