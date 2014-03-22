@@ -1379,7 +1379,7 @@ Full multiply has leading term
 .
  So this algorithm is about six times faster than naive, full, dense matrix
  multiplication.
- This doesn't crack the algorithmic nut, 
+ This doesn't crack this algorithmic nut, 
 \series bold
 but it could make the difficult possible
 \series default
@@ -1387,13 +1387,9 @@ but it could make the difficult possible
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-TODO: plot the actual runtime functions together, and find where they become
- indis
-\end_layout
+\begin_inset Graphics
+	filename full_vs_triangular.png
+	scale 70
 
 \end_inset
 
