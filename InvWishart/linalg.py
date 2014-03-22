@@ -59,7 +59,7 @@ def schoolbook_multiply(A, B):
 
 
 
-D = list(range(32))
+D = list(range(100))
 
 runtimes = [schoolbook_multiply((d,d), (d,d)) for d in D]
 
@@ -117,8 +117,11 @@ def triangular_multiply(A, B):
     #print()
     return RUNTIME 
 
+
 runtimes = [triangular_multiply((d,d), (d,d)) for d in D]
-plt.plot(D, runtimes, label="triangular multiply")
+plt.plot(D, runtimes, label="triangular multiply") ##-> conclusion:
+
+plt.plot(D, [10*d**2 for d in D], label="10*d^2")
 
 plt.legend()
 plt.show()
