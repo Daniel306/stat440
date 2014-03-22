@@ -75,24 +75,48 @@ def triangular_multiply(A, B):
     "compute how long it would take to multiply matrix A and B"
     "WITH A and B both lower-triangular"
     "don't actually pass a matrix; just A = (m,n) and B = (n, l)"
+
+    
     m, n = A
     n2, l = B
     assert n == n2, "Incompatible matrix dimensions"
     
+    print("------------------- (%d,%d) x (%d, %d)-----------------------------------" % (m,n,n,l))
+    
+    #NB: using 1-indexing to be portable to the writeups I've been doing
+    
     S = {}  #our output matrix: a dictionary (just to be super inefficient)
     RUNTIME = 0  #TODO: break this into a dict counting muls, adds, and divides
     # we know that the only points filled in are lower triangles
-    for i in range(0, m): #rows of the output matrix
-        for j in range(i-1, l): #columns of the output matrix
+    for i in range(1, m+1): #rows of the output matrix
+        print()
+        #for j in range(1+i-1, l+1): #columns of the output matrix
+        for j in range(1, l+1): #columns of the output matrix
             S[(i,j)] = 0
-            for k in range(n):
+            print((i,j),end="")
+            #for k in range(j+1,i+1):
+            print("[", end="")
+            for k in range(1, n+1):
+                
+                # since A and B are lower triangular we know
+                # ....wat
+                A_NOT_ZERO = (i>=k) #           A[i,k] is only nonzero below the diagonal: where the row is larger than the column
+                B_NOT_ZERO = (k>=j) #similarly, B[k,j] is only nonzero where k>j
+                print(A_NOT_ZERO, B_NOT_ZERO)
+                NOT_ZERO = A_NOT_ZERO and B_NOT_ZERO
+                #assert NOT_ZERO, (i,j,"@",k)
+                if(NOT_ZERO): print(k,end="")
+                #print(NOT_ZERO)
                 RUNTIME += 1; #for the multiply A[i,k] * B[k, j]
                 RUNTIME += 1; # for the addition S[(i,j)] += {the above}
+            print("]", end=", ")
             # S[(i,j)] /= A[(i,j)]
             RUNTIME += 1 # for the division
+        print(" <ENDL> ")
+    print()
     return RUNTIME 
 
-
+D = list(range(4, 5+1))
 runtimes = [triangular_multiply((d,d), (d,d)) for d in D]
 plt.plot(D, runtimes, label="triangular multiply")
 
