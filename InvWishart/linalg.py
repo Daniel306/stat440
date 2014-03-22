@@ -89,13 +89,13 @@ def triangular_multiply(A, B):
     RUNTIME = 0  #TODO: break this into a dict counting muls, adds, and divides
     # we know that the only points filled in are lower triangles
     for i in range(1, m+1): #rows of the output matrix
-        print()
+        #print()
         #for j in range(1+i-1, l+1): #columns of the output matrix
         for j in range(1, l+1): #columns of the output matrix
             S[(i,j)] = 0
-            print((i,j),end="")
+            #print((i,j),end="")
             #for k in range(j+1,i+1):
-            print("[", end="")
+            #print("[", end="")
             for k in range(1, n+1):
                 
                 # since A and B are lower triangular we know
@@ -105,18 +105,18 @@ def triangular_multiply(A, B):
                 #print(A_NOT_ZERO, B_NOT_ZERO)
                 NOT_ZERO = A_NOT_ZERO and B_NOT_ZERO
                 #assert NOT_ZERO, (i,j,"@",k)
-                if(NOT_ZERO): print(k,end="")
+                #if(NOT_ZERO): print(k,end="")
                 #print(NOT_ZERO)
-                RUNTIME += 1; #for the multiply A[i,k] * B[k, j]
-                RUNTIME += 1; # for the addition S[(i,j)] += {the above}
-            print("]", end=", ")
+                if NOT_ZERO:
+                  RUNTIME += 1; #for the multiply A[i,k] * B[k, j]
+                  RUNTIME += 1; # for the addition S[(i,j)] += {the above}
+            #print("]", end=", ")
             # S[(i,j)] /= A[(i,j)]
             RUNTIME += 1 # for the division
-        print(" <ENDL> ")
-    print()
+        #print(" <ENDL> ")
+    #print()
     return RUNTIME 
 
-D = list(range(4, 5+1))
 runtimes = [triangular_multiply((d,d), (d,d)) for d in D]
 plt.plot(D, runtimes, label="triangular multiply")
 
