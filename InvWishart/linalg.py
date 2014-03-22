@@ -59,7 +59,9 @@ def schoolbook_multiply(A, B):
 
 
 
-D = list(range(100))
+D = list(range(150))
+if D[-1] > 50: print("this is going to be slow...")
+if D[-1] > 100: print("really, really slow.")
 
 runtimes = [schoolbook_multiply((d,d), (d,d)) for d in D]
 
