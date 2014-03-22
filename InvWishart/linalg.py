@@ -102,7 +102,7 @@ def triangular_multiply(A, B):
                 # ....wat
                 A_NOT_ZERO = (i>=k) #           A[i,k] is only nonzero below the diagonal: where the row is larger than the column
                 B_NOT_ZERO = (k>=j) #similarly, B[k,j] is only nonzero where k>j
-                print(A_NOT_ZERO, B_NOT_ZERO)
+                #print(A_NOT_ZERO, B_NOT_ZERO)
                 NOT_ZERO = A_NOT_ZERO and B_NOT_ZERO
                 #assert NOT_ZERO, (i,j,"@",k)
                 if(NOT_ZERO): print(k,end="")
