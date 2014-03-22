@@ -745,7 +745,7 @@ I won't count the time for memory allocation because that is much more dependent
 
  in use, how fragmented RAM is, whether a cache is involved, and whether
  
-\begin_inset Formula $d^{2}>\text{\ensuremath{malloc} page size}$
+\begin_inset Formula $d^{2}>\text{\ensuremath{malloc}page size}$
 \end_inset
 
 .
@@ -1187,6 +1187,172 @@ except the inverse does NOT have independent columns? experiment
 \end_inset
 
 So, for now, it looks like we're stuck inv
+\end_layout
+
+\begin_layout Standard
+\begin_inset space ~
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection*
+Runtime of Full Matrix Multiplication
+\end_layout
+
+\begin_layout Subsubsection*
+Runtime of Triangular Matrix Multiplication
+\end_layout
+
+\begin_layout Standard
+A triangular matrix by a triangular matrix (of the same sidedness) can be
+ sped up a bit over the full multiply.
+\end_layout
+
+\begin_layout Standard
+Suppose our matrices are lower triangular.
+\end_layout
+
+\begin_layout Standard
+As before, the value of each entry in the result matrix 
+\begin_inset Formula $S$
+\end_inset
+
+ is
+\begin_inset Formula $S_{ij}=\sum_{k=1}^{d}A_{ik}B_{kj}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Since our matrices are lower triangular, they have the property that 
+\begin_inset Formula $A_{cd}=0$
+\end_inset
+
+ if 
+\begin_inset Formula $c<d$
+\end_inset
+
+ (everything with row strictly above column is null).
+ This has two consequences:
+\end_layout
+
+\begin_layout Standard
+1) the terms in 
+\begin_inset Formula $S_{ij}=\sum_{k=1}^{d}A_{ik}B_{kj}$
+\end_inset
+
+ are 
+\begin_inset Formula $0$
+\end_inset
+
+ if 
+\begin_inset Formula $i<k$
+\end_inset
+
+ or 
+\begin_inset Formula $k<j$
+\end_inset
+
+ since at least one of 
+\begin_inset Formula $A_{ik}$
+\end_inset
+
+ and 
+\begin_inset Formula $B_{kj}$
+\end_inset
+
+ are zero in that case.
+ That is, for 
+\begin_inset Formula $k\in[1,d]$
+\end_inset
+
+, the only nonzero terms are 
+\begin_inset Formula $k\in[1,d]\setminus(i,d]\setminus[1,j)$
+\end_inset
+
+=.
+ So if we are told our matrices are lower triangular, we know without looking
+ that we can shorten innermost loop to:
+\end_layout
+
+\begin_layout Standard
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula $S_{ij}=\sum_{k=j}^{i}A_{ik}B_{kj}$
+\end_inset
+
+ which has one multiply for each term in the sum and one add (less one)
+ for each, giving runtime:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $(i-j+1)+(i-j+1)-1=2(i-j)+1$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+2) 
+\begin_inset Formula $[j,i]=\emptyset$
+\end_inset
+
+ if 
+\begin_inset Formula $i<j$
+\end_inset
+
+, so 
+\begin_inset Formula $S_{ij}=0$
+\end_inset
+
+ in that case, meaning that the output matrix is again lower triangular,
+ and we can skip doing any work at all in that case: we only need to send
+ our second-inner loop from 1 to i, not 1 to d.
+\end_layout
+
+\begin_layout Standard
+If our matrices are instead uppertriangular, notice that 
+\begin_inset Formula $AB=(AB)^{T^{T}}=(B^{T}A^{T})^{T}$
+\end_inset
+
+, which is the transpose of the product of two lower triangular matrices.
+ Transposing is constant time (in a wise implementation) and only 
+\begin_inset Formula $d^{2}$
+\end_inset
+
+ time elsewhere, so this algorithm holds in either case.
+\end_layout
+
+\begin_layout Standard
+However, with
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+\sum_{i=1}^{d}\sum_{j=1}^{i}2(i-j)+1= & \sum_{i=1}^{d}i\cdot(2i+1)-\sum_{j=1}^{i}2j\\
+= & \sum_{i=1}^{d}i\cdot(2i+1)-2\frac{i(i+1)}{2}\\
+= & \sum_{i=1}^{d}i\cdot(2i+1-(i+1))\\
+= & \sum_{i=1}^{d}i\cdot((2-1)i+(1-1))\\
+= & \sum_{i=1}^{d}i^{2}\\
+= & \frac{1}{6}d(d+1)(2d+1)
+\end{align*}
+
+\end_inset
+
+
 \end_layout
 
 \end_body
