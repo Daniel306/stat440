@@ -127,3 +127,19 @@ plt.plot(D, [10*d**2 for d in D], label="10*d^2")
 
 plt.legend()
 plt.show()
+
+
+
+######################3
+##
+
+def full_vs_triangular_via_algebra(d=15000, show=True):
+    """
+    plot the runtimes using the formulas derived in the writeup
+    much faster than explicitly counting
+    """
+    D = scipy.array(range(d))
+    plt.plot(D, D*(D+1)*(2*D+1)/6, label="Triangular")
+    plt.plot(D, D**2*(2*d-1), label="Full")
+    plt.legend(loc="best")
+    if show: plt.show()

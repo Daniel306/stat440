@@ -1200,6 +1200,18 @@ So, for now, it looks like we're stuck inv
 Runtime of Full Matrix Multiplication
 \end_layout
 
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+\sum_{i=1}^{d}\sum_{j=1}^{d}2(d)-1= & \sum_{i=1}^{d}d(2d-1)\\
+= & d^{2}(2d-1)
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Subsubsection*
 Runtime of Triangular Matrix Multiplication
 \end_layout
@@ -1349,6 +1361,39 @@ However, with
 = & \sum_{i=1}^{d}i^{2}\\
 = & \frac{1}{6}d(d+1)(2d+1)
 \end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Full multiply has leading term 
+\begin_inset Formula $2d^{3}$
+\end_inset
+
+, while this has leading term 
+\begin_inset Formula $2d^{3}/6$
+\end_inset
+
+.
+ So this algorithm is about six times faster than naive, full, dense matrix
+ multiplication.
+ This doesn't crack the algorithmic nut, 
+\series bold
+but it could make the difficult possible
+\series default
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+TODO: plot the actual runtime functions together, and find where they become
+ indis
+\end_layout
 
 \end_inset
 
