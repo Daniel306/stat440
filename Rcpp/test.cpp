@@ -17,5 +17,3 @@ Rcpp::NumericVector foo(){
   Rcpp::NumericVector ab = Rcpp::NumericVector::create(1,2,3,4);
   return ab;
 }
-
-SEXP test()
