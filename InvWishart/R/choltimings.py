@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import pandas
 import scipy
 
-R = pandas.read_csv("randcov.times.Rdata")
+R = pandas.read_csv("randcov.times.csv")
 
 C = 5e9 #scale factor, to make things legible
 #C = 5e6 #a scale factor which, if you turn off d^3, demonstrates (I think?) that this curve cannot be d^2: it initially lies below d^2 and then goes above it.
