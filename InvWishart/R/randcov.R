@@ -30,7 +30,7 @@ timechol <- function() {
       #message("record it")
       R = rbind(R, c(d, z["elapsed"]))       #LAWL SLOW
     }
-    write.csv(R, "randcov.times.Rdata")
+    write.csv(R, "randcov.times.csv")
   }
   R
 }
