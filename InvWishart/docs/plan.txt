@@ -1,0 +1,38 @@
+
+Validation testing
+ - Moments 
+   - derive (in math and latex) the expected moments, check if we get them o
+     (moments are handy because they are all expectations, which can be tested--by the law of large numbers--with taking sample means)
+ - Marginals
+   - k-s test?
+ - 
+
+Performance testing
+ - cases: algorithm X impl
+   
+   impl: (
+   python
+   cython
+   scipy with explicitly marking matrices as upper/lower triangular (see: ...)
+   scipy with vectorized ops (eg. can we vectorize adding mu to all samples or is that no better than a for loop?)
+   scipy with for loops
+   R
+   R with explicitly marking matrices as upper/lower triangular (the functions 'backsolve' and 'forwardsolve' do this)
+   R with vectorized ops
+   R with for loops
+   Rcpp
+   )
+
+   algorithm: (
+   naive
+   snappysample
+   factoredsnappysample (in which we only compute chol(Psi) once)
+   )
+   
+   for each case, do a parameter sweep on:
+   ( d, df, n )
+   and measure
+   ( runtime )
+
+Stability Testing
+ - at what point do the algorithms get numerically unstable?

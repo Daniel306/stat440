@@ -119,7 +119,7 @@ pInvWishart <- function(X, V, df) {
   # TODO: derive this more clearly/formally/in latex-ly
   #  ---like, perhaps it is true that these two dists are equidistributed, but does that mean that the PDFs are the same??
   
-  pWishart(solve(X), solve(V), df);
+  pWishart(solve(X), solve(V), df); #XXX FIXME: this needs to be scaled by the jacobian of V^-1. See Sawyer-Wishart.pdf.
 }
 
 

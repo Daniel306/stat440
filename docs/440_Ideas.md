@@ -1,5 +1,14 @@
 440 Ideas:
 
+A Bayesian Reasoner for Virus Detection
+=======================================
+
+Use factors like:
+ -> "I explicitly opened this program" / "I didn't explicitly open this program"
+ -> the number of people who've encountered the file (Avast does this)
+ ->  
+ ->
+ 
 MultiD Distribution Comparison
 ==============================
 
@@ -72,6 +81,13 @@ Multinomial Project
          ---huh, does this contradict the other def'n of uncorrelated (which is cov(x,y)=0) or the def'n of indepedent (which is p(a,b) = p(a)p(b) 
  
      P(t1,t1) != P(t1)P(t1) --- the right side is smaller (unless P(t1)=1)
+
+ (oh. durp. it's CORRELATION that's an equivalence relation)
+   reflexity: t1 is correlated to t1 (with cor = 1)
+      because if p(t1,t1) != p(t1)p(t1)  since p(t1 and t1) = p(t1), and 0 < p(t1) < 1 so p(t1)^2 < p(t1) < 1 ... hm, but if p(t1)
+   symmetry: if t1 is correlated to t2 then t2 is correlated to t1 (because if p(t1, t2) != p(t1)p(t2) then p(t2,t1) != p(t2)p(t1)
+   transitivity: if t1 is correlated to t2 and t2 to t3 then t1 is correlated to t3 with cor = _________
+     proof:
      )
 
    --> some work to relax the condition from strict independence to near independence
