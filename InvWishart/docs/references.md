@@ -1,4 +1,5 @@
 
+[WP:Invertible Matrix](https://en.wikipedia.org/wiki/Invertible_matrix#Blockwise_inversion) has a surprising amount of insight.
 
 [Tim Davis](http://www.cise.ufl.edu/research/sparse/), whose sparse matrix solvers underly everything that's fast in numerical computation: matlab, scipy, CUDA, and R.
 
