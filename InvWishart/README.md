@@ -21,11 +21,6 @@ The [NIW](https://en.wikipedia.org/wiki/Normal-inverse-Wishart_distribution) dis
  }
 ```
 
-```
-LOL.butts(fsadfs)
-```
-
-
 
 Documentation
 --------------
