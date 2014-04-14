@@ -7,6 +7,14 @@ Validation testing
    - k-s test?
  - 
 
+
+tips: R doesn't have pointers (everything is by-value), so passing matrices
+ from function to function literally does memcpys.
+ So writing in C will speed things up simply by avoiding the copies.
+
+maybeidea: Bartlett's Method gives us dists of the entries of the square root of a Wishart matrix.
+   What if we work out the dist of the inverse of that (which we call Gamma in the notes). (tip from prof: it "should" be a matrix where each entry is a sum of normals which is a normal)
+
 Performance testing
  - cases: algorithm X impl
    
