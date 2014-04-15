@@ -13,55 +13,81 @@
 
 % 1 page
 \maketitle
+\newpage
 
-% half a page
-\section*{Introduction}
+\tableofcontents %because latex is from before the days of interactive computing, you need to run the build twice for this to show up
+ % also note that only autonumbered sections get entered into the TOC by default
+ % see http://www.andy-roberts.net/writing/latex/contents
 
-% 4 pages
-\section*{Program Package}
+%these macros correct part of the oversight:
+% of couse, these macros also confuse texmaker
+% le sigh
+\newcommand{\Section}[1] {
+  \section*{#1}
+  \addcontentsline{toc}{section}{#1}
+}
+
+\newcommand{\Subsection}[1] {
+  \subsection*{#1}
+  \addcontentsline{toc}{subsection}{#1}
+}
+
+\newcommand{\Subsubsection}[1] {
+  \subsubsection*{#1}
+  \addcontentsline{toc}{subsubsection}{#1}
+}
+
+% .5 pages
+\Section{Introduction}
+
+% (4 pages)
+\Section{Program Package}
 
 % 1 page
-\subsection*{Algorithm}
+\Subsection{Algorithm}
 
 - Why we care
 - State of the art
 - What we did differently
 
-% 2?? pages
-\subsection*{Testing}
+% (2?? pages)
+\Subsection{Testing}
 
-% 1.5 pages
-\subsubsection*{Correctness <-- this title is dumb}
+% 1 pages
+\Subsubsection{Correctness <-- this title is dumb}
 
 - marginals
 - moments
 - brief mention that doing a full multivariate K-S test is so hard as to be ridiculous (+ citation?)
 
 % 1 page
-\subsubsection*{Benchmarking}
+\Subsubsection{Benchmarking}
 
 - methodology
 - algorithms compared
 - results
 
-% 4 pages
-\section*{Applications}
+% (4 pages)
+\Section{Applications}
 
-\subsection*{Thingy I}
+% 2 pages
+\Subsection{Thingy I}
 
-\subsection*{Gibbs Sampler}
+% 2 pages
+\Subsection{Gibbs Sampler}
 
 - we did this thing
 - here's our test case
 - and look, the code is reusable (and in C)
 
-% half a page
-\section*{Conclusion}
+% .5 pages
+\Section{Conclusion}
 
 blah blah blah yay code we like R
 
-
-\section*{References}
+% 1 page
+\newpage
+\Section{References}
 
 
 \end{document}
