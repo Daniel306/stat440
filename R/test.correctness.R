@@ -4,6 +4,13 @@
 #  n is the number of samples
 #    (a, b, c, ...) is the dimensionality of the object
 
+# this is complicated, however, because what is marginalized over does not necessarily come in a sensible matrix shape:
+  # for NIW our samples are tuples (X, V) with dim(X)=c(d,1), dim(V) = c(d,d)
+  #    we could cram them together so that each sample is a d x (d+1) matrix
+  #    but that's awkward and loses pertinent information
+  # in general the entries of the tuples may be any size at all
+
+
 plot.compare <- (ground, sample, ...) { #XXX NAME
    # plot histograms of the marginals in sample, overlaid with "ground truth" probability density.
    # 
@@ -46,54 +53,60 @@ plot.compare <- (ground, sample, ...) { #XXX NAME
     #}
 }
 
-
-plot.compare.marginals <- function(ground, sample) { #XXX name
-  # plot comparison histograms over all the marginals in
-  # ground and sample must share the same dimensionality -- all but their first dimension, which is n, the number of samples
-  #  and in particular, ground must be a sample itself -- you cannot use pdf functions here
-
-  if(any(dim(ground)[-1] != dim(sample)[-1])) {
-    stop("ground and sample have inconsistent dimensions: ", dim(ground)[-1],"  vs ", dim(sample)[-1]) #TODO: this won't print correctly
-  }
-
-  # method 1: reshape ground and sample into 2d matrices: n x (number of marginals)
-  #   con: you lose the information about ~which~ marginal you're looking at, unless you reconstruct it manually
-  # method 2: somehow recurisvely loop down the dimensions, loop over all values in that dimension as you go
-  #   con: since [] is a variable arity function call in R, constructing the correct indexing calls will require some R magic
-  #        this is probable doable though
-
-  # however
-  # e.g. the [1,3] marginal is sample[, 1, 3]: note how every dimension was specified except for the first
-  # this doesn't work as written, but it shows the idea of what I want to accomplish: 
-  #  plot.compare(ground[, m], sample[, m], main=paste("Marginal ", m))
-}
-
-marginals1.do <- function(M, op) {
-    # extracts the one-dimensional marginal distributions of MultiS
-    #  and performs op(m, v) on them, with m being the index of the marginal (a vector, e.g. c(2,2) means the 2,2th marginal) and v being the vector of values
+plot.NIW.marginals <- function(ground, sample) {
+    # compare (using plot.compare) the marginals of the Normal Inverse Wishart against their expected pdfs
     #
     # args:
-    #   M, a MultiS
-    #
-    # returns:
-    #   a list with entries named "[a,b,c]" -- each
-    #    the list is ordered in
+    #   ground, sample: lists containing two elements, $X and $V. The first is a c(n, d) matrix, the second is a c(n, d, d) matrix
+    #                the each of the n pairs (X[k,], V[k,]) corresponds to one of the Normal Inverse Wishart samples.
+    #         ground is assumed to be samples from the true distribution, and creates kernel density estimates
+    #         sample has histograms plotted from it
+    
 
-    # this is really just a reshape..
-        n = dim(M)[1]
-            dim(M) = c(n, length(M)/n) #NB: R's quirk: 'length(M)' is the total number of elements in it
-                               # length(M) is gauranteed to be divisible by n
-                                  }
-                                  - 
-
-
-# 
-
-marginals2.do <- function(M) {
-
+    #typechecks
+    stopifnot(class(ground) == "list" && class(sample) == "list")
+    stopifnot(names(ground) == names(sample))
+    for(N in names(ground)) {
+      if(any(dim(ground[[N]])[-1] != dim(sample[[N]])[-1])) {
+        stop("ground$", N, " and sample$", N, " have inconsistent dimensions: ", dim(ground[[N]])[-1],"  vs ", dim(sample[[N]])[-1]) #TODO: this won't print correctly
+      }
+    }
+    
+    
+    # TODO: factor this into a generic function that takes a list() of matrixables and figures out the labels (eg "V[3,43]") to use automatically 
+    # method 1: reshape ground and sample into 2d matrices: n x (number of marginals)
+    #   pro: simple
+    #   con: you lose the information about ~which~ marginal you're looking at, unless you reconstruct it manually
+    # method 2: somehow recurisvely loop down the dimensions, loop over all values in that dimension as you go
+    #   con: since [] is a variable arity function call in R (it doesn't just take a tuple like in Python),
+    #          constructing the correct indexing calls will require some R call() magic
+    #          such magic is probably doable though
+  
+    # X marginals
+    par(mfrow=c(2,2))
+    for(i in dim(ground$X)[2]) {
+        plot.compare(ground$X[i,], sample$X[i,], main=paste("X[",i,"]"))
+    }
+    par(mfrow=c(1,1))
+    title("NIW X marginals")
+    
+    # V marginals
+    par(mfrow=c(2,2))
+    for(i in dim(ground$V)[2]) {
+    for(i in dim(ground$V)[3]) { #purposely not indented
+        plot.compare(ground$V[,i,j], sample$V[,i,j], main=paste("V[",i,",",j,"]"))
+    }
+    }
+    par(mfrow=c(1,1))
+    title("NIW V marginals")
 }
 
-#NIW.moment.first
+#TODO: plot.NIW.marginals = plot.marginals
+
+
+#TODO: NIW.moment.first
 # --> mean?
-#NIW.moment.second
+#TODO: NIW.moment.second
 # --> ??
+
+# run this all on NIW.naive
