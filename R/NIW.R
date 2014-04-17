@@ -18,12 +18,17 @@ rInvWishart <- function(n, df, Sigma) {
  W
 }
 
+# rNIW.* API:
+# preconditions: Mu is a vector; d := length(Mu) == dim(Psi)[1] == dim(Psi)[2];
+#                Psi is a matrix, which is positive-definite (=> square, symmetric, all positive eigenvalues, and chol(Psi) exists)
+# rNIW(n, Mu, Kappa, Psi, df) -> list(X= { c(n, d) matrix of sample X values}, V = {c(n, d, d) matrix of sample V values} )
+#  $X and $V have the same number of rows, and ans$X[i,] corresponds is a d-dimensional normal generated with variance ans$V[i,]
 
 rNIW.extremelynaive <- function(n, d, Mu, kappa, Psi, df, V, X) {
   # generate the n samples by n times doing: i) generate V, ii) generate X given V.
 
   for(i in 1:n) {
-     V[,,i] = rInvWishart(1, df, Psi)[,,1]; #sample only one 
+     V[,,i] = rInvWishart(1, df, Psi)[,,1]; #sample only one variance matrix at a time
      X[,i] = rmvnorm(1, Mu, V[,,i]/kappa);  #ditto
   }
   list(V=V, X=X)
