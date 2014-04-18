@@ -31,7 +31,6 @@
 #     This form is used by the built-in rWishart() function.
 
 require(MASS); #for rmvnorm
-print(mvrnorm)
 rmvnorm <- MASS::mvrnorm; mvrnorm <- NULL; #repair naming convention; I don't know why I need the namespace in the first step, but it breaks under source()ing this file without it
 
 
