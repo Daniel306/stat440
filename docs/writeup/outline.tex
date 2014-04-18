@@ -103,9 +103,17 @@ so we can just take samples, map them with a function, and average. As more samp
 Our moments are multivariate, so as before we need to look at marginals 
 (IMAGE: an element moment converging to the expected value)
 
-If, under a large number of samples, any of these statistics ((is it correct to call a full pdf a 'statistic'? you could view a function as an infinite set related statistics...)) do not match its expected value--pdf or moment--it means there is an error. Conversely, while all of the statistics matching doesn't logically prove correctness, they give strong support to likelihood of correctness.
+Finally, we used a k-s test [CITE?] to numerically detect marginals which deviate from the correct value. Example 
+```
+snappy2 X[3]: different
+snappy2 X[4]: same
+snappy2 V[1,1]: same
+snappy2 V[1,2]: same
+snappy2 V[1,3]: different
+```
 
-TODO: k-s test on the pdfs, and .. a ..t-test? on the others
+
+If, under a large number of samples, any of these statistics ((is it correct to call a full pdf a 'statistic'? you could view a function as an infinite set related statistics...)) do not match its expected value--pdf or moment--it means there is an error. Conversely, while all of the statistics matching doesn't logically prove correctness, they give strong support to likelihood of correctness.
 
 
 

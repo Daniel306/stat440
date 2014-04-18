@@ -133,7 +133,7 @@ ks.test.NIW.marginals <- function(ground, sample, alg=NULL) {
     # X marginals
     par(mfrow=c(2,2))
     for(i in 1:d) { #the 1st dimension is the 
-        p = ks.test(ground$X[i,], sample$X[i,])$p.value
+        p = ks.test(sample$X[i,], ground$X[i,])$p.value #NB: order that ks.test takes its args is swapped from our order
         message(alg," X[",i,"]", ": ", if(p > 0.05) { "same" } else { "different" })
     }
     
@@ -141,7 +141,7 @@ ks.test.NIW.marginals <- function(ground, sample, alg=NULL) {
     par(mfrow=c(2,2))
     for(i in 1:d) {
     for(j in 1:d) { #purposely not indented
-        p = ks.test(ground$V[i,j,], sample$V[i,j,])$p.value
+        p = ks.test(sample$V[i,j,], ground$V[i,j,])$p.value #NB: order that ks.test takes its args is swapped from our order
         message(alg, " V[",i,",",j,"]", ": ", if(p > 0.05) { "same" } else { "different" })
     }
     }
