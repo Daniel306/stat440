@@ -55,7 +55,7 @@ plot.compare <- function(ground, sample, ...) { #XXX NAME
     #}
 }
 
-plot.NIW.marginals <- function(ground, sample) {
+plot.NIW.marginals <- function(ground, sample, alg=NULL) {
     # compare (using plot.compare) the marginals of the Normal Inverse Wishart against their expected pdfs
     #
     # args:
@@ -96,7 +96,7 @@ plot.NIW.marginals <- function(ground, sample) {
         plot.compare(ground$X[i,], sample$X[i,], main=paste("X[",i,"]"))
     }
     par(mfrow=c(1,1))
-    title("NIW X marginals")
+    title(paste(alg, "NIW X marginals"))
     
     # V marginals
     par(mfrow=c(2,2))
@@ -106,7 +106,7 @@ plot.NIW.marginals <- function(ground, sample) {
     }
     }
     par(mfrow=c(1,1))
-    title("NIW V marginals")
+    title(paste(alg,"NIW V marginals"))
 }
 
 #TODO: plot.NIW.marginals = plot.marginals

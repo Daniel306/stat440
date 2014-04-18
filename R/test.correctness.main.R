@@ -23,11 +23,11 @@ main <- function() { # avoid polluting the namespace
     n = 32343
     
     message()
-    message("Generate reference samples")
-    ground = rNIW.naive(500, kMu, kKappa, kPsi, kDF)
-
-    message("Starting test runs")
     message("------------------------------------")
+    message("Generating reference samples.")
+    ground = rNIW.naive(5500, kMu, kKappa, kPsi, kDF)
+
+    message("Starting test runs:")
     
     for(alg in c("snappy1", "snappy2", "snappy3")) {
         message("Beginning ",alg,"...")
@@ -42,12 +42,13 @@ main <- function() { # avoid polluting the namespace
             message("Runtime for ", alg,"(",n,",...): ", runtime,"s")
             
             # make density plots
-            plot.NIW.marginals(ground, samples)
+            plot.NIW.marginals(ground, samples, alg)
             
         })
         
         message()
     }
+    message("------------------------------------")
 }
 
 
