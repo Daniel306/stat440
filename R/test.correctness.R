@@ -123,12 +123,13 @@ ks.test.NIW.marginals <- function(ground, sample, alg=NULL) {
     # since we know sample came from rNIW, we have stronger conditions than the above:
     # 
     d = dim(ground$X)[1]
-    
+
+    message("KS Tests")
     # X marginals
     par(mfrow=c(2,2))
     for(i in 1:d) { #the 1st dimension is the 
         p = ks.test(sample$X[i,], ground$X[i,])$p.value #NB: order that ks.test takes its args is swapped from our order
-        message(alg," X[",i,"]", ": ", if(p > 0.05) { "same" } else { "different" })
+        message(alg," X[",i,"]", ": ", if(p > 0.05) { "same" } else { paste("different", " (", p, ")", sep="")  })
     }
     
     # V marginals
@@ -136,7 +137,7 @@ ks.test.NIW.marginals <- function(ground, sample, alg=NULL) {
     for(i in 1:d) {
     for(j in 1:d) { #purposely not indented
         p = ks.test(sample$V[i,j,], ground$V[i,j,])$p.value #NB: order that ks.test takes its args is swapped from our order
-        message(alg, " V[",i,",",j,"]", ": ", if(p > 0.05) { "same" } else { "different" })
+        message(alg, " V[",i,",",j,"]", ": ", if(p > 0.05) { "same" } else { paste("different", " (", p, ")", sep="") })
     }
     }
 }
