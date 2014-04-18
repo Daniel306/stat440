@@ -46,6 +46,13 @@ main <- function() { # avoid polluting the namespace
             # make density plots
             plot.NIW.marginals(ground, samples, alg)
             
+            # make first moment convergence plots
+            # TODO ....
+            
+            # make second moment convergence plots
+            # TODO ....
+            
+            
             # test for equidistribution numerically 
             ks.test.NIW.marginals(ground, samples, alg)
             
