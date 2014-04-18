@@ -1,4 +1,6 @@
 
+source("NIW.R")
+
 #typedef: a multidimensional sample (MultiS) is
 #  a matrix M with dim(M) = c(n, c(a,b, c, ...)) 
 #  n is the number of samples
