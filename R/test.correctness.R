@@ -23,25 +23,19 @@ plot.compare <- function(ground, sample, ...) { #XXX NAME
    # sample: the "sample"
    #  this is is the sample
    # ...: extra arguments to plot()
-   
-   if(!is.call(ground)) {
-     
-     # this approach is a bit convoluted! it is perfectly possible to call lines(density(...)) directly
-     # however, doing this special case just feels more clever which is nice
-   }
 
    # display the histogram
-   hist(sample, probability=TRUE, ...)
+   hist(sample, probability=TRUE, breaks=40, ...)
    
    # overlay the pdf
    if(is.call(ground)) {
-     lines(sample, ground(sample))
+     lines(sample, ground(sample), col="blue", lty="twodash")
    } else {
      # if caller has not given us a pdf directly, then
      # assume ground is a vector for us to kernel-density estimate
      stopifnot(is.vector(ground) && is.numeric(ground)) #typecheck
      
-     lines(density(ground))
+     lines(density(ground), col="blue", lty="twodash")
    }
 
   # omitted code, which could be used instead of the special casing in lines() above
