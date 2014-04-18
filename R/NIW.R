@@ -21,28 +21,35 @@ rInvWishart <- function(n, df, Sigma) {
 # rNIW.* API:
 # preconditions: Mu is a vector; d := length(Mu) == dim(Psi)[1] == dim(Psi)[2];
 #                Psi is a matrix, which is positive-definite (=> square, symmetric, all positive eigenvalues, and chol(Psi) exists)
-# rNIW(n, Mu, Kappa, Psi, df) -> list(X= { c(n, d) matrix of sample X values}, V = {c(n, d, d) matrix of sample V values} )
-#  $X and $V have the same number of rows, and ans$X[i,] corresponds is a d-dimensional normal generated with variance ans$V[i,]
+# rNIW(n, Mu, Kappa, Psi, df) -> list(X= { c(d, n) matrix of sample X values}, V = {c(d, d, n) matrix of sample V values} )
+#  $X and $V have the same number of samples, and ans$X[,i] corresponds is a d-dimensional normal generated with variance ans$V[,,i]
+# NB: having n as the last dimension means that it is the 'widest' dimension: each set of d or d^2 sample elements run consecutively.
+#     This form is used by the built-in rWishart() function.
 
 rNIW.extremelynaive <- function(n, d, Mu, kappa, Psi, df, V, X) {
   # generate the n samples by n times doing: i) generate V, ii) generate X given V.
-
+  # this "extremely naive" version is a 1-for-1 translation of the algorithm on wikipedia
+  #  where it does every sample one at a time
   for(i in 1:n) {
-     V[,,i] = rInvWishart(1, df, Psi)[,,1]; #sample only one variance matrix at a time
-     X[,i] = rmvnorm(1, Mu, V[,,i]/kappa);  #ditto
+     V[,,i] = rInvWishart(1, df, Psi)[,,1];
+     X[,i] = rmvnorm(1, Mu, V[,,i]/kappa);
   }
   list(V=V, X=X)
 }
 
+# TEST: rNIW.extremelynaive(...)
+
 
 rNIW.naive <- function(n, d, Mu, kappa, Psi, df, V, X) {
   # generate the n samples
-  # slightly less totally durpy implementation
-  # the main difference between this and extremelynaive is that this only inverts Psi once
+  # this calls rWishart once to generate the n wishart samples, then inverts them all (to make them inverse wishart samples)
+  # The only effective difference between this and extremelynaive should be that this only inverts Psi once
   
   V = rInvWishart(n, df, Psi);   #ignore the prealloc'd space
   
-  # must be in a loop because each sample has a different distribution
+  # unfortunately, generating X must still be in a loop because each sample has a different distribution
+  # and there's no way with rmvnorm to ask "give me n samples and here's the parameters for each"
+  # ..is there?
   for(i in 1:n) {
      X[,i] = rmvnorm(1, Mu, V[,,i]/kappa);
   }

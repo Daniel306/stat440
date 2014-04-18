@@ -62,16 +62,17 @@ plot.NIW.marginals <- function(ground, sample) {
     #         ground is assumed to be samples from the true distribution, and creates kernel density estimates
     #         sample has histograms plotted from it
     
-
     #typechecks
     stopifnot(class(ground) == "list" && class(sample) == "list")
     stopifnot(names(ground) == names(sample))
     for(N in names(ground)) {
-      if(any(dim(ground[[N]])[-1] != dim(sample[[N]])[-1])) {
-        stop("ground$", N, " and sample$", N, " have inconsistent dimensions: ", dim(ground[[N]])[-1],"  vs ", dim(sample[[N]])[-1]) #TODO: this won't print correctly
+      last = length(dim(ground[[N]])) #the length of the last dimension is "n", the number of samples,
+                                      # which is irrelevant; we only care that the dimensionality of each sample in ground matches the dimensionality of each sample in sample
+      stopifnot(length(dim(ground[[N]])) == length(dim(sample[[N]])))
+      if(any(dim(ground[[N]])[-last] != dim(sample[[N]])[-last])) {
+        stop("ground$", N, " and sample$", N, " have inconsistent dimensions: ", dim(ground[[N]])[-last],"  vs ", dim(sample[[N]])[-last]) #TODO: this won't print correctly
       }
     }
-    
     
     # TODO: factor this into a generic function that takes a list() of matrixables and figures out the labels (eg "V[3,43]") to use automatically 
     # method 1: reshape ground and sample into 2d matrices: n x (number of marginals)
@@ -102,7 +103,9 @@ plot.NIW.marginals <- function(ground, sample) {
 }
 
 #TODO: plot.NIW.marginals = plot.marginals
-
+#TODO: write a function (to base plot.marginals on) which extracts the marginals in some sensible way;
+#             either ruby-style where you pass an op block which receives the marginal as an argument
+#             or more (procedurally?) where the marginals are reshaped into I guess a list with entries named by their marginal
 
 #TODO: NIW.moment.first
 # --> mean?
