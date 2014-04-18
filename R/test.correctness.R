@@ -93,20 +93,16 @@ plot.NIW.marginals <- function(ground, sample, alg=NULL) {
     # X marginals
     par(mfrow=c(2,2))
     for(i in 1:d) { #the 1st dimension is the 
-        plot.compare(ground$X[i,], sample$X[i,], main=paste("X[",i,"]"))
+        plot.compare(ground$X[i,], sample$X[i,], main=paste("X[",i,"]"), sub=alg)
     }
-    par(mfrow=c(1,1))
-    title(paste(alg, "NIW X marginals"))
     
     # V marginals
     par(mfrow=c(2,2))
     for(i in 1:d) {
     for(j in 1:d) { #purposely not indented
-        plot.compare(ground$V[i,j,], sample$V[i,j,], main=paste("V[",i,",",j,"]"))
+        plot.compare(ground$V[i,j,], sample$V[i,j,], main=paste("V[",i,",",j,"]"), sub=alg)
     }
     }
-    par(mfrow=c(1,1))
-    title(paste(alg,"NIW V marginals"))
 }
 
 #TODO: plot.NIW.marginals = plot.marginals

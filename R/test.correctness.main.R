@@ -25,7 +25,8 @@ main <- function() { # avoid polluting the namespace
     message()
     message("------------------------------------")
     message("Generating reference samples.")
-    ground = rNIW.naive(5500, kMu, kKappa, kPsi, kDF)
+    ground = rNIW.naive(15500, kMu, kKappa, kPsi, kDF)
+    #plot.NIW.marginals(ground, ground, alg="naive") #DEBUG
 
     message("Starting test runs:")
     
