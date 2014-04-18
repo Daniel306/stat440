@@ -13,7 +13,7 @@ source("NIW.R")
   # in general the entries of the tuples may be any size at all
 
 
-plot.compare <- (ground, sample, ...) { #XXX NAME
+plot.compare <- function(ground, sample, ...) { #XXX NAME
    # plot histograms of the marginals in sample, overlaid with "ground truth" probability density.
    # 
    # ground: the "ground truth"
@@ -76,6 +76,7 @@ plot.NIW.marginals <- function(ground, sample) {
       }
     }
     
+    
     # TODO: factor this into a generic function that takes a list() of matrixables and figures out the labels (eg "V[3,43]") to use automatically 
     # method 1: reshape ground and sample into 2d matrices: n x (number of marginals)
     #   pro: simple
@@ -85,9 +86,13 @@ plot.NIW.marginals <- function(ground, sample) {
     #          constructing the correct indexing calls will require some R call() magic
     #          such magic is probably doable though
   
+    # since we know sample came from rNIW, we have stronger conditions than the above:
+    # 
+    d = dim(ground$X)[1]
+    
     # X marginals
     par(mfrow=c(2,2))
-    for(i in dim(ground$X)[2]) {
+    for(i in 1:d) { #the 1st dimension is the 
         plot.compare(ground$X[i,], sample$X[i,], main=paste("X[",i,"]"))
     }
     par(mfrow=c(1,1))
@@ -95,9 +100,9 @@ plot.NIW.marginals <- function(ground, sample) {
     
     # V marginals
     par(mfrow=c(2,2))
-    for(i in dim(ground$V)[2]) {
-    for(i in dim(ground$V)[3]) { #purposely not indented
-        plot.compare(ground$V[,i,j], sample$V[,i,j], main=paste("V[",i,",",j,"]"))
+    for(i in 1:d) {
+    for(j in 1:d) { #purposely not indented
+        plot.compare(ground$V[i,j,], sample$V[i,j,], main=paste("V[",i,",",j,"]"))
     }
     }
     par(mfrow=c(1,1))
