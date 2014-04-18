@@ -306,4 +306,30 @@ full, dense matrix multiplication. This doesn't crack this algorithmic
 nut, \textbf{but it could make the difficult possible}.
 
 \includegraphics[scale=0.7]{full_vs_triangular}
+
+
+\section*{Lemmas}
+
+\subsection*{chol(P)}
+
+\subsection*{Inverse of a triangular matrix}
+
+Suppose $T$ is a triangular matrix (lower or upper). Then $T^{-1}$ is also triangular (lower or upper, respectively).
+
+Proof:
+
+
+\begin{align*}
+T T^{-1} &= I \\
+\end{align*}
+
+
+$T^{-1} = backsolve(T, I)$
+
+so column $i$ of $T^{-1}$ is
+ $backsolve(T, [0 ... 1 ... 0 0 0 0 ... 0]^T) $
+ with the 1 in the $i$th position.
+
+so ... ?
+
 \end{document}

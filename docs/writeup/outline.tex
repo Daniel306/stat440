@@ -13,55 +13,151 @@
 
 % 1 page
 \maketitle
+\newpage
 
-% half a page
-\section*{Introduction}
+\tableofcontents %because latex is from before the days of interactive computing, you need to run the build twice for this to show up
+ % also note that only autonumbered sections get entered into the TOC by default
+ % see http://www.andy-roberts.net/writing/latex/contents
 
-% 4 pages
-\section*{Program Package}
+%these macros correct part of the oversight:
+% of couse, these macros also confuse texmaker
+% le sigh
+\newcommand{\Section}[1] {
+  \section*{#1}
+  \addcontentsline{toc}{section}{#1}
+}
+
+\newcommand{\Subsection}[1] {
+  \subsection*{#1}
+  \addcontentsline{toc}{subsection}{#1}
+}
+
+\newcommand{\Subsubsection}[1] {
+  \subsubsection*{#1}
+  \addcontentsline{toc}{subsubsection}{#1}
+}
+
+% .5 pages
+\Section{Introduction}
+
+The NIW distribution is 
+.....
+
+its history
+its relationship to other others (it's a generalized Normal-Inverse-ChiSq)
+
+In bayesian statistics, it is the conjugate prior in (...this situation...)
+
+% (4 pages)
+\Section{Program Package}
 
 % 1 page
-\subsection*{Algorithm}
+\Subsection{Algorithm}
 
 - Why we care
 - State of the art
 - What we did differently
 
-% 2?? pages
-\subsection*{Testing}
+% (2?? pages)
+\Subsection{Testing}
 
-% 1.5 pages
-\subsubsection*{Correctness <-- this title is dumb}
+% 1 pages
+\Subsubsection{Correctness <-- this title is dumb}
 
-- marginals
-- moments
-- brief mention that doing a full multivariate K-S test is so hard as to be ridiculous (+ citation?)
+There is no test we can do which will demonstrate the correctness of this code.
+Like Knuth, we have only proven this code correct, not tested it thoroughly.
+But there are some relatively basic tests we have applied to 
+(- brief mention that doing a full multivariate K-S test is so hard as to be ridiculous (+ citation?))
+
+Each element we are generating has a distribution by itself. These are the \emph{marginal distributions} such as:
+
+$$ V_{2,3} | X_1, X_2, X_3, ..., V_{1,1}, V_{1,2}, V_{1,3} , ....  \sim P(V_{2,3} = v) $$
+% BUG: continuous distributions don't have "equals"
+%  I wish there was a consistent notation which covered the discrete and continuous cases together without having to jump a layer of indirection into pdfs
+
+We can derive the marginals directly. For the elements of $X$, we have:
+
+
+so  $X_i \sim t_{???}$ .
+
+For the elements of $V$, we have:
+
+....
+
+
+More quickly, we can sample $X,V \sim NIW$ from a sampler that we know should work: the naive algorithm %TODO: <-- grammar%
+  , and then use kernel density estimation.
+  
+With either method, we get a PDF, and we can plot histograms and the PDF together. Here are some examples of this from our final code:
+
+(IMAGE: A correct sample)
+(IMAGE: An incorrect sample)
+
+
+Every \emph{moment} is an expected value. This makes moments an easy to compute statistic,
+ because (for $ S_i \sim S $)
+$$ lim_{n \rightarrow \infty} \frac{\sum_{i=1}^n g(S_i)}{n} = E[g(S)] $$
+  ((TODO: prove. why is this? the CLT??))
+so we can just take samples, map them with a function, and average. As more samples come in we expect these numbers to converge to specific values. As before, we can examine the marginals one by one. We can check for convergence by.
+
+Our moments are multivariate, so as before we need to look at marginals 
+(IMAGE: an element moment converging to the expected value)
+
+Finally, we used a k-s test [CITE?] to numerically detect marginals which deviate from the correct value. Example 
+```
+snappy2 X[3]: different
+snappy2 X[4]: same
+snappy2 V[1,1]: same
+snappy2 V[1,2]: same
+snappy2 V[1,3]: different
+```
+
+
+If, under a large number of samples, any of these statistics ((is it correct to call a full pdf a 'statistic'? you could view a function as an infinite set related statistics...)) do not match its expected value--pdf or moment--it means there is an error. Conversely, while all of the statistics matching doesn't logically prove correctness, they give strong support to likelihood of correctness.
+
+
 
 % 1 page
-\subsubsection*{Benchmarking}
+\Subsubsection{Benchmarking}
 
 - methodology
 - algorithms compared
-- results
+  - naive
+  - snappy in R
+  - snappy in Rcpp
+% - snappy in python (on numpy)
+%  - snappy in cython (on numpy)
 
-% 4 pages
-\section*{Applications}
+These results show that our algorithm has approximately a (10?) times speed up over the naive algorithm, with a further (3?) times speed up by the port to C.
 
-\subsection*{Thingy I}
+% (4 pages?)
+\Section{Applications}
 
-\subsection*{Gibbs Sampler}
+The NIW distribution is a extremely common conjugate prior. Here, we use our algorithm to rapidly do two simulation studies:
+
+
+% 1.25 pages
+\Subsection{Thingy I}
+
+% 1.25 pages
+\Subsection{Gibbs Sampler}
 
 - we did this thing
 - here's our test case
 - and look, the code is reusable (and in C)
 
-% half a page
-\section*{Conclusion}
+% .5 pages
+\Section{Conclusion}
 
 blah blah blah yay code we like R
 
+((APPENDIX??!?!?! WITH THE CODE AND STUFF YEAH))
 
-\section*{References}
+% 1 page
+\newpage
+\Section{References}
 
+- a ref to the NIW dist
+- Rcpp
 
 \end{document}
