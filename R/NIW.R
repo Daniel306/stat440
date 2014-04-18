@@ -319,7 +319,6 @@ rNIW.snappy1 <- rNIW.typecheck(function(n, Mu, kappa, Psi, df) {
 rNIW.snappy2 <- function(n, Mu, kappa, Psi, df) {
   # The difference between snappy1 and snappy2 is analogous to the difference between extremelynaive and naive:
   #  we factor out the common terms (Mu, kappa, chol(Psi)) to before and after the sampling loop
-  # (NB: this commit merges what in the previous commit was snappy3: the "X = Mu + X/sqrt(kappa)" line; imo, it's splitting hairs to keep both versions around)
   
   d = length(Mu)
   ans = rNIW.alloc(n, d)
