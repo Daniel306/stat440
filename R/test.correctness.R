@@ -105,6 +105,48 @@ plot.NIW.marginals <- function(ground, sample, alg=NULL) {
     }
 }
 
+ks.test.NIW.marginals <- function(ground, sample, alg=NULL) {
+    # compare (using plot.compare) the marginals of the Normal Inverse Wishart against their expected pdfs
+    #
+    # args:
+    #   ground, sample: lists containing two elements, $X and $V. The first is a c(n, d) matrix, the second is a c(n, d, d) matrix
+    #                the each of the n pairs (X[k,], V[k,]) corresponds to one of the Normal Inverse Wishart samples.
+    #         ground is assumed to be samples from the true distribution
+    #         sample has histograms plotted from it
+    #      for each marginal, ks.test is performed and the results printed
+    
+    #typechecks
+    stopifnot(class(ground) == "list" && class(sample) == "list")
+    stopifnot(names(ground) == names(sample))
+    for(N in names(ground)) {
+      last = length(dim(ground[[N]])) #the length of the last dimension is "n", the number of samples,
+                                      # which is irrelevant; we only care that the dimensionality of each sample in ground matches the dimensionality of each sample in sample
+      stopifnot(length(dim(ground[[N]])) == length(dim(sample[[N]])))
+      if(any(dim(ground[[N]])[-last] != dim(sample[[N]])[-last])) {
+        stop("ground$", N, " and sample$", N, " have inconsistent dimensions: ", dim(ground[[N]])[-last],"  vs ", dim(sample[[N]])[-last]) #TODO: this won't print correctly
+      }
+    }
+    # since we know sample came from rNIW, we have stronger conditions than the above:
+    # 
+    d = dim(ground$X)[1]
+    
+    # X marginals
+    par(mfrow=c(2,2))
+    for(i in 1:d) { #the 1st dimension is the 
+        p = ks.test(ground$X[i,], sample$X[i,])$p.value
+        message(alg," X[",i,"]", ": ", if(p > 0.05) { "same" } else { "different" })
+    }
+    
+    # V marginals
+    par(mfrow=c(2,2))
+    for(i in 1:d) {
+    for(j in 1:d) { #purposely not indented
+        p = ks.test(ground$V[i,j,], sample$V[i,j,])$p.value
+        message(alg, " V[",i,",",j,"]", ": ", if(p > 0.05) { "same" } else { "different" })
+    }
+    }
+}
+
 #TODO: plot.NIW.marginals = plot.marginals
 #TODO: write a function (to base plot.marginals on) which extracts the marginals in some sensible way;
 #             either ruby-style where you pass an op block which receives the marginal as an argument

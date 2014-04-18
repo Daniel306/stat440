@@ -27,6 +27,7 @@ main <- function() { # avoid polluting the namespace
     message("Generating reference samples.")
     ground = rNIW.naive(15500, kMu, kKappa, kPsi, kDF)
     #plot.NIW.marginals(ground, ground, alg="naive") #DEBUG
+    #ks.test.NIW.marginals(ground, ground, "naive") #DEBUG
 
     message("Starting test runs:")
     
@@ -44,6 +45,10 @@ main <- function() { # avoid polluting the namespace
             
             # make density plots
             plot.NIW.marginals(ground, samples, alg)
+            
+            # test for equidistribution numerically 
+            ks.test.NIW.marginals(ground, samples, alg)
+            
             
         })
         
