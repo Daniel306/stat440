@@ -288,7 +288,9 @@ rNIW.snappy1 <- rNIW.typecheck(function(n, Mu, kappa, Psi, df) {
   d = length(Mu)
   ans = rNIW.alloc(n,d)
   for(i in 1:n) {
-  gamma.inv = chol(Psi) # upper triangular
+  #gamma.inv = chol(Psi) # upper triangular #<-- WRONG; I thought chol(inv(S)) = inv(chol(S)) but that's very not true
+  gamma.inv = solve(chol(solve(Psi)))
+  
   # note: actually getting gamma = solve(gamma.inv) is expensive and numerically unstable,
   #       so you should avoid computing it if possible
   
@@ -323,7 +325,9 @@ rNIW.snappy2 <- function(n, Mu, kappa, Psi, df) {
   d = length(Mu)
   ans = rNIW.alloc(n, d)
   
-  gamma.inv = chol(Psi)  #XXX Daniel proved this incorrect; leaving in now until can demonstrate that empirically with the testing code
+  #gamma.inv = chol(Psi)  #XXX Daniel proved this incorrect; leaving in now until can demonstrate that empirically with the testing code
+  gamma.inv = solve(chol(solve(Psi)))
+  
   I = diag(d)  # identity matrix; used for inverting via backsolve (solve(A) does inversion, but backsolve(A) says "missing argument"; sigh)
   for(i in 1:n) {  #apply scaling after the fact
      
@@ -352,8 +356,10 @@ rNIW.snappy3 <- rNIW.typecheck(function(n, Mu, kappa, Psi, df) {
   ans = rNIW.alloc(n, d)
   
   I = diag(d)  # identity matrix; used for inverting via backsolve (solve(A) does inversion, but backsolve(A) says "missing argument"; sigh)
-  gamma.inv = chol(Psi) #XXX daniel proved this wrong 
-  gamma = backsolve(gamma.inv, I)
+  
+  #gamma.inv = chol(Psi) #XXX daniel proved this wrong ; good thing, it's unused anyway
+  #gamma = backsolve(gamma.inv, I)
+  gamma = chol(solve(Psi))
   
   for(i in 1:n) {  #apply scaling after the fact
      
