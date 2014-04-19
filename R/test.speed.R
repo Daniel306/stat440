@@ -31,7 +31,7 @@ NIW.runtimes <- function(algorithms, max=1e7, N=floor(exp(seq(0, log(max), lengt
   colnames(R) = c("n","algorithm","time")
 
   # i is the index into R; really I wish for an "enumerate()" to loop over a crossproduct
-  # but this will do
+  # but this will do for now.
   i = 1;
   for(a in algorithms) {               # These loops are
     A = get(paste("rNIW", a, sep=".")) # purposely flat
@@ -41,14 +41,20 @@ NIW.runtimes <- function(algorithms, max=1e7, N=floor(exp(seq(0, log(max), lengt
     tic = proc.time()
     A(n, kMu, kKappa, kPsi, kDF) #generate samples
     toc = proc.time()
-    print(toc - tic)
-    
-    R[i,] = c(n, a, (toc - tic)["elapsed"])
+    #print(toc - tic) #DEBUG
+
+    # because R is a jerk
+    # these lines need to be done one at a time
+    # otherwise the presence of the string a makes the whole tuple type "character"
+    # and that causes the whole dataframe to be "character" typed
+    R[i,"n"] = n
+    R[i, "algorithm"] = a
+    R[i,"time"] = (toc - tic)["elapsed"]
     i = i + 1;
   }
   }
   }
-
+  
   #coerce the algorithm column to the categorical variable it is
   # this needs to happen here because 'factors' are just thinly disguised enums
   # and there's no way to e.g. assign a string to a pre-existing factor
