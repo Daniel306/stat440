@@ -419,5 +419,16 @@ rNIW.snappy3 <- rNIW.typecheck(function(n, Mu, kappa, Psi, df) {
 
 # TODO: Rcpp::source("rNIW.c")
 
+rNIW.Rcpp2 <- rNIW.typecheck(function(n, Mu, kappa, Psi, df) {
+  # precompute what can be precomputed
+  # because the slowness of doing them in R will not be
+  # that much (only O(1), not O(n)), and is outweighed by the headache in C
+  # TODO: do these in C as well, just to be sure.
+  d = length(Mu)
+  gamma.inv = solve(chol(solve(Psi)))
+    
+  return(rNIW_Rcpp_2(n, d, Mu, kappa, gamma.inv, df))
+})
+
 # TODO: make a final decision:
 # rNIW = rNIW.therealslimshady
