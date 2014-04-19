@@ -88,7 +88,7 @@ rNIW.typecheck <- function(rNIW) {
     
     #PRECONDITIONS
     # n must be a natural number
-    stopifnot(is.integer(n) && n > 0)
+    stopifnot(n==round(n) && n > 0) # is.integer() is wrong for this; see its help
     
     #Psi must be positive definite
     # XXX we don't actually check that Psi is positive definite because that's hard and slow
