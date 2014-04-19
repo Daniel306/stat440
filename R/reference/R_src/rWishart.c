@@ -1,3 +1,5 @@
+// SOURCE: http://svn.r-project.org/R/trunk/src/library/stats/src/rWishart.c
+
 /*
  *  R : A Computer Language for Statistical Data Analysis
  *  Copyright (C) 2012   The R Core Team
