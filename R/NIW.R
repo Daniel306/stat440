@@ -87,6 +87,9 @@ rNIW.typecheck <- function(rNIW) {
     d = dim(Psi)[1]
     
     #PRECONDITIONS
+    # n must be a natural number
+    stopifnot(is.integer(n) && n > 0)
+    
     #Psi must be positive definite
     # XXX we don't actually check that Psi is positive definite because that's hard and slow
     #  we check for symmetry (and squareness) which is relatively cheap 
