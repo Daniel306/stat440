@@ -87,6 +87,9 @@ rNIW.typecheck <- function(rNIW) {
     d = dim(Psi)[1]
     
     #PRECONDITIONS
+    # n must be a natural number
+    stopifnot(n==round(n) && n > 0) # is.integer() is wrong for this; see its help
+    
     #Psi must be positive definite
     # XXX we don't actually check that Psi is positive definite because that's hard and slow
     #  we check for symmetry (and squareness) which is relatively cheap 
@@ -287,31 +290,33 @@ rNIW.snappy1 <- rNIW.typecheck(function(n, Mu, kappa, Psi, df) {
 #(one thing this setup doesn't do is precompute inv(Psi) ahead of time)
   d = length(Mu)
   ans = rNIW.alloc(n,d)
-  for(i in 1:n) {
-  #gamma.inv = chol(Psi) # upper triangular #<-- WRONG; I thought chol(inv(S)) = inv(chol(S)) but that's very not true
-  gamma.inv = solve(chol(solve(Psi)))
-  
-  # note: actually getting gamma = solve(gamma.inv) is expensive and numerically unstable,
-  #       so you should avoid computing it if possible
-  
-  # construct 
-  A = BartlettFactor(d, df)
-  #message("Upper triangular bartlett factor") #DEBUG
-  #print(A)
-  
-  # okay, well, it seems we're stuck with inverting A..
-  U = gamma
+
   # lawl wat: the canconical way to make an identity matrix in R is "diag(scalar)". wowwww.
-  A.inv = backsolve(A, diag(d))
-  U.inv = gamma.inv %*% A.inv  #(U = AG and U'U = G'A'AG = W the Wishart-distributed matrix we never actually compute)
+  I = diag(d)
   
-  ans$V[,,i] = tcrossprod(U.inv) #note well that this is not a LU decomposition -- it's UL
-  
-  # now we want X to follow some stuff
-  # one method (slow and numerically unstable)
-  z = rnorm(d); #sample N_d(0, I); since the covariance matrix is I, all draws are i.i.d. , so we can just sample d-univariates and reshape them into a vector
-  ans$X[,i] = Mu + U.inv %*% z/sqrt(kappa)
-  
+  for(i in 1:n) {
+    #gamma.inv = chol(Psi) # upper triangular #<-- WRONG; I thought chol(inv(S)) = inv(chol(S)) but that's very not true
+    gamma.inv = solve(chol(solve(Psi)))
+    
+    # note: actually getting gamma = solve(gamma.inv) is expensive and numerically unstable,
+    #       so you should avoid computing it if possible
+    
+    # construct the cholesky decomposition of a W(I, df) 
+    A = BartlettFactor(d, df)
+    #message("Upper triangular bartlett factor") #DEBUG
+    #print(A)
+    
+    # okay, well, it seems we're stuck with inverting A..
+    U = gamma
+
+    A.inv = backsolve(A, I)
+    U.inv = gamma.inv %*% A.inv  #(U = AG and U'U = G'A'AG = W the Wishart-distributed matrix we never actually compute)
+    
+    ans$V[,,i] = tcrossprod(U.inv) #note well that this is not a LU decomposition -- it's UL
+    
+    # now we want X ~ N(Mu, V/kappa)
+    z = rnorm(d); #sample N_d(0, I); since the covariance matrix is I, all draws are i.i.d. , so we can just sample d-univariates and reshape them into a vector
+    ans$X[,i] = Mu + U.inv %*% z/sqrt(kappa)
   }
   
   ans
@@ -336,7 +341,7 @@ rNIW.snappy2 <- function(n, Mu, kappa, Psi, df) {
      
      z = rnorm(d); #sample N_d(0, I); since the covariance matrix is I, all draws are i.i.d. , so we can just sample d-univariates and reshape them into a vector
      
-     U.inv = gamma.inv %*% A.inv   #this seems dumb. TWO multiplies by gamma? hmmm 
+     U.inv = gamma.inv %*% A.inv
      ans$V[,,i] = tcrossprod(U.inv)
      ans$X[,i] = U.inv %*% z
   }
@@ -413,6 +418,17 @@ rNIW.snappy3 <- rNIW.typecheck(function(n, Mu, kappa, Psi, df) {
 #         anywhere we need an inverse+multiply we can use backsolve instead, which is actually faster 
 
 # TODO: Rcpp::source("rNIW.c")
+
+rNIW.Rcpp2 <- rNIW.typecheck(function(n, Mu, kappa, Psi, df) {
+  # precompute what can be precomputed
+  # because the slowness of doing them in R will not be
+  # that much (only O(1), not O(n)), and is outweighed by the headache in C
+  # TODO: do these in C as well, just to be sure.
+  d = length(Mu)
+  gamma.inv = solve(chol(solve(Psi)))
+    
+  return(rNIW_Rcpp_2(n, d, Mu, kappa, gamma.inv, df))
+})
 
 # TODO: make a final decision:
 # rNIW = rNIW.therealslimshady
