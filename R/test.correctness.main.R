@@ -47,10 +47,10 @@ main <- function() { # avoid polluting the namespace
             plot.NIW.marginals(ground, samples, alg)
             
             # make first moment convergence plots
-            # TODO ....
+            plot.moment1(groud,samples)
             
             # make second moment convergence plots
-            # TODO ....
+            plot.moment2(groud,samples)
             
             
             # test for equidistribution numerically 
