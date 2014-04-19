@@ -290,31 +290,33 @@ rNIW.snappy1 <- rNIW.typecheck(function(n, Mu, kappa, Psi, df) {
 #(one thing this setup doesn't do is precompute inv(Psi) ahead of time)
   d = length(Mu)
   ans = rNIW.alloc(n,d)
-  for(i in 1:n) {
-  #gamma.inv = chol(Psi) # upper triangular #<-- WRONG; I thought chol(inv(S)) = inv(chol(S)) but that's very not true
-  gamma.inv = solve(chol(solve(Psi)))
-  
-  # note: actually getting gamma = solve(gamma.inv) is expensive and numerically unstable,
-  #       so you should avoid computing it if possible
-  
-  # construct 
-  A = BartlettFactor(d, df)
-  #message("Upper triangular bartlett factor") #DEBUG
-  #print(A)
-  
-  # okay, well, it seems we're stuck with inverting A..
-  U = gamma
+
   # lawl wat: the canconical way to make an identity matrix in R is "diag(scalar)". wowwww.
-  A.inv = backsolve(A, diag(d))
-  U.inv = gamma.inv %*% A.inv  #(U = AG and U'U = G'A'AG = W the Wishart-distributed matrix we never actually compute)
+  I = diag(d)
   
-  ans$V[,,i] = tcrossprod(U.inv) #note well that this is not a LU decomposition -- it's UL
-  
-  # now we want X to follow some stuff
-  # one method (slow and numerically unstable)
-  z = rnorm(d); #sample N_d(0, I); since the covariance matrix is I, all draws are i.i.d. , so we can just sample d-univariates and reshape them into a vector
-  ans$X[,i] = Mu + U.inv %*% z/sqrt(kappa)
-  
+  for(i in 1:n) {
+    #gamma.inv = chol(Psi) # upper triangular #<-- WRONG; I thought chol(inv(S)) = inv(chol(S)) but that's very not true
+    gamma.inv = solve(chol(solve(Psi)))
+    
+    # note: actually getting gamma = solve(gamma.inv) is expensive and numerically unstable,
+    #       so you should avoid computing it if possible
+    
+    # construct the cholesky decomposition of a W(I, df) 
+    A = BartlettFactor(d, df)
+    #message("Upper triangular bartlett factor") #DEBUG
+    #print(A)
+    
+    # okay, well, it seems we're stuck with inverting A..
+    U = gamma
+
+    A.inv = backsolve(A, I)
+    U.inv = gamma.inv %*% A.inv  #(U = AG and U'U = G'A'AG = W the Wishart-distributed matrix we never actually compute)
+    
+    ans$V[,,i] = tcrossprod(U.inv) #note well that this is not a LU decomposition -- it's UL
+    
+    # now we want X ~ N(Mu, V/kappa)
+    z = rnorm(d); #sample N_d(0, I); since the covariance matrix is I, all draws are i.i.d. , so we can just sample d-univariates and reshape them into a vector
+    ans$X[,i] = Mu + U.inv %*% z/sqrt(kappa)
   }
   
   ans
@@ -339,7 +341,7 @@ rNIW.snappy2 <- function(n, Mu, kappa, Psi, df) {
      
      z = rnorm(d); #sample N_d(0, I); since the covariance matrix is I, all draws are i.i.d. , so we can just sample d-univariates and reshape them into a vector
      
-     U.inv = gamma.inv %*% A.inv   #this seems dumb. TWO multiplies by gamma? hmmm 
+     U.inv = gamma.inv %*% A.inv
      ans$V[,,i] = tcrossprod(U.inv)
      ans$X[,i] = U.inv %*% z
   }
