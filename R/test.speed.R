@@ -6,7 +6,7 @@ source("test.constants.R")
 # TODO: there's some appeal in a NIW.runtime() which only runs one algorithm at a time
 #       and then writing NIW.runtimes() to just rbinds the results from that all together?
 
-NIW.runtimes <- function(algorithms, max=1e7, N=floor(exp(seq(0, log(max), length.out=15))), rep=5) {
+NIW.runtimes <- function(algorithms, max=1e5, freq=25, N=floor(exp(seq(0, log(max), length.out=freq))), rep=5) {
   # Record the runtimes of a suite of Normal-Inverse-Wishart samplers, for comparison.
   #
   # args:
@@ -14,6 +14,7 @@ NIW.runtimes <- function(algorithms, max=1e7, N=floor(exp(seq(0, log(max), lengt
   #   each function has the rNIW API as documented in NIW.R
   #  N:   the points at which to sample the runtimes algorithm (n being the number of samples to ask each NIW to generate)
   #  max: the largest n to test, if N is left at its default (and unused otherwise)
+  #  freq: the number of points to sample at, if N is left at is default (and unused otherwise) (XXX bad name)
   #  rep: the number of times to sample each runtime
   #
   # returns:

@@ -154,6 +154,7 @@ ks.test.NIW.marginals <- function(ground, sample, alg=NULL) {
 #TODO: NIW.moment.first
 # --> mean?
 plot.moment1 <- function(ground, samples){
+  
   d = dim(samples$X)[1]
   n = dim(samples$X)[2]
   X.cumMean <- matrix(NA, d*n)
@@ -198,7 +199,7 @@ plot.moment2 <- function(ground, samples){
   X.squared <- matrix(NA, d*d*n)
   dim(X.squared) <- c(d,d,n)
   
-  for(i in 1:n){
+  for(i in 1:n){ #..this seems buggy. it's not giving the right outputs.
     X.squared[,,i] <- outer(samples$X[,i],samples$X[,i])
   }
   

@@ -10,8 +10,9 @@ source("test.speed.R")
 
 
 main <- function() { #avoid polluting the namespace
-    
-    results = NIW.runtimes(c("extremelynaive", "naive", "snappy1", "snappy2", "snappy3"), max=1e3, rep=1)
+
+  # TODO: pull the alg names out into a constant..    
+    results = NIW.runtimes(c("extremelynaive", "naive", "snappy1", "snappy2", "snappy3"), max=1e6, rep=3)
 
     # plot runtime plots yay
     plot(c(), xlim=range(results$n), ylim=range(results$time),
