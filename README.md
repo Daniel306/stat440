@@ -22,6 +22,16 @@ The [NIW](https://en.wikipedia.org/wiki/Normal-inverse-Wishart_distribution) dis
 ```
 
 
+Code Guide
+----------------
+
+* `NIW.R` contains the various algorithm implementations
+* `*.main.R` are files which can be run to exercise the related file. Run
+    * `Rscript test.correctness.main.R` and check the output plots to exercise the code
+* `test.speed.R` contains a harness for doing runtime testing
+* `test.correctness.R` tests the correctness of the rNIW and dNIW output by looking at statistical properties: densities, moments, marginals, etc
+
+
 Documentation
 --------------
 
