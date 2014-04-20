@@ -112,6 +112,5 @@ SEXP rNIW_Rcpp_2(int n, int d, NumericVector Mu, double kappa, NumericMatrix gam
    List ret;
    ret["X"] = X_ans;
    ret["V"] = V_ans;
-   ret[]
    return ret;
 }
