@@ -13,7 +13,13 @@ int timesTwo(int x) {
 }
 
 //[[Rcpp::export]]
-Rcpp::NumericVector foo(){
-  Rcpp::NumericVector ab = Rcpp::NumericVector::create(1,2,3,4);
-  return ab;
+SEXP foo(SEXP inp){
+  //if(!Rcpp::isMatrix(inp))
+ //   error(_"error")
+    
+  NumericMatrix ab = inp;
+  List ret;
+  ret["r"] = ab.nrow();
+  ret["c"] = ab.ncol();
+  return ret;
 }

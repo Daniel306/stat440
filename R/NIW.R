@@ -482,7 +482,8 @@ rNIW.snappy3 <- rNIW.typecheck(function(n, Mu, kappa, Psi, df) {
 # XXX I can't prove it because I don't have it written, but I don't think this will give a significant advantage:
 #         anywhere we need an inverse+multiply we can use backsolve instead, which is actually faster 
 
-# TODO: Rcpp::source("rNIW.c")
+require("Rcpp")
+Rcpp::sourceCpp("rNIW.cpp")
 
 rNIW.Rcpp2 <- rNIW.typecheck(function(n, Mu, kappa, Psi, df) {
   # precompute what can be precomputed
@@ -494,6 +495,7 @@ rNIW.Rcpp2 <- rNIW.typecheck(function(n, Mu, kappa, Psi, df) {
     
   return(rNIW_Rcpp_2(n, d, Mu, kappa, gamma.inv, df))
 })
+
 
 # TODO: make a final decision:
 # rNIW = rNIW.therealslimshady
