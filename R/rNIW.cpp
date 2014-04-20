@@ -59,11 +59,11 @@ SEXP rNIW_Rcpp_2(int n, int d, NumericVector Mu, double kappa, NumericVector gam
   NumericVector V_ans(Dimension(d,d,n));
   NumericVector X_ans(Dimension(d,n));
   
-  NumericVector A = BartlettFactorCpp(d,df);
+  
   
   for (int k = 0; k < n; k++){
    // First, create A.
-  
+  NumericVector A = BartlettFactorCpp(d,df);
     // Apply backsolve
   NumericVector A_inv = backSolveInverse(A,d);
   
