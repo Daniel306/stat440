@@ -488,7 +488,7 @@ rNIW.Rcpp2 <- rNIW.typecheck(function(n, Mu, kappa, Psi, df) {
   # precompute what can be precomputed
   # because the slowness of doing them in R will not be
   # that much (only O(1), not O(n)), and is outweighed by the headache in C
-  # TODO: do these in C as well, just to be sure.
+  # TODO: do these in C as well, for completeness.
   d = length(Mu)
   gamma.inv = solve(chol(solve(Psi)))
     
