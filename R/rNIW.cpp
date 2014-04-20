@@ -14,10 +14,10 @@ NumericVector BartlettFactorCpp(int d, int df){
   NumericVector A(Dimension(d,d));
   NumericVector Norms = rnorm((d*(d-1)/2));
   int NormsCount = 0;
-  // Not sure if calculating a numeric vector of dfs makes it faster
+  // Not sure if calculating a numeric vector of dfs makes it faster, could do it later.
   for(int row = 0; row < d; row++){
     A[row*(d+1)] = sqrt(rchisq(1,d-row)[0]);
-    for(int col = 0; col < row; col++){
+    for(int col = 0; col < row; col++){ 
       A[row*d+col] = Norms[NormsCount++];
     }                   
   }
@@ -27,23 +27,47 @@ NumericVector BartlettFactorCpp(int d, int df){
 }
 
 
+// Used only for inverse on upper triangular matrices
+// [[Rcpp::export]]
+NumericVector backSolveInverse(NumericVector A, int d){
+ //
+ NumericVector A_inv(Dimension(d,d)); // sets ot to 0
+
+  // preset diagonals in A_inv to 1 to account for subtraction from I
+  for(int i = 0; i< d; i++){
+    A_inv[i*(d+1)] = 1;
+  }
+
+
+  for(int col = d-1; col > -1; col--){ // colums of solution matrix
+    for(int row = d-1; row > -1; row--){ // row of solution matrix, col of A
+
+     for (int row2 = d-1; row2 > row; row2--){ // row of A, row of solution
+      A_inv[col*d + row] -= A[row2*d + row]*A_inv[col*d+row2] ;
+      }
+      
+      A_inv[col*d + row] = A_inv[col*d + row]/A[row*(d+1)]; 
+    }
+  }
+  
+  return A_inv;
+}
+
+
 // [[Rcpp::export]]
 SEXP rNIW_Rcpp_2(int n, int d, NumericVector Mu, int kappa, NumericMatrix gamma_inv, int df) {
   NumericVector V_ans(Dimension(d,d,n));
   NumericVector X_ans(Dimension(d,n));
+  
   for (int k = 0; k < n; k++){
    // First, create A.
   NumericVector A = BartlettFactorCpp(d,df);
+    // Apply backsolve
+  NumericVector A_inv = backSolveInverse(A,d);
   
-   for(int i = 0; i < d; i++)
-    for(int j = 0; j < d; j++){
-     
-      
-      
-      
-    }
+  NumericVector z = rnorm(d);
+  
   }
-   
    
    
    List ret;
