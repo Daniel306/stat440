@@ -55,23 +55,63 @@ NumericVector backSolveInverse(NumericVector A, int d){
 
 
 // [[Rcpp::export]]
-SEXP rNIW_Rcpp_2(int n, int d, NumericVector Mu, int kappa, NumericMatrix gamma_inv, int df) {
+SEXP rNIW_Rcpp_2(int n, int d, NumericVector Mu, double kappa, NumericMatrix gamma_inv, double df) {
   NumericVector V_ans(Dimension(d,d,n));
   NumericVector X_ans(Dimension(d,n));
   
+  NumericVector A = BartlettFactorCpp(d,df);
+  
   for (int k = 0; k < n; k++){
    // First, create A.
-  NumericVector A = BartlettFactorCpp(d,df);
+  
     // Apply backsolve
   NumericVector A_inv = backSolveInverse(A,d);
   
+
+  
   NumericVector z = rnorm(d);
   
+  
+  NumericVector U_inv(Dimension(d,d));
+  // might want to move this to helper function for upper triangular dot product
+  for (int col = 0; col < d; col++){ // col of result 
+    for(int row = 0; row < d; row++){ // row of result
+      for(int i = 0; i < d; i++){
+        U_inv[col*d+row] +=  gamma_inv[i*d + row] * A_inv[col*d + i]; // Will optimize after
+      }
+               // Rcout << U_inv[col*d+row] << " ";
+    }  
+ //   Rcout << std::endl;
   }
-   
-   
+  
+  /*
+    for (int i = 0; i < d; i++){
+    for (int j = 0; j < d; j++){
+      Rcout << gamma_inv[d*i+j] << " ";
+    }
+    Rcout << std::endl;
+  }
+  */
+  
+  for (int col = 0; col < d; col++){
+    for (int row = 0; row < d; row++){
+      for(int i = 0; i < d; i++){
+        V_ans[k*d*d + col*d + row] += U_inv[i*d+ row] * U_inv[i*d + col];  
+      }
+    }
+  }
+  
+  for(int i = 0; i < d; i++){
+    for(int j = 0; j < d; j++){
+      X_ans[k*d+i] += U_inv[j*d + i]*z[j];
+    }
+      X_ans[k*d + i] = X_ans[k*d + i]/sqrt(kappa) + Mu[i];
+  }
+  
+  }
    List ret;
-   ret["V"] = V_ans;
    ret["X"] = X_ans;
+   ret["V"] = V_ans;
+   ret[]
    return ret;
 }
