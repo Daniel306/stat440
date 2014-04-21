@@ -11,7 +11,7 @@ vectorize <- function(f) {
 }
 
 # multiintegrate
-integrate.multi(f, left, right, ...) {
+integrate.multi <- function(f, lower, upper, ...) {
   # perform a k-ary, hyperrectangular, integral, numerically
   #
   # TODO: clean up the 'extra args' part
@@ -19,9 +19,9 @@ integrate.multi(f, left, right, ...) {
   # note: this i
 
   # Typechecks
-  stopifnot(is.vector(left) && is.vector(right)) #note: scalars are vectors, in R (but vectors are not matrices!)
-  p = length(right)
-  stopifnot(p == length(left))
+  stopifnot(is.vector(lower) && is.vector(upper)) #note: scalars are vectors, in R (but vectors are not matrices!)
+  p = length(upper)
+  stopifnot(p == length(lower))
   stopifnot(p > 0) #TODO: is it meaningful to integrate over a function with no arguments?
   #          -> ..sort of. the result is a rectangle: f() * (right-left)
   #  except that isn't right, because, as written, a function with no args is marked by right and left being empty
@@ -31,27 +31,24 @@ integrate.multi(f, left, right, ...) {
   
   if(p == 1) {
     # base case
-    integrate(f, left, right, ...)
+    g = f;
+    #integrate(f, left, right, ...)
   } else {
     # recursive case
     # note that the function we pass down must be able to handle vector args
-    integrate(function(x) {
-      # integrate needs to take a vectorized function
-      # doing that with matrices is tricky
-      # so for now, do it with sapply(), as inefficient as that is
-      sapply(x, function(x) {
-        # in here, x is scalar
-        # recurse!
-        integrate.multi(function(v) {
-          # do something...
-          #???
-          # Splay scalar x against all the values in v
-          # we need a function which computes
-        }
-        , left=left[-1], right=right[-1])
-      })
-    }, left=left[1], right=right[1], ...)
+    # we need to curry f over its remaining arguments and recurse
+    # the currying is effectively done by recursing into intergrate.multi
+    message("recursive case")
+    g = function(x) {   #<-- this x is a scalar, the first argument
+      message('g called at x=', x)
+      o = function(v) { #<-- this v is a vector *of* scalars: the rest of the arguments
+                        # neither of these functions are vectorized (that happens later)
+        f(c(x, v))
+      }
+      integrate.multi(o, lower=lower[-1], upper=upper[-1]) #-1 deletes the 1st element from the vectors
+    }
   }
+  integrate(vectorize(g), lower=lower[1], upper=upper[1], ...)
 }
 
 # test
@@ -62,12 +59,17 @@ dmvnorm <- function(X, Mu, V, log=FALSE) {
   #TODO: typechecks
   d = length(X) 
   C = sqrt((2*pi*det(V))^d) #TODO: fix this scaling constant
-  exp(-mahalanobis(X, Mu, V)/ 2) / C
+  R = exp(-mahalanobis(X, Mu, V)/ 2) / C
+  message('dmvnorm return val')
+  print(R)
+  return(R)
 }
 # ^warning: dmvnorm is *not* vectorized
 
 source("test.constants.R")
-r = intergrate.multi(function(X) {
+r = integrate.multi(function(X) {
+  message('calling dmvnorm at ')
+  print(X)
   dmvnorm(X, kMu, kPsi)
 }, c(-Inf, -Inf, -Inf), c(0, 0, +Inf))
 message("integral came out to: ", r)
