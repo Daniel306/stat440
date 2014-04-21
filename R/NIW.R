@@ -99,10 +99,7 @@ NIW.typecheck <- function(Mu, Kappa, Psi, df) {
     
     d = dim(Psi)[1]
     
-    #PRECONDITIONS
-    # n must be a natural number
-    stopifnot(n==round(n) && n > 0) # is.integer() is wrong for this; see its help
-    
+    #PRECONDITIONS    
     #Psi must be positive definite
     # XXX we don't actually check that Psi is positive definite because that's hard and slow
     #  we check for symmetry (and squareness) which is relatively cheap 
@@ -114,8 +111,8 @@ NIW.typecheck <- function(Mu, Kappa, Psi, df) {
     # the scalar parameters need to be sane
     stopifnot(Kappa > 0);
     stopifnot(df > d - 1);
-      
-
+    
+    return(d);
 }
 
 
@@ -128,7 +125,12 @@ rNIW.typecheck <- function(rNIW) {
     function(n, Mu, Kappa, Psi, df) {
         Mu = as.vector(Mu)
         Psi = as.matrix(Psi)
+        
+        #PRECONDITIONS
         d = NIW.typecheck(Mu, Kappa, Psi, df)
+        
+        # n must be a natural number
+        stopifnot(n==round(n) && n > 0) # is.integer() is wrong for this; see its help
 
         # IMPLEMENTATION
         ans = rNIW(n, Mu, Kappa, Psi, df);
