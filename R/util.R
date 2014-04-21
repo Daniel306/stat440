@@ -131,11 +131,53 @@ marginalize <- function(f, arity, dims) {
         # v holds the variates we are pushing up to the caller
         # merging them into a single thingy
         # the way we do this is by cbind()ing and then rearranging the columns using R's indexing magic
+        # # ahhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh this is complicated
+        #  we aren't guaranteed that cv and v have the same number of samples
+        V = cbind(cv, v)
+        # currently, cv is 1:m, v is (m+1):arity
+        # we want cv to be ""at"" dims
+        #  what that means is that cv maps to 
+        # uhh
+        # our permutation is
+        #   -dims, dims
+        # e.g. kPsi[,c((1:4)[-c(1,3)], c(1,3))]
+        # but we want the inverse of that
+        # what's the inverse of a permutation?
+        # and how do we write that in R?
+        # that perm is [1,2,3,4] <- [2,4,1,3]
+        # that is, column 2 is put in column 1, column 4 is put in column 2, ...
+        # [1,2,3,4] -> [2,4,1,3]
+        #  column 1 is put in column 2
+        #  column 2 is put in column 4
+        #  column 3 is put in column 1
+        #  column 4 is put in column 3
+        # which we need to write as
+        #  column 3 is put in column 1
+        #  column 1 is put in column 2
+        #  column 4 is put in column 3
+        #  column 2 is put in column 4
+        # or, in psuedo-R syntax
+        # inv(c(2,4,1,3)) == c(3,1,4,2)
+        # ...that easy? nice!
+        # so we want th epermutation
         #
+        # TODO: factor this difficult code to a subroutine
+        cv_dims = dims
+        v_dims = (1:arity)[-dims] #R doesn't let us directly mix negative indexing with positive, so we need to do this
+        perm = c(cv_dims, v_dims)
+        perm.inv = perm[arity:1] # the inverse of a permutation is it reversed
+        V = V[, perm.inv]
+
+        # finally, call the original function on the curried data cv mixed with the passed data v
+        f(V)
       }
       
-      # recurse!
-      g = marginalize(c, arity, dims[-1])
+      # the currying means that can directly loop down the remainder of the dims
+      # summing all of them
+      # eg this next step could also be written with "multiintegrate" if we had such a beast.
+      # TODO: instead of a full marginalize call, write multiintegrate (which is, itself, recursive) 
+      #       and use that.
+      g = marginalize(c, arity-1, dims[-1])
       
       # g needs to be vectorized for integrate to work on it
       # which means the output of marginalize() needs to be vectorized
