@@ -63,3 +63,17 @@ intseq <- function(from=1, to=NULL, by=NULL, length.out=NULL) {
   
   seq(from, to, by)
 }
+
+
+cummean <- function(v) {
+  # compute the "cumulative mean" of a vector: considering each entry as a new sample point, give the sample mean up to that point
+  # 
+  # args:
+  #  v: a numeric vector
+  #
+  # returns:
+  #   a vector the same length as v
+  
+  cumsum(v) / (1:length(v))
+}
+
