@@ -58,7 +58,7 @@ intseq <- function(from=1, to=NULL, by=NULL, length.out=NULL) {
     if(length.out > (to-from)) {
       by = 1;
     } else {
-      by = (to - from) / (length.out - 1) #this formula taken from help(seq); I am unsure why the -1 is necessary, but it is demonstrably.
+      by = floor((to - from) / (length.out - 1)) #this formula taken from help(seq); I am unsure why the -1 is necessary, but it is demonstrably.
     }
   }
 
@@ -66,6 +66,7 @@ intseq <- function(from=1, to=NULL, by=NULL, length.out=NULL) {
   if(!(by==round(by))) {
     stop("assertion: 'by' should be integer, but by=",by," and round(by)=", round(by))
   }
+  stopifnot(by > 0)
   
   seq(from, to, by)
 }
