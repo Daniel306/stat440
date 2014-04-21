@@ -40,9 +40,13 @@ main <- function() { # avoid polluting the namespace
             plot.NIW.marginals(ground, samples, alg)
             
             # make first moment convergence plots
+            plot.moment.first(ground$X, samples$X, "NIW: X")
+            plot.moment.first(ground$V, samples$V, "NIW: V")
             plot.moment1(groud,samples)
             
             # make second moment convergence plots
+            plot.moment.second(ground$X, samples$X, "NIW: X")
+            plot.moment.second(ground$V, samples$V, "NIW: V")
             plot.moment2(groud,samples)
             
             

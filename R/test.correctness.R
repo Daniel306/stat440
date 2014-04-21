@@ -192,6 +192,7 @@ plot.converging.moment.multi <- function(ground, samples, title=NULL) { # XXX na
   # TODO: docstring
   # TODO: merge plot.converging.moment into this, so that it handles multivariates smoothly in line with univariates?
   #    con: the plotting arguments, main=, sub=, etc, will be finicky to do if it's merged
+  #    pro: it might (might) be faster to do the cummeans all at once
 
   # TODO: typechecks
   
@@ -199,12 +200,10 @@ plot.converging.moment.multi <- function(ground, samples, title=NULL) { # XXX na
   n_dimension = length(dim(samples))
   interesting_dimensions = 1:(n_dimension-1) #XXX name
   
-  # TODO: it might (might) be faster to do the cummeans once, in this function
-  # instead of passing that buck down to plot.converging.moment
   #ground = apply(ground, -n_dimension, mean) # ground is FLATTENED to a single number (per marginal, so there's actually still a bunch)
   #dim(ground) = dim(samples)[interesting_dimensions] #for some reason, using mean() means the result ground loses all its dimensions and becomes a vector. go figure.
   #samples = apply(samples, -n_dimension, cummean) # PAY ATTENTION: this line changes samples from (d,d,n) to (n,d,d)
-
+    
   # deal with the special case of ground being a single value
   # by giving it an extra dimension of length 1
   # (and the beginnings of typechecks while we're at it) 
@@ -225,8 +224,20 @@ plot.converging.moment.multi <- function(ground, samples, title=NULL) { # XXX na
       # base case
       # we've bottomed out and have an actual index in hand
       # so use it
-      i = idx[1]; j = idx[2];
-      plot.converging.moment(ground[i,j,], samples[i,j,],  main=paste(title," [",i,",",j,"]", sep=""));
+      message("bottomed out at idx=")
+      print(idx)
+      # FIXME: I don't understand how to handle variable arity functions in R
+      # so I've hardcoded the cases we're actually using
+      # this needs to be repaired!
+      if(length(idx) == 0) {
+        plot.converging.moment(ground[], samples[],  main=paste(title, sep=""));
+      } else if(length(idx) == 1) {
+        i = idx[1];
+        plot.converging.moment(ground[i,], samples[i,],  main=paste(title," [",i,"]", sep=""));
+      } else if(length(idx) == 2) {
+        i = idx[1]; j = idx[2];
+        plot.converging.moment(ground[i,j,], samples[i,j,],  main=paste(title," [",i,",",j,"]", sep=""));
+      }
     } else {
       # split the top dimensions from the body
       # note how we extract the *number* of elements in the dimension d from the index of the dimension itself dims[1]
@@ -244,45 +255,41 @@ plot.converging.moment.multi <- function(ground, samples, title=NULL) { # XXX na
 test.plot.converging.moment.multi <- function() {
   source("test.constants.R")
   S = rWishart(14441, kDF, kPsi);
+   # the mean of a wishart distribution is V*df..
   plot.converging.moment.multi(kPsi*kDF, S, paste("W(Psi,", kDF,")"))
 }
 #test.plot.converging.moment.multi()
 
 
-# t
-# this is the multivariate wrapper for plot.converging.moment
-  # 
-  # args:
-  #  ground: either a ground sample set the same dimensionality as samples (as in plot.compare)
-  #          or a *single* sample the same dimensionality as samples, which is assume
-#}
-
 moment.first <- identity
 
 plot.moment.first <- function(ground, samples, title=NULL) {
+  if(length(dim(ground)) == length(dim(samples)) - 1) {
+    dim(ground) = c(dim(ground), 1)
+  } # else: maybe unhandled crashytimes
+  
   plot.converging.moment.multi(moment.first(ground), moment.first(samples), title=title)
 }
 
 moment.second <- function(M) {
-  # given a (d,p,n) matrix
+  # given a (d,n) or (d,p,n) matrix
   #  (n being the number of samples)
   # compute the second moment of each sample
-  # which, in matrixland, is M%*%t(M)
-  # returns: a matrix of the same size
+  # which, in matrixland, is M%*%t(M), a (d,d) matrix (nb: a (d,n) matrix means each sample is (d,) which tcrossprod treats as a (d,1) matrix)
+  # returns: a (d,d,n) matrix containing the second moments
   # TODO: generalize to matrices of more than 2 dimensions
 
   # Typechecks
-  stopifnot(length(dim(M)) == 3)
-
+  n_dim = length(dim(M))
   d = dim(M)[1]
-  p = dim(M)[2]
-  n = dim(M)[3]
+  n = dim(M)[n_dim]
   
-  R = apply(M, 3, tcrossprod)
-  # apply() flattens its results; we need to unflatten them
+  R = apply(M, n_dim, tcrossprod)
+  # apply() flattens its results just to be a pain;
+  # we need to unflatten them.
   # M %*% t(M) is (d x p)*(p * d) so the result is (d x d)
-  # FIXME: I doubt this holds in higher dimensional cases.
   dim(R) = c(d, d, n)
+  
   return(R)
 }
 
@@ -291,6 +298,7 @@ plot.moment.second <- function(ground, samples, title=NULL) {
   # the mainline case is that ground and sample are both (d,p,n) matrices
   # but ground MIGHT be a single sample, without the 'n' dimension
   # we special- this case by giving it a third dimension of length 1
+  
   if(length(dim(ground)) == length(dim(samples)) - 1) {
     dim(ground) = c(dim(ground), 1)
   } # else: maybe unhandled crashytimes
