@@ -178,7 +178,7 @@ plot.converging.moment <- function(ground, samples, ...) {
   # so use intseq() to reduce
   idx = intseq(1, length(samples), length.out=1000)
   means = cummean(samples)[idx]
-  plot(idx, means, xlab="n", ylab="moment", ...) #XXX is ylab right?
+  plot(idx, means, xlab="samples taken", ylab="moment", ...) #XXX is ylab right?
   abline(h=ground, lty="solid", col="blue")
 }
 
@@ -305,89 +305,3 @@ plot.moment.second <- function(ground, samples, title=NULL) {
   
   plot.converging.moment.multi(moment.second(ground), moment.second(samples), title=paste(title, "^2", sep=""))
 }
-
-plot.moment1 <- function(ground, samples){
-  
-  d = dim(samples$X)[1]
-  n = dim(samples$X)[2]
-  X.cumMean <- matrix(NA, d*n)
-  dim(X.cumMean) <- c(d,n)
-  V.cumMean <- matrix(NA, d*d*n)
-  dim(V.cumMean) <- c(d,d,n)
-  
-  # expectations of X
-  par(mfrow=c(2,2))
-  for(i in 1:d){
-    X.cumMean[i,] <- cumsum(samples$X[i,])/(1:n)
-    plot(1:n, X.cumMean[i,], 
-         xlab = "samples taken", ylab = paste("E[X_",i,"]" ))
-  }
-  
-  #Expectations of V
-  par(mfrow=c(2,2))
-  
-  for(i in 1:d){
-    for(j in i:d){ # since symetric, ignoring lower triangle
-      V.cumMean[i,j,] <- cumsum(samples$V[i,j,])/(1:n)
-      plot(1:n, V.cumMean[i,j,], 
-           xlab = "samples taken", ylab = paste("E[V_",i,",",j,"]" ))
-    }
-  }
-  
-}
-#TODO: NIW.moment.second
-# --> ??
-plot.moment2 <- function(ground, samples){
-  d = dim(samples$X)[1]
-  n = dim(samples$X)[2]
-  X.cumMean <- matrix(NA, d*d*n)
-  dim(X.cumMean) <- c(d,d,n)
-  V.cumMean <- matrix(NA, d*d*n)
-  dim(V.cumMean) <- c(d,d,n)
-  
-  
-  
-  # expectations of X
-  
-  X.squared <- matrix(NA, d*d*n)
-  dim(X.squared) <- c(d,d,n)
-  
-  for(i in 1:n){ #..this seems buggy. it's not giving the right outputs.
-    X.squared[,,i] <- outer(samples$X[,i],samples$X[,i])
-  }
-  
-  par(mfrow=c(2,2))
-  for(i in 1:d){
-    for(j in i:d){
-      X.cumMean[i,j,] <- cumsum(X.squared[i,j,])/(1:n)
-      plot(1:n, X.cumMean[i,j,], 
-           xlab = "samples taken", ylab = paste("E[X^2_",i,",",j,"]" ))
-    }
-  }
-  
-  #Expectations of V
-  
-  
-  V.squared <- matrix(NA, d*d*n)
-  dim(V.squared) <- c(d,d,n)
-  
-  for(i in 1:n){
-    # Done differently since outer is buggy on matrices
-    # This works since V is symetric
-    V.squared[,,i] <- samples$V[,,i] %*% samples$V[,,i] 
-  }
-  
-  par(mfrow=c(2,2))
-  
-  for(i in 1:d){
-    for(j in i:d){ # since symetric, ignoring lower triangle
-      V.cumMean[i,j,] <- cumsum(V.squared[i,j,])/(1:n)
-      plot(1:n, V.cumMean[i,j,], 
-           xlab = "samples taken", ylab = paste("E[V^2_",i,",",j,"]" ))
-    }
-  }
-  
-}
-
-
-# run this all on NIW.naive
