@@ -62,13 +62,7 @@ mvrnorm <- NULL;           #I don't know why I need the namespace in the first s
 ######################
 ## Helper functions
 
-is.square <- function(M) {
-    length(dim(M)) == 2 && (nrow(M) == ncol(M))
-}
-
-is.symmetric <- function(M) {
-    is.square(M) && all(t(M) == M)
-}
+source("util.R")
 
 rNIW.alloc <- function(n, d) {
   # Construct an empty datastructure to store rNIW results.
