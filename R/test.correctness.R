@@ -15,12 +15,15 @@ source("NIW.R")
 
 #TODO: rewrite plot.NIW.marginals to it can just be 'plot.marginals'
 #TODO: ditto for the ks tests
-#  --> the trick used with moments will help here, where we write a generic function and have the 
+#  --> the trick used with moments will help here, where we write a generic function
+#     which takes the fiddly details, main=, sub=, title=, etc, as arguments to be set by the caller
+#    NIW.ks.test, in particular, definitely does not need to know what algorithm generated the data it is looking at
+#    and that is a holdover from that we passed that argument in to plot.NIW.densities so that it could label the plots (because there's no other way in R but to label the plots as you create them)
 #TODO: write a function (to base plot.marginals on) which extracts the marginals of a matrix in some sensible way;
 #             either ruby-style where you pass an op block which receives the marginal as an argument
 #             or more (procedurally?) where the marginals are reshaped into I guess a list with entries named by their marginal
 #  the core of this function now exists as R() inside of plot.converging.moment.multi; factoring it out will be helpful: it will drastically shorten *.marginals() above
-
+# TODO: figure out a bloody better way of labelling the various output with which algorithm created it.
 
 ##################################################
 ## Density Plots
@@ -62,7 +65,7 @@ plot.compare <- function(ground, sample, ...) { #XXX NAME
 }
 
 
-plot.NIW.marginals <- function(ground, sample, alg=NULL) { #XXX name
+plot.NIW.densities <- function(ground, sample, alg=NULL) { #XXX name
   # compare (using plot.compare) the marginals of the Normal Inverse Wishart against their expected pdfs
   #
   # args:
@@ -275,15 +278,15 @@ plot.moment.second <- function(ground, samples, title=NULL) {
 
 plot.NIW.moment.first <- function(ground, sample) { 
   #TODO: should this take the distribution paramters so it can compute 'ground' directly?
-  plot.moment.first(ground$X, sample$X. "NIW X")
-  plot.moment.first(ground$V, sample$V. "NIW V")
+  plot.moment.first(ground$X, sample$X, "NIW X")
+  plot.moment.first(ground$V, sample$V, "NIW V")
 }
 
 
 plot.NIW.moment.second <- function(ground, sample) {
   #TODO: should this take the distribution paramters so it can compute 'ground' directly?
-  plot.moment.second(ground$X, sample$X. "NIW X")
-  plot.moment.second(ground$V, sample$V. "NIW V")
+  plot.moment.second(ground$X, sample$X, "NIW X")
+  plot.moment.second(ground$V, sample$V, "NIW V")
 }
 
 # TODO: the formulas on wikipedia include the covariances of each element of V; we aren't computing covariances here, but maybe we should.
@@ -292,7 +295,7 @@ plot.NIW.moment.second <- function(ground, sample) {
 ##########################################
 ## Kolmogorov-Smirnov Tests
 
-ks.test.NIW.marginals <- function(ground, sample, alg=NULL) {
+NIW.ks.test <- function(ground, sample, alg=NULL) {
   # compare (using plot.compare) the marginals of the Normal Inverse Wishart against their expected pdfs
   #
   # args:
