@@ -49,7 +49,7 @@ plot.compare <- function(ground, sample, ...) { #XXX NAME
   #}
 }
 
-plot.NIW.marginals <- function(ground, sample, alg=NULL) {
+plot.NIW.marginals <- function(ground, sample, alg=NULL) { #XXX name
   # compare (using plot.compare) the marginals of the Normal Inverse Wishart against their expected pdfs
   #
   # args:
@@ -153,6 +153,108 @@ ks.test.NIW.marginals <- function(ground, sample, alg=NULL) {
 
 #TODO: NIW.moment.first
 # --> mean?
+
+# Wikipedia gives some analytic formulas:
+# https://en.wikipedia.org/wiki/Inverse-Wishart_distribution#Moments
+#
+
+
+plot.converging.moment <- function(ground, samples, ...) {
+  # 
+  # every moment is an expectation, which can be approximated by a sample mean
+  # to use this function, first compute
+  # plots a horizontal line at the expected value as given in 'ground
+  #
+  # args:
+  #  ground: the 'ground truth': a number or a vector
+  #  samples: a vector of sample points
+  #  ...: extra arguments to plot()
+
+  # TODO: typechecks
+  
+  if(length(ground) > 1) { ground = mean(ground) }
+
+  # plotting too many points causes lag
+  # so use intseq() to reduce
+  idx = intseq(1, length(samples), length.out=1000)
+  means = cummean(samples)[idx]
+  plot(idx, means, xlab="n", ylab="moment", ...) #XXX is ylab right?
+  abline(h=ground, lty="solid", col="blue")
+}
+
+# multivariate is harder
+# sample
+
+plot.converging.moment.multi <- function(ground, samples, title=NULL) { # XXX name
+  # befpore using this function, map samples (and ground) with
+  # for example, to take second moments, first run crossprod() across samples
+  #
+  # TODO: docstring
+
+  # TODO: typechecks
+  
+  # our convention is: the LAST dimension is 'n'
+  
+  n_dimension = length(dim(samples))
+  interesting_dimensions = dim(samples)[-n_dimension] #XXX name
+
+  # TODO: it might (might) be faster to do the cummeans once, in this function
+  # instead of passing that buck down to plot.converging.moment
+  #ground = apply(ground, -n_dimension, mean) # ground is FLATTENED to a single number (per marginal, so there's actually still a bunch)
+  #dim(ground) = interesting_dimensions #for some reason, using mean() means the result ground loses all its dimensions and becomes a vector. go figure.
+  #samples = apply(samples, -n_dimension, cummean) # PAY ATTENTION: this line changes samples from (d,d,n) to (n,d,d)
+
+  # deal with the special case of ground being a single value
+  # by giving it an extra dimension of length 1
+  # (and the beginnings of typechecks while we're at it) 
+  if( length(dim(ground)) == length(dim(samples)) ) {
+    # acceptable
+  } else if(length(dim(ground)) == length(dim(samples)) - 1) { #TODO: also check the dimensions that match actually do match
+    # fixable
+    dim(ground) = c(dim(ground), 1)
+  } else {
+    # unacceptable!!
+    stop("Inconsistent dimenesions between ground and sample")
+  }
+
+  # loop over all interesting_dimensions and plot each marginal
+  # recursive something someting  
+  R<-function(idx, dims) { #TODO: pull out into util.R
+    if(length(dims)==0) {
+      # base case
+      # we've bottomed out and have an actual index in hand
+      # so use it
+      i = idx[1]; j = idx[2];
+      plot.converging.moment(ground[i,j,], samples[i,j,],  main=paste(title," [",i,",",j,"]", sep=""));
+    } else {
+      # split the top dimensions from the body
+      d = dims[1]; dims = dims[-1];
+      for(i in 1:d) {
+        R(append(idx, i), dims)
+      }
+    }
+  }
+  R(c(), interesting_dimensions)
+}
+
+
+# sketchy test:
+test.plot.converging.moment.multi <- function() {
+  source("test.constants.R")
+  S = rWishart(14441, kDF, kPsi);
+  plot.converging.moment.multi(kPsi*kDF, S, paste("W(Psi,", kDF,")"))
+}
+#test.plot.converging.moment.multi()
+
+
+# t
+# this is the multivariate wrapper for plot.converging.moment
+  # 
+  # args:
+  #  ground: either a ground sample set the same dimensionality as samples (as in plot.compare)
+  #          or a *single* sample the same dimensionality as samples, which is assume
+#}
+
 plot.moment1 <- function(ground, samples){
   
   d = dim(samples$X)[1]
