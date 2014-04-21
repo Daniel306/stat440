@@ -40,7 +40,11 @@
 #  produces probability densities P(NIW(Mu, Kappa, Psi, df) = (X, V))
 #
 # args:
-#     X, V: the point at which to select
+#     X, V: the point(s) at which to select:
+#       X is a d-length vector or a dx1 matrix)
+#       V is a dxd matrix
+#         if either X or V has an extra dimension, it is taken to be 'n', the number of sample points
+#         and the other must have a matching sized dimension
 #     Mu, Kappa, Psi, df: the parameters of the particular Normal/Inverse-Wishart distribution in question
 #     log: whether to produce log-probabilities or not.
 #
@@ -48,7 +52,7 @@
 #   XXX FILL ME IN
 #
 # returns:
-#   p, a probability, or log(p) if log==TRUE
+#   a vector of probabilities p, or log(p) if log==TRUE
 
 
 
