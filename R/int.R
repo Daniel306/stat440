@@ -1,4 +1,15 @@
 
+vectorize <- function(f) {
+  # vectorize a univariate function
+  #
+  # this uses sapply(), so it's reliable and as slow as doing it by hand
+  # it can make your code more readable, though.
+  
+  function(x) {
+    sapply(x, function(x) { f(x) })
+  }
+}
+
 # multiintegrate
 integrate.multi(f, left, right, ...) {
   # perform a k-ary, hyperrectangular, integral, numerically
