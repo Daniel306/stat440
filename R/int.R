@@ -6,6 +6,7 @@ vectorize <- function(f) {
   # it can make your code more readable, though.
   
   function(x) {
+    message('------------------vectorize----------------------')
     sapply(x, function(x) { f(x) })
   }
 }
@@ -52,12 +53,20 @@ integrate.multi <- function(f, lower, upper, ...) {
 }
 
 # test
+source("util.R")
 dmvnorm <- function(X, Mu, V, log=FALSE) {
   if(log) {
     stop("log probabilities are not supported yet")
   }
-  #TODO: typechecks
+  
+  # typechecks
+  stopifnot(is.vector(X) && is.vector(Mu) && is.matrix(V))
   d = length(X) 
+  stopifnot(length(Mu) == d)
+  stopifnot(is.symmetric(V))
+  stopifnot(dim(V)[1] == d)
+
+  
   C = sqrt((2*pi*det(V))^d) #TODO: fix this scaling constant
   R = exp(-mahalanobis(X, Mu, V)/ 2) / C
   message('dmvnorm return val')
@@ -68,8 +77,6 @@ dmvnorm <- function(X, Mu, V, log=FALSE) {
 
 source("test.constants.R")
 r = integrate.multi(function(X) {
-  message('calling dmvnorm at ')
-  print(X)
-  dmvnorm(X, kMu, kPsi)
-}, c(-Inf, -Inf, -Inf), c(0, 0, +Inf))
+  dmvnorm(X, kMu[1:2], kPsi[1:2, 1:2])
+}, c(-Inf, -Inf), c(0, 0))
 message("integral came out to: ", r)

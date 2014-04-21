@@ -221,4 +221,4 @@ test.marginalize <- function() {
   x = seq(-100, 100, length.out=55)
   plot(x, p(x), main="Marginalization test")
 }
-test.marginalize()
+#test.marginalize()
