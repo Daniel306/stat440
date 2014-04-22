@@ -547,13 +547,21 @@ dIW <- function(V, Psi, df, log=FALSE) {
   if(length(dim(V)) == 2) {
     dim(V) = c(d,d,1)  
   }
-  
+
+
   c = v*log(det(Psi))/2 - (df*d)*log(2)/2 - multigamma(d)(df/2) #normalizing constant
   
   det_V = apply(V, 3, det)
   #Psi %*% solve(V) would be a clever backsolve IF we had the square root of V handed to us
   trace_Psi_invV = apply(Psi_invV, 3, function(M) { sum(diag( Psi %*%  solve(M)    )) } )
-  p = -  (   (df+d+1)*log(det_V)  + trace_Psi_invV)    )/2    + c
+
+  # Wikipedia is wrong as of <https://en.wikipedia.org/w/index.php?title=Inverse-Wishart_distribution&oldid=604297660>
+  # the pdf on https://en.wikipedia.org/wiki/Inverse-Wishart_distribution should be identical to https://en.wikipedia.org/wiki/Wishart_distribution
+  #  but with the X and V terms inverted
+  # and indeed those are
+  # but the Inverse Wishart page additionally switches the 2/3 signs in the power
+  # which is completely the sort of mistake that one might make with LaTeX
+  p = -  (   (df-d-1)*log(det_V)  + trace_Psi_invV)    )/2    + c
   
   if(!log) {
     p = exp(p)
