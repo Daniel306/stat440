@@ -299,16 +299,19 @@ test.marginalize <- function() {
   source("test.constants.R")
   kMu = kMu[1:3] #the constants are 4 dimensional
   kV = solve(kPsi[1:3,1:3]) #but that's too much to test.
-  
+
+  d = length(kMu)  
   # marginalize requires currying over any distributional parameters
   # whatvever, we can use Psi instead of V
   # the marginal of a multinormal should be normal
   f = function(X) { dmvnorm(X, kMu, kV) }
   # perform the tricky part 
-  p = marginalize(f, 3, c(1,3), rel.tol=1e-3)
-  # perform the *hard* part
-  x = seq(-3, 3, length.out=5)
+
+  margin = 2
+  p = marginalize(f, d, (1:d)[-margin], rel.tol=1e-3)
   
+  # perform the *hard* part
+  x = seq(-3, 3, length.out=10)
   plot(x, vectorize(p)(x), main="Marginalization test")
   
   # the expected marginal is just found by simply dropping
@@ -319,8 +322,10 @@ test.marginalize <- function() {
   message("V:")
   print(kV)
   
-  abline(v=kMu[1], lty="dashed", col="red")
-  d = function(x) { dnorm(x, kMu[1], kV[1,1]) }
-  lines(x, d(x), lty="dashed", col="red") #plot the expected density
+  for(margin in 1:d) {
+    abline(v=kMu[margin], lty="dashed", col=margin)
+    dist = function(x) { dnorm(x, kMu[margin], kV[margin,margin]) }
+    lines(x, dist(x), lty="dashed", col=margin) #plot the expected density
+  }
 }
 test.marginalize()
