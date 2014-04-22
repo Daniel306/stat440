@@ -97,10 +97,11 @@ cummean <- function(v) {
   
   cumsum(v) / (1:length(v))
 }
-
+ 
 dmvnorm <- function(X, Mu, V, log=FALSE) {
   # the multivariate normal density function (pdf)
   # warning: dmvnorm is *not* vectorized
+  # TODO: this function isn't really a utility; it belongs ..somewhere else
   # TODO: docstring
   if(log) {
     stop("log probabilities are not supported yet")
@@ -280,7 +281,6 @@ marginalize <- function(f, arity, dims) {
 }
 
 # sketchy test
-
 test.marginalize <- function() {
   # what's an easy trivariate function we can look at?
   #.. how about dmvnorm
