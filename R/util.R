@@ -51,6 +51,7 @@ intseq <- function(from=1, to=NULL, by=NULL, length.out=NULL) {
   # construct a list of indecies
   # 
   # this is like seq() except that 'seq' doesn't guarantee its results can be used as indecies.
+  # this is NOT the same as seq.int, which seems mostly to just be an alias for seq
   # usage: intseq(n) -> 1:n
   #        intseq(m,n) -> m:n
   #        intseq(m,n,by=k) -> c(m, m+k, m+2k, ..., n-ish) where 'ish' is the remainder of (n-m)/k
