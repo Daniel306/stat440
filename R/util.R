@@ -175,7 +175,7 @@ test.integrate.multi <- function() {
 #test.integrate.multi()
 
 
-marginalize <- function(f, arity, dims) {
+marginalize <- function(f, arity, dims, lower=-Inf, upper=+Inf) {
   # numerically marginalize some chosen set of variates out of a pdf
   # 
   # this is somewhat like currying, but each curried variable corresponds to an integrate()
@@ -185,16 +185,17 @@ marginalize <- function(f, arity, dims) {
   #  forks at each branch.
   # It is also prone to numerical instability.
   #
-  # TODO: clean up this docstring
-  # TODO: allow hinting the endpoints for each dim (instead of assuming c(-Inf, +Inf)) to speed up evaluation
-  #    at the possible expense of correctness
-  #
   # args:
   #   f: the function to marginalize over; f should take a single argument, a vector, and return a single scalar
   #   arity: the number of variates that f takes; that is, the length of the single vector argument to f.
   #         be careful to specify this correctly. marginalize() has no way of typechecking that you are giving the correct
   #         or that f is interpreting the vector marginalize ends up handing it correctly
   #   dims: a vector containing which variates to marginalize out
+  #  lower, upper: vectors giving the boundaries of dims to marginalize over
+  #    this can speed up evaluation, but possibly at the expense of correctness.
+  #    You must know something about your distribution to use these correctly.
+  #    These should be the same length as the number of dimensions.
+  #       as a special case, if either is scalar, it is used as the boundary for ALL dimensions.
   #
   # e.g. if you have a function f(a,b,c,d,e,f,g) then marginalize(f, 7, c(2,3)) -> f(a,d,e)
   #   marginalize(f, 7, c(1,3,5,6,7)) -> f(2,4)
@@ -202,11 +203,12 @@ marginalize <- function(f, arity, dims) {
   #
   # returns:
   #   a function which takes a single vector of ariity
-  #   (TODO: figure out how to actually handle v-arity functions in R)
+  #
+  # TODO: figure out how to actually handle v-arity functions nicely in R
   # TODO: support dims being given as negatives (as apply() and indexing)
-  
-  # TODO: is there some kind of magical optimization which will allow us to precompute the integrate()s? Redoing length(dims) integrates at EVERY call it extremely painful
-  # ESPECIALLY because integrate.multi can't handle vectorized calls
+  # TODO: is there some kind of magical probability theory trick which allows precomputing the integrate()s?
+  #             Redoing length(dims) integrates at EVERY call it extremely painful
+  #             ESPECIALLY because integrate.multi can't handle vectorized calls
    
    # Typechecks
   stopifnot(unique(dims) == dims)
@@ -222,6 +224,19 @@ marginalize <- function(f, arity, dims) {
       
     stopifnot(p + q == arity) #arity of the marginalized function must be the number of marginalized variables (length(dims)) and the number of variates given to us here
     # above we checked that length(dims) <= arity,   so   arity - length(dims) >= 0 
+      
+      
+    # if the integration bounds are scalar,
+    # vectorize them
+    if(length(lower) == 1) {
+      lower = rep(lower, q)
+    }
+    if(length(upper) == 1) {
+      upper = rep(upper, q)
+    }
+    stopifnot(length(lower) == length(upper))
+    stopifnot(length(lower) == q)
+    
       
     # here's the idea: to marginalize, first curry the function so that it is only a function of the marginalized variates
     # , then use integrate.multi to eat up the marginalized variates
@@ -262,14 +277,12 @@ marginalize <- function(f, arity, dims) {
       V = V[rev(perm)] #the inverse of a permutation is its reverse
       
       # finally, call the original function on the curried data cv mixed with the passed data v
-      message("calling original function on these args")
-      print(V)
       stopifnot(length(V) == arity)
       f(V)
     }
     
     # now that we have curried, marginalize over everything else
-    integrate.multi(cr, lower=rep(-Inf, q), upper=rep(Inf, q))
+    integrate.multi(cr, lower=lower, upper=upper)
   }
 }
 
@@ -286,11 +299,14 @@ test.marginalize <- function() {
   # the marginal of a multinormal should be normal
   f = function(X) { dmvnorm(X, kMu, kV) }
   # perform the tricky part 
-  p = marginalize(f, 3, c(2,3))
+  p = marginalize(f, 3, c(2,3), lower=-3, upper=2)
   print(p)
   # perform the *hard* part
-  x = seq(-100, 100, length.out=55)
+  x = seq(-3, 3, length.out=55)
   print(x)
   plot(x, vectorize(p)(x), main="Marginalization test")
+  # the expected marginal is just found by dropping
+  abline(v=kMu[1])
+  lines(function(x) { dnorm(x, kMu[1], kV[1,1]) }, lty="dashed") #plot the expected density
 }
 test.marginalize()
