@@ -41,10 +41,12 @@
 #
 # args:
 #     X, V: the point(s) at which to select:
-#       X is a d-length vector or a dx1 matrix)
-#       V is a dxd matrix
-#         if either X or V has an extra dimension, it is taken to be 'n', the number of sample points
-#         and the other must have a matching sized dimension
+#      either:
+#       X is a d-length vector or a (d,1) matrix
+#       V is a (d,d) matrix
+#      or:
+#       X is a (d,n) matrix
+#       V is a (d,d,n) matrix
 #     Mu, Kappa, Psi, df: the parameters of the particular Normal/Inverse-Wishart distribution in question
 #     log: whether to produce log-probabilities or not.
 #
@@ -62,6 +64,8 @@ mvrnorm <- NULL;           #I don't know why I need the namespace in the first s
                            #but without it this breaks under source(). :shrug:
 
 #require("slam") #TODO: investigate this package
+
+
 
 ######################
 ## Helper functions
@@ -90,6 +94,10 @@ rNIW.alloc <- function(n, d) {
   
   list(X=X, V=V)
 }
+
+#########################################################
+#################### rNIW ###############################
+
 
 #######################
 ## Hosting code
@@ -499,3 +507,18 @@ rNIW.Rcpp2 <- rNIW.typecheck(function(n, Mu, kappa, Psi, df) {
 
 # TODO: make a final decision:
 # rNIW = rNIW.therealslimshady
+
+
+
+#########################################################
+#################### dNIW ###############################
+
+dNIW <- function(X, V, Mu, Kappa, Psi, df, log=FALSE) {
+  if(log) {
+    stop("log probabilities unsupported")
+  }
+  #
+  # Typechecks
+  #
+  # coerce the arguments to vectors
+}
