@@ -6,7 +6,6 @@ vectorize <- function(f) {
   # it can make your code more readable, though.
   
   function(x) {
-    message('------------------vectorize----------------------')
     sapply(x, function(x) { f(x) })
   }
 }
@@ -14,6 +13,8 @@ vectorize <- function(f) {
 # multiintegrate
 integrate.multi <- function(f, lower, upper, ...) {
   # perform a k-ary, hyperrectangular, integral, numerically
+  # this is not API compatible with integrate() because it only returns a single number
+  # if any of the subintegrations fails the whole thing will probably just blow up
   #
   # TODO: clean up the 'extra args' part
   # ...: extra args to integrate()
@@ -30,28 +31,25 @@ integrate.multi <- function(f, lower, upper, ...) {
   # that there are no
   # still, it seems like this can be written shorter if we define a p==0 case..
   
+  g = 
   if(p == 1) {
-    # base case
-    g = f;
-    #integrate(f, left, right, ...)
-  } else {
-    # recursive case
-    # note that the function we pass down must be able to handle vector args
-    # we need to curry f over its remaining arguments and recurse
-    # the currying is effectively done by recursing into intergrate.multi
-    message("recursive case")
-    g = function(x) {   #<-- this x is a scalar, the first argument
-      message('g called at x=', x)
+    #base case
+    f
+  } else {           
+    #recursive case
+    function(x) {   #<-- this x is a scalar, the first argument to f
       o = function(v) { #<-- this v is a vector *of* scalars: the rest of the arguments
-                        # neither of these functions are vectorized (that happens later)
+                     # though v is a vector, neither of these functions
+                     # are vectorized (in the sense of mapping multiple
+                     # input points to an equal number of output points)
+                     # (that happens later)
         f(c(x, v))
       }
-      integrate.multi(o, lower=lower[-1], upper=upper[-1]) #-1 deletes the 1st element from the vectors
+    integrate.multi(o, lower=lower[-1], upper=upper[-1]) #-1 deletes the 1st element from the vectors
     }
   }
-  R = integrate(vectorize(g), lower=lower[1], upper=upper[1], ...)$value
-  message("result from integrate(vectorize(g)) on ", p, " arity:", R)
-  return(R)
+  
+  integrate(vectorize(g), lower=lower[1], upper=upper[1], ...)$value
 }
 
 # test
@@ -67,13 +65,9 @@ dmvnorm <- function(X, Mu, V, log=FALSE) {
   stopifnot(length(Mu) == d)
   stopifnot(is.symmetric(V))
   stopifnot(dim(V)[1] == d)
-
   
-  C = sqrt((2*pi)^d*det(V)) #TODO: fix this scaling constant
-  R = exp(-mahalanobis(X, Mu, V)/ 2) / C
-  message('dmvnorm return val')
-  print(R)
-  return(R)
+  C = sqrt((2*pi)^d*det(V))
+  exp(-mahalanobis(X, Mu, V)/ 2) / C
 }
 # ^warning: dmvnorm is *not* vectorized
 
