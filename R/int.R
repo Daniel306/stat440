@@ -49,7 +49,9 @@ integrate.multi <- function(f, lower, upper, ...) {
       integrate.multi(o, lower=lower[-1], upper=upper[-1]) #-1 deletes the 1st element from the vectors
     }
   }
-  integrate(vectorize(g), lower=lower[1], upper=upper[1], ...)
+  R = integrate(vectorize(g), lower=lower[1], upper=upper[1], ...)$value
+  message("result from integrate(vectorize(g)) on ", p, " arity:", R)
+  return(R)
 }
 
 # test
@@ -67,7 +69,7 @@ dmvnorm <- function(X, Mu, V, log=FALSE) {
   stopifnot(dim(V)[1] == d)
 
   
-  C = sqrt((2*pi*det(V))^d) #TODO: fix this scaling constant
+  C = sqrt((2*pi)^d*det(V)) #TODO: fix this scaling constant
   R = exp(-mahalanobis(X, Mu, V)/ 2) / C
   message('dmvnorm return val')
   print(R)
@@ -78,5 +80,5 @@ dmvnorm <- function(X, Mu, V, log=FALSE) {
 source("test.constants.R")
 r = integrate.multi(function(X) {
   dmvnorm(X, kMu[1:2], kPsi[1:2, 1:2])
-}, c(-Inf, -Inf), c(0, 0))
+}, c(-Inf, -Inf), c(Inf, +Inf))
 message("integral came out to: ", r)
