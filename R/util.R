@@ -125,7 +125,9 @@ integrate.multi <- function(f, lower, upper, ...) {
   # perform a k-ary, hyperrectangular, integral, numerically
   # this is not API compatible with integrate() because it only returns a single number
   # if any of the subintegrations fails the whole thing will probably just blow up
-  #
+  ## f should be a function taking a single vector argument, which is all the variates that it is a function of
+  # 
+  # TODO: support vectorized fs, which take a whole set of points (ie an n x p matrix) to sample at
   # TODO: clean up the 'extra args' part
   # ...: extra args to integrate()
   # note: this i
@@ -173,110 +175,99 @@ test.integrate.multi <- function() {
 
 
 marginalize <- function(f, arity, dims) {
-  # numerically marginalize over a chosen set of inputs to a function
+  # numerically marginalize some chosen set of variates out of a pdf
   # 
-  # this is somewhat like currying, but it involves a call to integrate for each dim you marginalize over
-  # e.g. marginalize(f, 7, c(2,3)) -> f(1,4,5,6,7)
+  # this is somewhat like currying, but each curried variable corresponds to an integrate()
+  #
+  # the marginalized function is EXTREMELY slow becaues a every evaluation of it
+  #  requires a length(dim)-deep stack  with at least 10, probably more  (however many integrate() decides) 
+  #  forks at each branch.
+  # It is also prone to numerical instability.
+  #
+  # TODO: clean up this docstring
+  # TODO: allow hinting the endpoints for each dim (instead of assuming c(-Inf, +Inf)) to speed up evaluation
+  #    at the possible expense of correctness
+  #
+  # args:
+  #   f: the function to marginalize over; f should take a single argument, a vector, and return a single scalar
+  #   arity: the number of variates that f takes; that is, the length of the single vector argument to f.
+  #         be careful to specify this correctly. marginalize() has no way of typechecking that you are giving the correct
+  #         or that f is interpreting the vector marginalize ends up handing it correctly
+  #   dims: a vector containing which variates to marginalize out
+  #
+  # e.g. if you have a function f(a,b,c,d,e,f,g) then marginalize(f, 7, c(2,3)) -> f(a,d,e)
   #   marginalize(f, 7, c(1,3,5,6,7)) -> f(2,4)
   #  marginalize(dnorm, 1, 1) -> f() == 1 (#because PDFs must sum to 1)
-  # f needs to be vectorized (because integrate wants it to be vectorized). If you cannot do
-  # so f must be able to take a MATRIX of (n, arity)
-  #  -> the return value will also be vectorized
-  # TODO: clean up this docstring
-  # TODO: allow specifying the endpoints for each dim (instead of assuming c(-Inf, +Inf))
-  # TODO: this function is extremely slow, and probably also numerically unstable
   #
   # returns:
-  #   a function whose arity is arity-length(dims)
-  #   (actually, a function which takes a single vector of that length)
+  #   a function which takes a single vector of ariity
   #   (TODO: figure out how to actually handle v-arity functions in R)
   # TODO: support dims being given as negatives (as apply() and indexing)
   
   # TODO: is there some kind of magical optimization which will allow us to precompute the integrate()s? Redoing length(dims) integrates at EVERY call it extremely painful
-  
-  if(length(dims) == 0) {
-    # base case: we're already done marginalizing
-    f
-  } else { 
-    # recursive case: take the first of dims off and marginalize over the rest, then integrate()
-    function(v) {
-      # vectorization is a jerk
-      # it means that v needs to be a matrix...
-      v = matrix(v) #coerce the input to a matrix..
-      n = dim(v)[1]
-      d = dim(v)[2]
-      
-      stopifnot(d == arity - length(dims)) #arity of the marginalized function must be arity-length(dims)
-      
-      # curry f over the arguments we know about
-      c = function(cv) {
-        # Note: no typechecks here because this is an internal function and we are (supposed to be) careful about what we pass it
-        #
-        # --> cv and v are both matrices
-        # cv holds the variates that we are marginalizing over
-        # v holds the variates we are pushing up to the caller
-        # merging them into a single thingy
-        # the way we do this is by cbind()ing and then rearranging the columns using R's indexing magic
-        # # ahhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh this is complicated
-        #  we aren't guaranteed that cv and v have the same number of samples
-        V = cbind(cv, v)
-        # currently, cv is 1:m, v is (m+1):arity
-        # we want cv to be ""at"" dims
-        #  what that means is that cv maps to 
-        # uhh
-        # our permutation is
-        #   -dims, dims
-        # e.g. kPsi[,c((1:4)[-c(1,3)], c(1,3))]
-        # but we want the inverse of that
-        # what's the inverse of a permutation?
-        # and how do we write that in R?
-        # that perm is [1,2,3,4] <- [2,4,1,3]
-        # that is, column 2 is put in column 1, column 4 is put in column 2, ...
-        # [1,2,3,4] -> [2,4,1,3]
-        #  column 1 is put in column 2
-        #  column 2 is put in column 4
-        #  column 3 is put in column 1
-        #  column 4 is put in column 3
-        # which we need to write as
-        #  column 3 is put in column 1
-        #  column 1 is put in column 2
-        #  column 4 is put in column 3
-        #  column 2 is put in column 4
-        # or, in psuedo-R syntax
-        # inv(c(2,4,1,3)) == c(3,1,4,2)
-        # ...that easy? nice!
-        # so we want th epermutation
-        #
-        # TODO: factor this difficult code to a subroutine
-        cv_dims = dims
-        v_dims = (1:arity)[-dims] #R doesn't let us directly mix negative indexing with positive, so we need to do this
-        perm = c(cv_dims, v_dims)
-        perm.inv = perm[arity:1] # the inverse of a permutation is it reversed
-        V = V[, perm.inv]
+  # ESPECIALLY because integrate.multi can't handle vectorized calls
+   
+   # Typechecks
+  stopifnot(unique(dims) == dims)
+  stopifnot(all(1 <= dims && dims <= arity))
+  # By the pigeonhole principle, these two lines also imply this:
+  #stopifnot(length(dims) <= arity)
 
-        # finally, call the original function on the curried data cv mixed with the passed data v
-        f(V)
-      }
+  function(v) {
+    #Typechecks
+    stopifnot(is.vector(v))
+    p = length(v)
       
-      # the currying means that can directly loop down the remainder of the dims
-      # summing all of them
-      # eg this next step could also be written with "multiintegrate" if we had such a beast.
-      # TODO: instead of a full marginalize call, write multiintegrate (which is, itself, recursive) 
-      #       and use that.
-      g = marginalize(c, arity-1, dims[-1])
+    stopifnot(p == arity - length(dims)) #arity of the marginalized function must be arity-length(dims)
+    # above we checked that length(dims) <= arity,   so   arity - length(dims) >= 0 
       
-      # g needs to be vectorized for integrate to work on it
-      # which means the output of marginalize() needs to be vectorized
-      #(which is probably a good idea)
-      #(...but that means that v 
-      # i need to write 
-      # # bear with my weird notation for a moment:
-      # say f is f(a,b,c,d). then
-      #  marginalize(f, (b,c)) is
-      #  marginalize(marginalize(f, b), c) #... is this true?
-      # 
-      return(integrate(g, -Inf, +Inf))
+    # here's the idea: to marginalize, first curry the function so that it is only a function of the marginalized variates
+    # , then use integrate.multi to eat up the marginalized variates
+    c = function(cv) {
+        
+      # Note: no typechecks here because this is an internal function and
+      # we are (supposed to be) careful about what we pass it
+       
+      # construct a single 
+      V = c(cv, v)
+      # but V is in the wrong order: the curried arguments cv need to go where 'dims' says they should
+      # and the others v need to go in the remaining spots
+      # We can think of this problem as that V has been permuted from the true order, and we want to undo the permutation
+      # In (pseudo-)R notation, our permutation is
+      #   c(dims, -dims)
+      # For example:
+      #   c(2,4,1,3) means 
+      #  column 2 --> 1
+      #  column 4 --> 2
+      #  column 1 --> 3
+      #  column 3 --> 4
+      # but we want the inverse, which would be
+      #  column 1 --> 2         or in other words                column 3 --> 1 
+      #  column 2 --> 4      (resorted to canonical form)   column 1 --> 2
+      #  column 3 --> 1                                                  column 4 --> 3
+      #  column 4 --> 3                                                  column 2 --> 4
+      # So, back in (psuedo-)R syntax, we have derived that
+      # inv(c(2,4,1,3)) == c(3,1,4,2)
+      # The pattern seems too obvious to miss:
+      #inv(c(2,4,1,3)) == rev(c(2,4,1,3))
+      # Indeed, this is explained at http://www.math.csusb.edu/notes/advanced/algebra/gp/node9.html,
+      # though that link is from a Group Theory course which is beyond what we need to know for this project.
+      #
+      # TODO: factor this difficult code (and the reasoning behind it) to a subroutine
+      cv_dims = dims
+      v_dims = (1:arity)[-dims] #R doesn't let us directly mix negative indexing with positive, so we need to do this
+      perm = c(cv_dims, v_dims)
+      V = V[, rev(perm)] #the inverse of a permutation is its reverse
+      
+      # finally, call the original function on the curried data cv mixed with the passed data v
+      message("calling original function on these args")
+      paste(v)
+      stopifnot(length(v) == arity)
+      f(V)
     }
+    
+    # now that we have curried, marginalize over everything else
+    integrate.multi(c, lower=rep(-Inf, p), upper=rep(Inf, p))
   }
 }
 
