@@ -12,7 +12,7 @@ is.square <- function(M) {
 
 is.symmetric <- function(M) {
    #test is a matrix is symmetric
-    is.square(M) && all(t(M) == M)
+    is.square(M) && max(t(M) - M) < 1e-6
 }
 
 
