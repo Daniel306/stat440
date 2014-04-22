@@ -21,6 +21,7 @@ vectorize <- function(f) {
   #
   # this uses sapply(), so it's reliable and as slow as doing it by hand
   # it can make your code more readable, though.
+  # TODO: allow x to be a matrix
   
   function(x) {
     sapply(x, function(x) { f(x) })
@@ -217,18 +218,19 @@ marginalize <- function(f, arity, dims) {
     #Typechecks
     stopifnot(is.vector(v))
     p = length(v)
+    q = length(dims)
       
-    stopifnot(p == arity - length(dims)) #arity of the marginalized function must be arity-length(dims)
+    stopifnot(p + q == arity) #arity of the marginalized function must be the number of marginalized variables (length(dims)) and the number of variates given to us here
     # above we checked that length(dims) <= arity,   so   arity - length(dims) >= 0 
       
     # here's the idea: to marginalize, first curry the function so that it is only a function of the marginalized variates
     # , then use integrate.multi to eat up the marginalized variates
-    c = function(cv) {
+    cr = function(cv) {
         
       # Note: no typechecks here because this is an internal function and
       # we are (supposed to be) careful about what we pass it
        
-      # construct a single 
+      # construct a single
       V = c(cv, v)
       # but V is in the wrong order: the curried arguments cv need to go where 'dims' says they should
       # and the others v need to go in the remaining spots
@@ -257,17 +259,17 @@ marginalize <- function(f, arity, dims) {
       cv_dims = dims
       v_dims = (1:arity)[-dims] #R doesn't let us directly mix negative indexing with positive, so we need to do this
       perm = c(cv_dims, v_dims)
-      V = V[, rev(perm)] #the inverse of a permutation is its reverse
+      V = V[rev(perm)] #the inverse of a permutation is its reverse
       
       # finally, call the original function on the curried data cv mixed with the passed data v
       message("calling original function on these args")
-      paste(v)
-      stopifnot(length(v) == arity)
+      print(V)
+      stopifnot(length(V) == arity)
       f(V)
     }
     
     # now that we have curried, marginalize over everything else
-    integrate.multi(c, lower=rep(-Inf, p), upper=rep(Inf, p))
+    integrate.multi(cr, lower=rep(-Inf, q), upper=rep(Inf, q))
   }
 }
 
@@ -276,15 +278,19 @@ test.marginalize <- function() {
   # what's an easy trivariate function we can look at?
   #.. how about dmvnorm
   source("test.constants.R")
-
+  kMu = kMu[1:3] #the constants are 4 dimensional
+  kV = solve(kPsi[1:3,1:3]) #but that's too much to test.
+  
   # marginalize requires currying over any distributional parameters
   # whatvever, we can use Psi instead of V
-  f = function(X) { dmvnorm(X, kMu, kPsi) }
+  # the marginal of a multinormal should be normal
+  f = function(X) { dmvnorm(X, kMu, kV) }
   # perform the tricky part 
   p = marginalize(f, 3, c(2,3))
-
+  print(p)
   # perform the *hard* part
   x = seq(-100, 100, length.out=55)
-  plot(x, p(x), main="Marginalization test")
+  print(x)
+  plot(x, vectorize(p)(x), main="Marginalization test")
 }
-#test.marginalize()
+test.marginalize()
