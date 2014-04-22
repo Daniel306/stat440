@@ -535,10 +535,25 @@ multigamma <- function(d, log=FALSE) {
 }
 
 dIW <- function(V, Psi, df, log=FALSE) {
-  # TODO: typecheck
+  # TODO: vectorize this
+
+  # Typechecks
+  stopifnot(is.symmetric(Psi))  
+  d = dim(Psi)[1]
+  stopifnot(dim(V)[1:2] == c(d,d))
+
+  # coerce V to a vectorized case, even when it isn't
+  # this lets us handle everything uniformly
+  if(length(dim(V)) == 2) {
+    dim(V) = c(d,d,1)  
+  }
   
   c = v*log(det(Psi))/2 - (df*d)*log(2)/2 - multigamma(d)(df/2) #normalizing constant
-  p = -  (   (df+d+1)*log(det(V))  + trace(Psi%*%solve(V))    )/2    + c
+  
+  det_V = apply(V, 3, det)
+  #Psi %*% solve(V) would be a clever backsolve IF we had the square root of V handed to us
+  trace_Psi_invV = apply(Psi_invV, 3, function(M) { sum(diag( Psi %*%  solve(M)    )) } )
+  p = -  (   (df+d+1)*log(det_V)  + trace_Psi_invV)    )/2    + c
   
   if(!log) {
     p = exp(p)
@@ -550,7 +565,8 @@ dIW <- function(V, Psi, df, log=FALSE) {
 dNIW <- function(X, V, Mu, Kappa, Psi, df, log=FALSE) {
   #
   # Typechecks
-  #
+  #TODO: test that X and V can be vectorized..
+  
   # coerce the arguments to vectors
 
   # always compute in logspace, because it's less prone to roundoff
