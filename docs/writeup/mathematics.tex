@@ -62,7 +62,7 @@ defines $\mathbf{W}=\Gamma AA^{T}\Gamma^{T}$, or you could also start
 from the theorem that $A^{T}A\sim W(I,df)$ and then prove that Wisharts
 can be scaled: $M\sim W(V,df)\wedge(C\text{ is invertible and square})\implies CMC^{T}\sim W(CVC^{T},df)$
 ). We choose this form because the value of $chol()$ in most libraries
-(certain, in R) is an \textbf{upper triangular matrix} and following
+(certainly, in R) is an \textbf{upper triangular matrix} and following
 that lead clarifies our derivations and the programs built on them.
 
 
@@ -214,22 +214,17 @@ U^{-1} & =\Gamma^{-1}A^{-1}
 \end{align*}
 
 
-Now, recall what $\Gamma$ is: $chol(V)=chol(P^{-1})=chol(P)^{-1}$.
-Here, a lemma :
-
-$chol(M^{-1})=chol(M)^{-1}$, both sides upper triangular. So 
+Now, recall what $\Gamma$ is: $chol(V)=chol(P^{-1})$
 
 \begin{align*}
 U^{-1} & =\Gamma^{-1}A^{-1}\\
  & =chol(P^{-1})^{-1}A^{-1}\\
- & =\left(chol(P)^{-1}\right)^{-1}A^{-1}\\
- & =chol(P)A^{-1}
 \end{align*}
 
 
-With $chol(P)$ and $A$ both upper triangular.
+With $chol(P^{-1})$ and $A^{-1}$ both upper triangular, which is important because a) we can compute $U^{-1}$ with backsolve b) $U^{-1}$ is upper triangular itself. Unfortunately, there is no clever way around computing $P^{-1}$ directly, but it can be precomputed at the start so it does not eat into the runtime of the overall algorithm.
 
-We care about this because it lets us get samples $V$ and $X$:
+We care about this $U$ it lets us get samples $V$ and $X$:
 
 \begin{align*}
 V & =U^{-1}\left(U^{-1}\right)^{T}\\
@@ -238,11 +233,6 @@ X & =\mu+U^{-1}z & \text{where }z\sim N_{d}(0,I)\\
  & =\mu+chol(P)A^{-1}z\\
  & =\mu+\Gamma^{-1}A^{-1}z
 \end{align*}
-
-
-So, for now, it looks like we're stuck inv
-
-~
 
 
 \subsubsection*{Runtime of Full Matrix Multiplication}
@@ -305,7 +295,7 @@ $2d^{3}/6$. So this algorithm is about six times faster than naive,
 full, dense matrix multiplication. This doesn't crack this algorithmic
 nut, \textbf{but it could make the difficult possible}.
 
-%\includegraphics[scale=0.7]{full_vs_triangular.jpeg}
+\includegraphics[scale=0.7]{full_vs_triangular}
 
 
 \section*{Lemmas}

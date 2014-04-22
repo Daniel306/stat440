@@ -24,7 +24,7 @@ main <- function() { # avoid polluting the namespace
 
     message("Starting test runs:")
     
-    for(alg in c("Rcpp2","snappy1", "snappy2", "snappy3")) { 
+    for(alg in c("snappy1", "snappy2", "snappy3", "Rcpp2")) { 
         message("Beginning ",alg,"...")
         try({ #wrap so that one algorithm being broken doesn't break the others (but we'll still see error messages from them)
         
@@ -37,17 +37,16 @@ main <- function() { # avoid polluting the namespace
             message("Runtime for ", alg,"(",n,",...): ", runtime,"s")
             
             # make density plots
-            plot.NIW.marginals(ground, samples, alg)
+            plot.NIW.densities(ground, samples, alg)
             
             # make first moment convergence plots
-            plot.moment1(groud,samples)
-            
+            plot.NIW.moment.first(ground, samples)
+                        
             # make second moment convergence plots
-            plot.moment2(groud,samples)
-            
+            plot.NIW.moment.second(ground, samples)
             
             # test for equidistribution numerically 
-            ks.test.NIW.marginals(ground, samples, alg)
+            NIW.ks.test(ground, samples, alg)
             
             
         })

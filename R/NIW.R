@@ -1,8 +1,13 @@
 #NIW.R
-# this file implements several algorithms to generate random samples from the Normal,Inverse-Wishart distribution.
-# there is a standard API for all implementations:
-# rNIW API:
-# rNIW(n, Mu, Kappa, Psi, df)
+# This file implements several version of two functions:
+# 1) rNIW(), which generates random samples from the Normal/Inverse-Wishart distribution.
+# 2) dNIW(), which gives the density function (p.d.f.) of the Normal/Inverse-Wishart distribution.
+#
+# This is prototype code. Eventually, one version of rNIW and dNIW each will be selected, packaged, and uploaded to CRAN.
+#
+# There is a standard API for each. Take the following as what should be in the inline help for each implementation.
+# 
+# rNIW(n, Mu, Kappa, Psi, df):
 #  generate samples (X, V) ~ NIW(Mu, kappa, Psi, df)
 #
 # see `???????` for the full definition and purpose of the NIW distribution. 
@@ -18,7 +23,7 @@
 #       kappa is positive.
 #       Psi is is positive-definite (=> square, symmetric, all positive eigenvalues, and chol(Psi) exists).
 #       df need not be integer, but it must be larger than d-1.
-
+#
 # returns:
 #   a list with elements
 #     $X, the c(d, n) matrix of sample X values.
@@ -29,24 +34,39 @@
 # NB: having n as the last dimension means that it is the 'widest' dimension:
 #     each set of d or d^2 sample elements run consecutively.
 #     This form is used by the built-in rWishart() function.
+#
+#
+# dNIW(X, V, Mu, Kappa, Psi, df, log=FALSE):
+#  produces probability densities P(NIW(Mu, Kappa, Psi, df) = (X, V))
+#
+# args:
+#     X, V: the point(s) at which to select:
+#       X is a d-length vector or a dx1 matrix)
+#       V is a dxd matrix
+#         if either X or V has an extra dimension, it is taken to be 'n', the number of sample points
+#         and the other must have a matching sized dimension
+#     Mu, Kappa, Psi, df: the parameters of the particular Normal/Inverse-Wishart distribution in question
+#     log: whether to produce log-probabilities or not.
+#
+# preconditions:
+#   XXX FILL ME IN
+#
+# returns:
+#   a vector of probabilities p, or log(p) if log==TRUE
+
+
 
 require(MASS); #for rmvnorm
-rmvnorm <- MASS::mvrnorm; mvrnorm <- NULL; #repair naming convention; I don't know why I need the namespace in the first step, but it breaks under source()ing this file without it
-
+rmvnorm <- MASS::mvrnorm;  #repair naming convention;
+mvrnorm <- NULL;           #I don't know why I need the namespace in the first step,
+                           #but without it this breaks under source(). :shrug:
 
 #require("slam") #TODO: investigate this package
-
 
 ######################
 ## Helper functions
 
-is.square <- function(M) {
-    length(dim(M)) == 2 && (nrow(M) == ncol(M))
-}
-
-is.symmetric <- function(M) {
-    is.square(M) && all(t(M) == M)
-}
+source("util.R")
 
 rNIW.alloc <- function(n, d) {
   # Construct an empty datastructure to store rNIW results.
@@ -74,22 +94,16 @@ rNIW.alloc <- function(n, d) {
 #######################
 ## Hosting code
 
-rNIW.typecheck <- function(rNIW) {
-    # wrap an rNIW implementation "rNIW" in the common safety code that all implementations should share
-    # this enforces all the pre (and post) conditions necessary
-    # in particular, inside of rNIW it is safe to say "d = length(Mu)" (XXX would it be nice to pass d INTO rNIW...??)
-  
-  
-    function(n, Mu, Kappa, Psi, df) {
-    Mu = as.vector(Mu)
-    Psi = as.matrix(Psi)
+NIW.typecheck <- function(Mu, Kappa, Psi, df) {
+    # common-core of typechecks for the NIW distribution parameters
+    # rNIW.typecheck and dNIW.typecheck implement extensions, depending on their use case.
+    # returns d, the dimensionality
+    stopifnot(class(Mu) == "numeric")
+    stopifnot(class(Psi) == "matrix")
     
     d = dim(Psi)[1]
     
-    #PRECONDITIONS
-    # n must be a natural number
-    stopifnot(n==round(n) && n > 0) # is.integer() is wrong for this; see its help
-    
+    #PRECONDITIONS    
     #Psi must be positive definite
     # XXX we don't actually check that Psi is positive definite because that's hard and slow
     #  we check for symmetry (and squareness) which is relatively cheap 
@@ -101,24 +115,75 @@ rNIW.typecheck <- function(rNIW) {
     # the scalar parameters need to be sane
     stopifnot(Kappa > 0);
     stopifnot(df > d - 1);
-      
-    # IMPLEMENTATION
-    ans = rNIW(n, Mu, Kappa, Psi, df);
     
-    # POSTCONDITIONS
-    
-    # make sure the results exist
-    stopifnot(class(ans) == "list")
-    stopifnot(all(sort(names(ans)) == c("V", "X")))
-    
-    # check dimensionality of the results
-    stopifnot(dim(ans$X) == c(d,n))
-    stopifnot(dim(ans$V) == c(d,d,n))
-    
-    # XXX similarly, we don't check that Vs are positive definite (or even symmetric), though they should be
-    
-    return(ans)
-  }
+    return(d);
+}
+
+
+rNIW.typecheck <- function(rNIW) {
+    # wrap an rNIW implementation "rNIW" in the common safety code that
+    #  all rNIW implementations should share.
+    # this enforces all the pre (and post) conditions necessary.
+    # in particular, inside of rNIW it is safe to say "d = length(Mu)" (XXX would it be nice to pass d INTO rNIW...??)  
+
+    function(n, Mu, Kappa, Psi, df) {
+        Mu = as.vector(Mu)
+        Psi = as.matrix(Psi)
+        
+        #PRECONDITIONS
+        d = NIW.typecheck(Mu, Kappa, Psi, df)
+        
+        # n must be a natural number
+        stopifnot(n==round(n) && n > 0) # is.integer() is wrong for this; see its help
+
+        # IMPLEMENTATION
+        ans = rNIW(n, Mu, Kappa, Psi, df);
+
+        # POSTCONDITIONS
+
+        # make sure the results exist
+        stopifnot(class(ans) == "list")
+        stopifnot(all(sort(names(ans)) == c("V", "X")))
+
+        # check dimensionality of the results
+        stopifnot(dim(ans$X) == c(d,n))
+        stopifnot(dim(ans$V) == c(d,d,n))
+
+        # XXX similarly, we don't check that Vs are positive definite (or even symmetric), though they should be
+
+        return(ans)
+    }
+}
+
+
+dNIW.typecheck <- function(dNIW) {
+    # wrap an rNIW implementation "rNIW" in the common safety code that
+    #  all rNIW implementations should share.
+    # this enforces all the pre (and post) conditions necessary.
+    # in particular, inside of rNIW it is safe to say "d = length(Mu)" (XXX would it be nice to pass d INTO rNIW...??)  
+  
+    function(X, V, Mu, Kappa, Psi, df, log=FALSE) {
+        Mu = as.vector(Mu)
+        Psi = as.matrix(Psi)
+        d = NIW.typecheck(Mu, Kappa, Psi, df)
+        
+        # IMPLEMENTATION
+        ans = dNIW(X, V, Mu, Kappa, Psi, df, log=log);
+        
+        # POSTCONDITIONS
+        
+        stopifnot(class(ans) == "numeric")
+        stopifnot(length(ans) == 1)
+        # enforce that probability result is in [0,1]
+        # XXX is this correct? it *is* possible for probabilities to be larger than 1 in weird corner cases of continuousland, isn't it?
+        if(log) {
+          stopifnot(ans < 0)
+        } else {
+          stopifnot(0<=ans && ans<=1)
+        }
+        
+        return(ans)
+    }
 }
 
 ##################################
@@ -424,7 +489,7 @@ rNIW.Rcpp2 <- rNIW.typecheck(function(n, Mu, kappa, Psi, df) {
   # precompute what can be precomputed
   # because the slowness of doing them in R will not be
   # that much (only O(1), not O(n)), and is outweighed by the headache in C
-  # TODO: do these in C as well, just to be sure.
+  # TODO: do these in C as well, for completeness.
   d = length(Mu)
   gamma.inv = solve(chol(solve(Psi)))
     
