@@ -561,7 +561,8 @@ dIW <- function(V, Psi, df, log=FALSE) {
   # and indeed those are
   # but the Inverse Wishart page additionally switches the 2/3 signs in the power
   # which is completely the sort of mistake that one might make with LaTeX
-  p = -  (   (df-d-1)*log(det_V)  + trace_Psi_invV)    )/2    + c
+  # ...but two software packages (LaplacesDemon and MCMCpack) agree with the wikipedia formula. so... hm.
+  p = -  (   (df+d+1)*log(det_V)  + trace_Psi_invV)    )/2    + c
   
   if(!log) {
     p = exp(p)
