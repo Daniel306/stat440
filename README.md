@@ -1,7 +1,7 @@
 Normal-Inverse-Wishart Generating Project
 =========================================
 
-Goal
+Goals
 ----
 
 The [NIW](https://en.wikipedia.org/wiki/Normal-inverse-Wishart_distribution) distribution is a typical, and is currently very, very, very slow. Here's a real working statistician [running up against it, painfully, in R](https://dahtah.wordpress.com/2012/03/07/why-an-inverse-wishart-prior-may-not-be-such-a-good-idea/):
