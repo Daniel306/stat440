@@ -186,6 +186,7 @@ marginalize <- function(f, arity, dims, lower=-Inf, upper=+Inf, ...) {
   #  requires a length(dim)-deep stack  with at least 10, probably more  (however many integrate() decides) 
   #  forks at each branch.
   # It is also prone to numerical instability.
+  # Basically: the curse of dimensionality bites this function and there's no (generic, numerical) way around that.
   #
   # args:
   #   f: the function to marginalize over; f should take a single argument, a vector, and return a single scalar
@@ -304,11 +305,20 @@ test.marginalize <- function() {
   # the marginal of a multinormal should be normal
   f = function(X) { dmvnorm(X, kMu, kV) }
   # perform the tricky part 
-  p = marginalize(f, 3, c(2,3), lower=-3, upper=2, rel.tol=1e-3)
+  p = marginalize(f, 3, c(1,3), rel.tol=1e-3)
   # perform the *hard* part
-  x = seq(-3, 3, length.out=55)
+  x = seq(-3, 3, length.out=5)
+  
   plot(x, vectorize(p)(x), main="Marginalization test")
-  # the expected marginal is just found by dropping
+  
+  # the expected marginal is just found by simply dropping
+  # the irrelevant dimensions from the parameters
+  message("Multivariate normal distribution:")
+  message("mu:")
+  print(kMu)
+  message("V:")
+  print(kV)
+  
   abline(v=kMu[1], lty="dashed", col="red")
   d = function(x) { dnorm(x, kMu[1], kV[1,1]) }
   lines(x, d(x), lty="dashed", col="red") #plot the expected density
