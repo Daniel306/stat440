@@ -45,7 +45,6 @@ NumericVector backSolveInverse(NumericVector A, int d){
      for (int row2 = d-1; row2 > row; row2--){ // row of A, row of solution
       A_inv[col*d + row] -= A[row2*d + row]*A_inv[col*d+row2] ;
       }
-      
       A_inv[col*d + row] = A_inv[col*d + row]/A[row*(d+1)]; 
     }
   }
