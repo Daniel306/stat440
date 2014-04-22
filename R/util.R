@@ -262,23 +262,15 @@ marginalize <- function(f, arity, dims, lower=-Inf, upper=+Inf, ...) {
       #  column 4 --> 2
       #  column 1 --> 3
       #  column 3 --> 4
-      # but we want the inverse, which would be
-      #  column 1 --> 2         or in other words                column 3 --> 1 
-      #  column 2 --> 4      (resorted to canonical form)   column 1 --> 2
-      #  column 3 --> 1                                                  column 4 --> 3
-      #  column 4 --> 3                                                  column 2 --> 4
-      # So, back in (psuedo-)R syntax, we have derived that
-      # inv(c(2,4,1,3)) == c(3,1,4,2)
-      # The pattern seems too obvious to miss:
-      #inv(c(2,4,1,3)) == rev(c(2,4,1,3))
-      # Indeed, this is explained at http://www.math.csusb.edu/notes/advanced/algebra/gp/node9.html,
-      # though that link is from a Group Theory course which is beyond what we need to know for this project.
-      #
+      # but we want the inverse, which would be c(3,1,4,2)
+      # it turns out that for some cases, rev() is enough
+      # but in general, we actually can (mis)use order() to 
       # TODO: factor this difficult code (and the reasoning behind it) to a subroutine
       cv_dims = dims
       v_dims = (1:arity)[-dims] #R doesn't let us directly mix negative indexing with positive, so we need to do this
       perm = c(cv_dims, v_dims)
-      V = V[rev(perm)] #the inverse of a permutation is its reverse
+      print(order(perm))
+      V = V[order(perm)] #the inverse of a permutation is its reverse
       
       # finally, call the original function on the curried data cv mixed with the passed data v
       stopifnot(length(V) == arity)
@@ -297,8 +289,9 @@ test.marginalize <- function() {
   #.. how about dmvnorm!
   # warning: this function is extremely slow. Call with time to spare.
   source("test.constants.R")
-  kMu = kMu[1:3] #the constants are 4 dimensional
-  kV = solve(kPsi[1:3,1:3]) #but that's too much to test.
+  kV = solve(kPsi)
+  #kMu = kMu[1:3] #the constants are 4 dimensional
+  #kV = solve(kPsi[1:3,1:3]) #but that's too much to test.
 
   d = length(kMu)  
   # marginalize requires currying over any distributional parameters
@@ -311,7 +304,7 @@ test.marginalize <- function() {
   p = marginalize(f, d, (1:d)[-margin], rel.tol=1e-3)
   
   # perform the *hard* part
-  x = seq(-3, 3, length.out=10)
+  x = seq(-3, 3, length.out=9)
   plot(x, vectorize(p)(x), main="Marginalization test")
   
   # the expected marginal is just found by simply dropping
