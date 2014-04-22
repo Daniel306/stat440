@@ -6,12 +6,13 @@
 # TODO: these functions need unit tests
 
 is.square <- function(M) {
-   # test if a matrix is square
+    # test if a matrix is square
+    # TODO: this appears to exist as matrixcalc::is.square.matrix already??
     length(dim(M)) == 2 && (nrow(M) == ncol(M))
 }
 
 is.symmetric <- function(M) {
-   #test is a matrix is symmetric
+    #test if a matrix is symmetric
     is.square(M) && max(t(M) - M) < 1e-6
 }
 
@@ -22,6 +23,7 @@ vectorize <- function(f) {
   # this uses sapply(), so it's reliable and as slow as doing it by hand
   # it can make your code more readable, though.
   # TODO: allow x to be a matrix
+  # TODO: compare to Vectorize() and maybe toss this one
   
   function(x) {
     sapply(x, function(x) { f(x) })
@@ -175,7 +177,7 @@ test.integrate.multi <- function() {
 #test.integrate.multi()
 
 
-marginalize <- function(f, arity, dims, lower=-Inf, upper=+Inf) {
+marginalize <- function(f, arity, dims, lower=-Inf, upper=+Inf, ...) {
   # numerically marginalize some chosen set of variates out of a pdf
   # 
   # this is somewhat like currying, but each curried variable corresponds to an integrate()
@@ -196,6 +198,7 @@ marginalize <- function(f, arity, dims, lower=-Inf, upper=+Inf) {
   #    You must know something about your distribution to use these correctly.
   #    These should be the same length as the number of dimensions.
   #       as a special case, if either is scalar, it is used as the boundary for ALL dimensions.
+  #  ...: extra arguments to 'integrate()'
   #
   # e.g. if you have a function f(a,b,c,d,e,f,g) then marginalize(f, 7, c(2,3)) -> f(a,d,e)
   #   marginalize(f, 7, c(1,3,5,6,7)) -> f(2,4)
@@ -278,18 +281,20 @@ marginalize <- function(f, arity, dims, lower=-Inf, upper=+Inf) {
       
       # finally, call the original function on the curried data cv mixed with the passed data v
       stopifnot(length(V) == arity)
+      print(V) #DEBUG
       f(V)
     }
     
     # now that we have curried, marginalize over everything else
-    integrate.multi(cr, lower=lower, upper=upper)
+    integrate.multi(cr, lower=lower, upper=upper, ...)
   }
 }
 
 # sketchy test
 test.marginalize <- function() {
   # what's an easy trivariate function we can look at?
-  #.. how about dmvnorm
+  #.. how about dmvnorm!
+  # warning: this function is extremely slow. Call with time to spare.
   source("test.constants.R")
   kMu = kMu[1:3] #the constants are 4 dimensional
   kV = solve(kPsi[1:3,1:3]) #but that's too much to test.
@@ -299,14 +304,13 @@ test.marginalize <- function() {
   # the marginal of a multinormal should be normal
   f = function(X) { dmvnorm(X, kMu, kV) }
   # perform the tricky part 
-  p = marginalize(f, 3, c(2,3), lower=-3, upper=2)
-  print(p)
+  p = marginalize(f, 3, c(2,3), lower=-3, upper=2, rel.tol=1e-3)
   # perform the *hard* part
   x = seq(-3, 3, length.out=55)
-  print(x)
   plot(x, vectorize(p)(x), main="Marginalization test")
   # the expected marginal is just found by dropping
-  abline(v=kMu[1])
-  lines(function(x) { dnorm(x, kMu[1], kV[1,1]) }, lty="dashed") #plot the expected density
+  abline(v=kMu[1], lty="dashed", col="red")
+  d = function(x) { dnorm(x, kMu[1], kV[1,1]) }
+  lines(x, d(x), lty="dashed", col="red") #plot the expected density
 }
 test.marginalize()
