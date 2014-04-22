@@ -151,8 +151,17 @@ D-1 (Thursday)
 
 - [ ] make R package(s) (i.e. call require() instead of Rcpp::source())
     - [ ] NIW
-    - [ ] prototype code
-    - [ ] write vingettes for each
+        - [ ] dNIW()
+        - [ ] rNIW()
+        - [ ] dMNIW()
+        - [ ] rMNIW()
+        - +various utility functions ((maybe these should get their own package?))
+    - [ ] MultivariableRegression
+        - depends: NIW
+        - [ ] ???
+    - ([ ] HierarchicalMatrixNormalGibbsSampler  _there is no way we're doing this by Friday_)
+    - [ ] prototype + testing
+    - [ ] write R help files for each function
 - [ ] extract the prototype code (i.e., apart from the final package), package it up reusably
 
 D (Friday, April the 25th, 2014)
@@ -168,6 +177,7 @@ D (Friday, April the 25th, 2014)
 D+k
 ---------------------
 
+- [ ] write vignette()s
 - [ ] look into the curve() function, instead of lines()
 - [ ] derive how the NIW is a conjugate prior for a hierarchical normal
     - [ ] record in `mathematics.tex`
@@ -182,4 +192,15 @@ Open Questions
 - [x] what is the proper IW PDF? is wikipedia wrong?
     - **Answer**: probably not; recall that changes of variables necessarily involve a scaling factor--the Jacobian--which pulls in a determinant; the particular algebra is beyond our ken at this point, though.
 - [ ] the iid multivariate normals all share a single variance matrix V; please re-explain what this means; shouldn't the variances be scaled? What is the interpretation of this model?
-
+- [ ] Why is snappy2 faster than snappy3? Shouldn't using backsolve()s be faster than %*%?
+- [ ] "lint" the code:
+    - [ ] naming conventions are followed
+        - [ ] distribution parameters are capitalized, except for df
+        - [ ] density functions begin with 'd'
+        - [ ] samplers begin with 'r'
+        - [ ] 
+    - [ ] indentation in R is 2 spaces
+    - [ ] indentation in C is 4 spaces
+    - [ ] brace style (?)
+    - [ ]  ????
+    - [ ] find all the TODOs and deal with them
