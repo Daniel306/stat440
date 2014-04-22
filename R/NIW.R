@@ -513,12 +513,59 @@ rNIW.Rcpp2 <- rNIW.typecheck(function(n, Mu, kappa, Psi, df) {
 #########################################################
 #################### dNIW ###############################
 
-dNIW <- function(X, V, Mu, Kappa, Psi, df, log=FALSE) {
-  if(log) {
-    stop("log probabilities unsupported")
+multigamma <- function(d, log=FALSE) {
+  # usage: multigamma(d)(x)
+  log_pi = log(pi) #precompute XXX this location for precomputing isn't useful
+  # TODO: typechecks
+  
+  function(x) {
+  #
+  # x: the point to evaluate at
+  # d: the dimensionality of the multigamma
+  # 
+  #prod(x + (1-1:d)/2) / sqrt(sqrt(pi^(d*(d-1)))) #<-- this formula is wrong
+  c = (d*(d-1))*log_pi/4 #normalizing constant
+  p = sum(log(gamma(x + (1-1:d)/2))) + c
+  
+  if(!log) {
+    p = exp(p)
   }
+  
+  return(p)
+}
+
+dIW <- function(V, Psi, df, log=FALSE) {
+  # TODO: typecheck
+  
+  c = v*log(det(Psi))/2 - (df*d)*log(2)/2 - multigamma(d)(df/2) #normalizing constant
+  p = -  (   (df+d+1)*log(det(V))  + trace(Psi%*%solve(V))    )/2    + c
+  
+  if(!log) {
+    p = exp(p)
+  }
+  
+  return(p)
+}
+
+dNIW <- function(X, V, Mu, Kappa, Psi, df, log=FALSE) {
   #
   # Typechecks
   #
   # coerce the arguments to vectors
+
+  # always compute in logspace, because it's less prone to roundoff
+  # map to normal space at the end if requested
+
+  # XXX both these ops could be much sped up if we
+  # were given the square root of V instead
+  pN = dmvnorm(X, Mu, V/Kappa, log=T)
+  pIW = dIW(V, Psi, df, log=T)
+  
+  p = pN + pIW; # P(X,V) = P(X|V)P(V) = exactly the piece distributions used to generate the NIW in the first place.
+  
+  if(!log) {
+    p = exp(p)
+  }
+  
+  return(p)
 }

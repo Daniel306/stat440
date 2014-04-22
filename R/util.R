@@ -104,25 +104,43 @@ cummean <- function(v) {
  
 dmvnorm <- function(X, Mu, V, log=FALSE) {
   # the multivariate normal density function (pdf)
-  # warning: dmvnorm is *not* vectorized
+  # X can be a single vector, or a matrix (n, d) (<-- note, this contradicts the convention used elsewhere in this project)
   # TODO: this function isn't really a utility; it belongs ..somewhere else
   # TODO: docstring
-  if(log) {
-    stop("log probabilities are not supported yet")
-  }
   
   # typechecks
-  stopifnot(is.vector(X) && is.vector(Mu) && is.matrix(V))
+  stopifnot(is.vector(Mu) && is.symmetric(V))
   d = length(X) 
   stopifnot(length(Mu) == d)
   stopifnot(is.symmetric(V))
   stopifnot(dim(V)[1] == d)
+  if(is.vector(X)) {
+    X = t(matrix(X)) #a vector is a single sample and mahalanobis expects each sample to run across columns a row
+  }
+  stopifnot(dim(X)[2] == d)
+
+  # in normal space (this formula from Wikipedia)
+  #C = sqrt((2*pi)^d*det(V))
+  #exp(-mahalanobis(X, Mu, V)/ 2) / C
   
-  C = sqrt((2*pi)^d*det(V))
-  exp(-mahalanobis(X, Mu, V)/ 2) / C
+  # in logspace
+  c = (d*(log(2) + log(pi)) + log(det(V))) #normalizing constant
+  p = -mahalanobis(X, Mu, V) #<-- this vectorizes. X needs to be (n, d)
+  p = (p - c)/2;
+  
+  if(!log) {
+    p = exp(p)
+  }
+
+  return(p)
 }
 
-
+trace <- function(M) {
+  # trace of a matrix
+  # TODO: typechecks
+  # Warning: This shadows the trace function meant for debugging
+  sum(diag(M))
+}
 
 # multiintegrate
 integrate.multi <- function(f, lower, upper, ...) {
