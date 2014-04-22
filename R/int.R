@@ -71,8 +71,11 @@ dmvnorm <- function(X, Mu, V, log=FALSE) {
 }
 # ^warning: dmvnorm is *not* vectorized
 
-source("test.constants.R")
-r = integrate.multi(function(X) {
-  dmvnorm(X, kMu[1:2], kPsi[1:2, 1:2])
-}, c(-Inf, -Inf), c(Inf, +Inf))
-message("integral came out to: ", r)
+test.integrate.multi <- function() {
+  source("test.constants.R")
+  r = integrate.multi(function(X) {
+    dmvnorm(X, kMu[1:2], kPsi[1:2, 1:2])
+  }, c(-Inf, -Inf), c(Inf, +Inf))
+  message("integral came out to: ", r, "; (it should be very nearly 1)")
+}
+#test.integrate.multi()
