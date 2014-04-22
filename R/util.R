@@ -322,7 +322,7 @@ test.marginalize <- function() {
   message("V:")
   print(kV)
   
-  for(margin in 1:d) {
+  for(margin in margin) {
     abline(v=kMu[margin], lty="dashed", col=margin)
     dist = function(x) { dnorm(x, kMu[margin], kV[margin,margin]) }
     lines(x, dist(x), lty="dashed", col=margin) #plot the expected density
