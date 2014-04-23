@@ -51,7 +51,7 @@ multigamma <- function(x, d) {
   # x: the point to evaluate at
   # d: the dimensionality of the multigamma
   # 
-  prod(x + (1-1:d)/2) / sqrt(sqrt(pi^(d*(d-1))))
+  prod(x + (1-1:d)/2) / sqrt(sqrt(pi^(d*(d-1)))) #<-- this formula is wrong
 }
 
 
@@ -63,7 +63,7 @@ multigamma <- function(d) {
   # x: the point to evaluate at
   # d: the dimensionality of the multigamma
   # 
-  prod(x + (1-1:d)/2) / sqrt(sqrt(pi^(d*(d-1))))
+  prod(x + (1-1:d)/2) / sqrt(sqrt(pi^(d*(d-1)))) #<-- this formula is wrong
   }
 }
 

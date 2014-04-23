@@ -1,6 +1,6 @@
 
 
-
+http://scythe.wustl.edu/ <-- " Programs written using Scythe are generally much faster than those written in commonly used interpreted languages, 
 
 [WP:Invertible Matrix](https://en.wikipedia.org/wiki/Invertible_matrix#Blockwise_inversion) has a surprising amount of insight.
 
