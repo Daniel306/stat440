@@ -135,8 +135,12 @@ D-2 (Wednesday)
     - [ ] reduce the number of samples taken--we get the idea
 - [ ] figure out if using pointers/references in Rcpp is faster; specifically, does passing a NumericVector cause a COPY of that vector even in C?
 - [ ] Dig up analytic formula for the particular marginals of NIW and (note: there's 2^(# parameters) different marginals; pick wisely which to look at)
-    - [ ] marginal of the inv.wish is inv.gamma
+    - [x] marginal of the inv.wish is inv.gamma
     - [ ] implement as functions
+        - [x] diagonals of iwish
+        - [ ] off-diagonals of iwish
+        - [ ] entries of X from the single NIW
+        - [ ] entries of Matrix-Normal thingy
     - [ ] wrap such functions into thingies and use them as 'ground' for the marginal plots
     - t-distributions (and the matrix-normal has multi-t)
         - analytically
