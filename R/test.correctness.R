@@ -118,6 +118,34 @@ plot.NIW.densities <- function(ground, sample, alg=NULL) { #XXX name
 
 
 
+IW.marginal <- function(i, j, Psi, df) {
+  # Inverse Wishart marginals
+  #
+  # returns:
+  #   a vectorized function in 'x' giving the pdf giving the inverse wishart
+  stopifnot(is.symmetric(Psi))
+  d = nrow(Psi)
+  
+  if(i == j) {
+    # from wikipedia
+    # Any subset of rows/cols our things are Inverse Wishart:
+    # SubW ~ IW(SubPsi, df - (number of columns outside of))
+    # which isn't all that useful for us interesting.
+    # but it does mean that a particular, scalar, diagonal entry
+    # is
+  
+    # close over the scalar invgamma parameters instead of over a whole matrix
+    # ((though maybe R closes over Psi anyway))
+    
+    alpha = (df - d - 1)/2
+    beta  = (Psi[i , i])/2
+    function(x) { dinvgamma(x, shape=alpha, scale=beta) }
+  } else {
+    stop("non-diagonal marginals not supported yet")
+  }
+}
+
+
 ##########################################
 ## Moments
 
