@@ -106,9 +106,7 @@ D-3 (Tuesday)
 - [x] split NIW.R to dNIW.R, dMNIW.R, rNIW.R and rMNIW.R
 - [x] clean up this TODO list to git
 - [x] write naive version in Rcpp (for timing comparison)
-- [ ] in the runtime tests, map the runtime matrix to have a ratio column so that we can say "snappy2 is 4.3 times faster than naive"
-- [ ] factor the algorithm list to `test.constants.R`
-- [ ] figure out if using pointers/references in Rcpp is faster; specifically, does passing a NumericVector cause a COPY of that vector even in C?
+- [x] factor the algorithm list to `test.constants.R`
 
 [daniel]
 
@@ -128,6 +126,14 @@ D-2 (Wednesday)
     - [ ] factor the common matrix terms to before/after the loop (call this `snappy4`)
     - [ ] does this save any time??
 - [ ] 13:00 - 14:00 blocked off
+- [ ] 14:00 - 16:00 blocked off
+- [ ] Better timings:
+    - [ ] in the runtime tests, map the runtime matrix to averages + sds instead of having the weird aliasing problems
+    - [ ] plot SDs as error bars
+    - [ ] map the averages to have a ratio column so that we can say "snappy2 is 4.3 times faster than naive"
+    - [ ] use lty=id so that the lines are distinguished by shape as well as colour (nicer on greyscale printouts and on colourblind folks)
+    - [ ] reduce the number of samples taken--we get the idea
+- [ ] figure out if using pointers/references in Rcpp is faster; specifically, does passing a NumericVector cause a COPY of that vector even in C?
 - [ ] Dig up analytic formula for the particular marginals of NIW and (note: there's 2^(# parameters) different marginals; pick wisely which to look at)
     - [ ] implement as functions
     - [ ] wrap such functions into thingies and use them as 'ground' for the marginal plots
