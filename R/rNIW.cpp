@@ -1,5 +1,11 @@
 #include <Rcpp.h>
+#include <RcppEigen.h>
+// [[Rcpp::depends(RcppEigen)]]
+
+
+
 using namespace Rcpp;
+using namespace Eigen;
 
 /* References:
  * 
@@ -17,19 +23,39 @@ using namespace Rcpp;
 /* test function
  * for playing around with things!
  */
-// // [[Rcpp::depends
 // [[Rcpp::export]]
-NumericVector c(NumericVector M) {
-  return chol(M);
+MatrixXd c(NumericVector M) {
+  const LLT<MatrixXd> cholesky_decomposition(as<Map<MatrixXd> >(M)); ///the incantation to get this took forever
+  return cholesky_decomposition.matrixU();
 }
 
-// Below is a simple example of exporting a C++ function to R. You can
-// source this function into an R session using the Rcpp::sourceCpp 
-// function (or via the Source button on the editor toolbar)
 
-// For more on using Rcpp click the Help button on the editor toolbar
+// example from the Eigen vignette
+// [[Rcpp::export]]
+List tc(NumericVector AA) {
+  using Eigen::Map;
+  using Eigen::MatrixXi;
+  using Eigen::Lower;
+  const Map<MatrixXd> A(as<Map<MatrixXd> >(AA));
+  const int m(A.rows()), n(A.cols());
+  MatrixXd AtA(MatrixXd(n, n).setZero().selfadjointView<Lower>().rankUpdate(A.adjoint()));
+  MatrixXd AAt(MatrixXd(m, m).setZero().selfadjointView<Lower>().rankUpdate(A));
+  return List::create(Named("crossprod(A)") = AtA, Named("tcrossprod(A)") = AAt);
+}
 
-// // [[Rcpp::export]]
+
+// now that I can do that.. what?
+// [[Rcpp::export]]
+List rNIW_naive(unsigned int n, NumericVector Mu, double kappa, NumericVector Psi, double df) {
+  // precondition: all the preconditions have been properly checked by rNIW.typechecked
+  MatrixXd Mu_(as<Map<MatrixXd> >(Mu));
+  unsigned int d = Mu_.size();
+  ArrayXd X;
+  ArrayXd V;
+  return List::create(Named("X") = X, Named("V") = V);
+}
+
+// // [[Rcpp::export]] //<-- not exported since A was converted to a reference
 void BartlettFactorCpp(int d, double df, NumericVector &A){
   
   // Initialize A, it starts off with all 0s
