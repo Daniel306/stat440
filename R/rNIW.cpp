@@ -56,13 +56,20 @@ List rNIW_naive(unsigned int n, NumericVector Mu, double kappa, NumericVector Ps
 
   NumericVector V(Dimension(d,d,n));
   NumericVector X(Dimension(d,n));
-  
+
+  // invert Psi  
+  MatrixXd Psi_inv = as<Map<MatrixXd> >(Psi).inverse();
+  // TODO: exploit that we know Psi is symmetric
 
   for(unsigned int i=0; i<n; i++) {
-    // step 1:
+    // step 1: generate the bartlette factor..
+    // step 2: 
   }  
 
-  return List::create(Named("X") = X, Named("V") = V);
+  return List::create(Named("X") = X, Named("V") = V,
+       //extra debugging stuff
+       Named("Psi.inv") = Psi_inv
+       );
 }
 
 // // [[Rcpp::export]] //<-- not exported since A was converted to a reference
