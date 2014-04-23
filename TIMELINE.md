@@ -100,12 +100,12 @@ D-3 (Tuesday)
 
 [nick]
 
-- [ ] MNIW.typecheck()
-    - [ ] make NIW.typecheck depend on that
+- [x] MNIW.typecheck()
+    - [ ] factor NIW.typecheck so that it shares code with that
 - [ ] split NIW.R to dNIW.R, dMNIW.R, rNIW.R and rMNIW.R
 - [x] clean up this TODO list to git
-- [ ] figure out if using pointers/references in Rcpp is faster; specifically, does passing a NumericVector cause a COPY of that vector even in C?
 - [ ] write naive version in Rcpp (for timing comparison)
+- [ ] figure out if using pointers/references in Rcpp is faster; specifically, does passing a NumericVector cause a COPY of that vector even in C?
 - [ ] Dig up analytic formula for the particular marginals of NIW and (note: there's 2^(# parameters) different marginals; pick wisely which to look at)
     - t-distributions (and the matrix-normal has multi-t)
         - analytically
