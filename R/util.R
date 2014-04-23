@@ -288,12 +288,12 @@ marginalize <- function(f, arity, dims, lower=-Inf, upper=+Inf, ...) {
       cv_dims = dims
       v_dims = (1:arity)[-dims] #R doesn't let us directly mix negative indexing with positive, so we need to do this
       perm = c(cv_dims, v_dims)
-      print(order(perm))
+      #print(order(perm)) #DEBUG
       V = V[order(perm)] #the inverse of a permutation is its reverse
       
       # finally, call the original function on the curried data cv mixed with the passed data v
       stopifnot(length(V) == arity)
-      print(V) #DEBUG
+      #print(V) #DEBUG
       f(V)
     }
     
@@ -340,4 +340,4 @@ test.marginalize <- function() {
     lines(x, dist(x), lty="dashed", col=margin) #plot the expected density
   }
 }
-test.marginalize()
+#test.marginalize()

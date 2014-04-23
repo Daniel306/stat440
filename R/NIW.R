@@ -102,48 +102,94 @@ rNIW.alloc <- function(n, d) {
 #######################
 ## Hosting code
 
+# convention: 'X.typecheck' has the preconditions (written as assertions, which will crash if the caller gives wrong data) that actually do validation.
+#                   'X.typechecked' wraps a function implementing API "X" with "X.typecheck" and additionally checks postconditions.
+
 NIW.typecheck <- function(Mu, Kappa, Psi, df) {
-    # common-core of typechecks for the NIW distribution parameters
-    # rNIW.typecheck and dNIW.typecheck implement extensions, depending on their use case.
-    # returns d, the dimensionality
-    stopifnot(class(Mu) == "numeric")
-    stopifnot(class(Psi) == "matrix")
+    # Common-core of typechecks of the NIW distribution's parameters
+    #
+    # These are things like "Psi is symmetric" and "Mu has the same dimensionality as Psi".
+    # TODO: this clearly shares DNA with MNIW.typecheck, but; try harder to factor it
     
-    d = dim(Psi)[1]
+    # the Xs in (X,V)~NIW(...) are "univariate": each X is one column:
+    stopifnot(is.vector(Mu))
+    d = length(Mu)
     
-    #PRECONDITIONS    
+    # as a consequence, Kappa must be scalar
+    stopifnot(length(Kappa) == 1)
+    
+    # Kappa must be positive definite
+    # because Kappa is scalar for NIW, we can actually check this directly:
+    stopifnot(Kappa > 0)
+    
     #Psi must be positive definite
     # XXX we don't actually check that Psi is positive definite because that's hard and slow
     #  we check for symmetry (and squareness) which is relatively cheap 
-    stopifnot(is.symmetric(Psi)) #Psi must be square
-    
+    stopifnot(is.symmetric(Psi)) #implies "is.matrix()"
+
     #Mu must be the same dimensionality as the covariance matrix it supposedly goes with
-    stopifnot(d == length(Mu))  
+    stopifnot(nrow(Psi) == length(Mu))
     
-    # the scalar parameters need to be sane
-    stopifnot(Kappa > 0);
-    stopifnot(df > d - 1);
+    # df is a scalar > d-1
+    stopifnot(length(df) == 1)
+    stopifnot(df > d - 1)
+}
+
+MNIW.typecheck <- function(Mu, Kappa, Psi, df) {
+    # Matrix-Normal|Inverse-Wishart typechecks
+    # setup / motivation
+    # in Y = XB + E ~ MN(Mu, I, Kappa)
+    # let q be the number of response variates (columns of Y)
+    # let d be the number of predictor variates (columns of X)
+    # then
+    #  1) Mu should be a q x d matrix
+    #  2) Kappa should be a q x q matrix (this gives the covariance between _____________?)
+    #  3) Psi should be a d x d matrix (this gives **the prior** for the covariance between __________?)
+    #  4) Kappa and Psi should be positive definite (XXX this isn't actually checked)
     
-    return(d);
+    # the Xs in (X,V)~NIW(...) are multivariate: each X is a whole matrix
+    stopifnot(is.matrix(Mu))
+    q = dim(Mu)[1]
+    d = dim(Mu)[2]
+    
+    # Kappa must be positive definite
+    stopifnot(is.symmetric(Kappa))
+    # and the same size as
+    stopifnot(dim(Kappa)[1] == q)
+    
+    #Psi must be positive definite
+    # XXX we don't actually check that Psi is positive definite because that's hard and slow
+    #  we check for symmetry (and squareness) which is relatively cheap 
+    stopifnot(is.symmetric(Psi)) #implies "is.matrix()"
+    #Mu must be the same dimensionality as the covariance matrix it supposedly goes with
+    stopifnot(dim(Psi)[1] == d)
+    
+    # df is a scalar > d-1
+    stopifnot(length(df) == 1)
+    stopifnot(df > d - 1)
 }
 
 
-rNIW.typecheck <- function(rNIW) {
+rNIW.typecheck <- function(n, Mu, Kappa, Psi, df) {
+  # rNIW preconditions
+  
+  # n must be a natural number
+  stopifnot(n==round(n) && n > 0) # is.integer() is wrong for this; see its help
+
+  # the distribution parameters must be sane
+  NIW.typecheck(Mu, Kappa, Psi, df)
+}
+
+rNIW.typechecked <- function(rNIW) {
     # wrap an rNIW implementation "rNIW" in the common safety code that
     #  all rNIW implementations should share.
     # this enforces all the pre (and post) conditions necessary.
     # in particular, inside of rNIW it is safe to say "d = length(Mu)" (XXX would it be nice to pass d INTO rNIW...??)  
 
     function(n, Mu, Kappa, Psi, df) {
-        Mu = as.vector(Mu)
-        Psi = as.matrix(Psi)
+        rNIW.typecheck(n, Mu, Kappa, Psi, df)
+        d = nrow(Psi)
         
-        #PRECONDITIONS
-        d = NIW.typecheck(Mu, Kappa, Psi, df)
-        
-        # n must be a natural number
-        stopifnot(n==round(n) && n > 0) # is.integer() is wrong for this; see its help
-
         # IMPLEMENTATION
         ans = rNIW(n, Mu, Kappa, Psi, df);
 
@@ -164,16 +210,26 @@ rNIW.typecheck <- function(rNIW) {
 }
 
 
-dNIW.typecheck <- function(dNIW) {
+dNIW.typecheck <- function(X, V, Mu, Kappa, Psi, df) {
+  NIW.typecheck(Mu, Kappa, Psi, df)
+  
+  # additionally, X and V must match the dimens
+  # the above enforces that Mu is a vector
+  
+  stopifnot(is.vector(X) && length(X) == length(Mu))
+  stopifnot(is.symmetric(V) && dim(V) == dim(Psi))
+}
+
+
+dNIW.typechecked <- function(dNIW) {
     # wrap an rNIW implementation "rNIW" in the common safety code that
     #  all rNIW implementations should share.
     # this enforces all the pre (and post) conditions necessary.
     # in particular, inside of rNIW it is safe to say "d = length(Mu)" (XXX would it be nice to pass d INTO rNIW...??)  
   
     function(X, V, Mu, Kappa, Psi, df, log=FALSE) {
-        Mu = as.vector(Mu)
-        Psi = as.matrix(Psi)
-        d = NIW.typecheck(Mu, Kappa, Psi, df)
+       #PRECONDITIONS
+        dNIW.typecheck(Mu, Kappa, Psi, df)
         
         # IMPLEMENTATION
         ans = dNIW(X, V, Mu, Kappa, Psi, df, log=log);
@@ -224,7 +280,7 @@ rNIW.extremelynaive <- rNIW.typecheck(function(n, Mu, kappa, Psi, df) {
   ans
 })
 
-rNIW.naive <- rNIW.typecheck(function(n, Mu, kappa, Psi, df) {
+rNIW.naive <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
   # generate the n samples
   # this calls rWishart once to generate the n wishart samples, then inverts them all (to make them inverse wishart samples)
   # The only effective difference between this and extremelynaive should be that this only inverts Psi once
@@ -358,7 +414,7 @@ BartlettFactor <- function(d, df) {
 
 
 
-rNIW.snappy1 <- rNIW.typecheck(function(n, Mu, kappa, Psi, df) {
+rNIW.snappy1 <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
   # attempt to write out the efficient algorithm (but in R, of course)
 #(one thing this setup doesn't do is precompute inv(Psi) ahead of time)
   d = length(Mu)
@@ -396,7 +452,7 @@ rNIW.snappy1 <- rNIW.typecheck(function(n, Mu, kappa, Psi, df) {
 })
 
 
-rNIW.snappy2 <- function(n, Mu, kappa, Psi, df) {
+rNIW.snappy2 <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
   # The difference between snappy1 and snappy2 is analogous to the difference between extremelynaive and naive:
   #  we factor out the common terms (Mu, kappa, chol(Psi)) to before and after the sampling loop
   
@@ -423,9 +479,9 @@ rNIW.snappy2 <- function(n, Mu, kappa, Psi, df) {
   ans$X =  Mu + ans$X/sqrt(kappa) 
   
   ans
-}
+})
 
-rNIW.snappy3 <- rNIW.typecheck(function(n, Mu, kappa, Psi, df) {
+rNIW.snappy3 <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
   #  instead of generating U.inv and using %*%, generate U and use backsolve
   # costs more at startup; perhaps that is much offset at runtime
   # XXX but because we need to output V, we necessarily need to construct U.inv anyway
@@ -490,14 +546,17 @@ rNIW.snappy3 <- rNIW.typecheck(function(n, Mu, kappa, Psi, df) {
 # XXX I can't prove it because I don't have it written, but I don't think this will give a significant advantage:
 #         anywhere we need an inverse+multiply we can use backsolve instead, which is actually faster 
 
-require("Rcpp")
-Rcpp::sourceCpp("rNIW.cpp")
 
 rNIW.Rcpp2 <- rNIW.typecheck(function(n, Mu, kappa, Psi, df) {
   # precompute what can be precomputed
   # because the slowness of doing them in R will not be
   # that much (only O(1), not O(n)), and is outweighed by the headache in C
   # TODO: do these in C as well, for completeness.
+  
+  require("Rcpp")  # XXX: putting this call inside of here means R only compiles the code as needed and speeds up our dev cycle
+  Rcpp::sourceCpp("rNIW.cpp") #in the long run, we should, of course, put these calls at the top with the other imports
+  
+  # precompute some useful labels
   d = length(Mu)
   gamma.inv = solve(chol(solve(Psi)))
     
@@ -505,8 +564,29 @@ rNIW.Rcpp2 <- rNIW.typecheck(function(n, Mu, kappa, Psi, df) {
 })
 
 
+
+
+# ???
+#rMNIW = rMNIW.Rcpp2
+
+rNIW.based_on_multi <- rNIW.typechecked(function(n, Mu, Kappa, Psi, df) { # TODO: pick a better name
+  # XXX this function will not run; rMNIW does not exist yet.
+  # TODO: ^ remove this comment when finished
+  # rNIW implementation backed by rMNIW
+  # you can view this as a convenience wrapper
+  # but also, it is a 
+  
+  # coerce Mu and Kappa to matrices 
+  d = length(Mu)
+  dim(Mu) = c(1, d)
+  dim(Kappa) = c(1,1)
+  
+  rMNIW(n, Mu, Kappa, Psi, df)
+})
+
 # TODO: make a final decision:
 # rNIW = rNIW.therealslimshady
+
 
 
 
@@ -532,6 +612,7 @@ multigamma <- function(d, log=FALSE) {
   }
   
   return(p)
+}
 }
 
 dIW <- function(V, Psi, df, log=FALSE) {
@@ -562,7 +643,7 @@ dIW <- function(V, Psi, df, log=FALSE) {
   # but the Inverse Wishart page additionally switches the 2/3 signs in the power
   # which is completely the sort of mistake that one might make with LaTeX
   # ...but two software packages (LaplacesDemon and MCMCpack) agree with the wikipedia formula. so... hm.
-  p = -  (   (df+d+1)*log(det_V)  + trace_Psi_invV)    )/2    + c
+  p = -  (   (df+d+1)*log(det_V)  + trace_Psi_invV    )/2    + c
   
   if(!log) {
     p = exp(p)

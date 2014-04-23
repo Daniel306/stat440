@@ -102,6 +102,7 @@ D-3 (Tuesday)
 
 - [ ] MNIW.typecheck()
     - [ ] make NIW.typecheck depend on that
+- [ ] split NIW.R to dNIW.R, dMNIW.R, rNIW.R and rMNIW.R
 - [x] clean up this TODO list to git
 - [ ] figure out if using pointers/references in Rcpp is faster; specifically, does passing a NumericVector cause a COPY of that vector even in C?
 - [ ] write naive version in Rcpp (for timing comparison)
