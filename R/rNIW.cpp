@@ -1,6 +1,28 @@
 #include <Rcpp.h>
 using namespace Rcpp;
 
+/* References:
+ * 
+ * - http://stackoverflow.com/questions/15263996/rcpp-how-to-generate-random-multivariate-normal-vector-in-rcpp
+ *
+ */
+
+/* TODO:
+ *
+ * - investigate RcppArmadillo <http://dirk.eddelbuettel.com/code/rcpp.armadillo.html> which gives more readable LAPACK calls, among other things.
+ * - investigate RcppEigen <http://cran.r-project.org/web/packages/RcppEigen/index.html>
+ *   long versus thread on the Rcpp mailing list: http://thread.gmane.org/gmane.comp.lang.r.rcpp/3522
+ */
+
+/* test function
+ * for playing around with things!
+ */
+// // [[Rcpp::depends
+// [[Rcpp::export]]
+NumericVector c(NumericVector M) {
+  return chol(M);
+}
+
 // Below is a simple example of exporting a C++ function to R. You can
 // source this function into an R session using the Rcpp::sourceCpp 
 // function (or via the Source button on the editor toolbar)
