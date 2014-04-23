@@ -188,7 +188,8 @@ D+k
 - [ ] derive how the NIW is a conjugate prior for a hierarchical normal
     - [ ] record in `mathematics.tex`
 - [ ] Hierarchical normal regression via Gibbs sampling (this is a separate piece of code; it may share some subroutines, but its core is an entirely different beast)
-
+- [ ] write versions of every function which are cholesky-parameterized (credit to LaplacesDemon for the simple and elegant idea);
+    - [ ] use these versions to collapse large portions of the code
 - [ ] move to using RUnit
 - [ ] test for and quantify numerical instability
 - [ ] runtimes

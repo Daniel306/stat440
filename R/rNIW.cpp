@@ -77,19 +77,25 @@ NumericMatrix riwishart_n(int n, NumericVector Psi, double df) {
 
 
 // [[Rcpp::export]]
-NumericVector rmvnorm(NumericVector Mu, NumericMatrix V) {
+NumericMatrix rmvnorm(int n, NumericVector Mu, NumericMatrix V) {
   unsigned int d = Mu.size();
   
   // take the lower chol() of V:
   //   vv^T = V
   // we need lower form because var(v z ) = v var(z) v^T = v I v^T
-  MatrixXd v = as<Map<MatrixXd> >(V).llt().matrixL(); //??
+  MatrixXd v = as<Map<MatrixXd> >(V).llt().matrixL(); //??    
   
   // sample standard normals
-  NumericVector z = rnorm(d);
+  NumericVector z = rnorm(d*n);
+
+  // Move them into Eigen
+  //again, Eigen to the rescue for something Rcpp missed
+  // this does dim(X) = c(d,n)
+  MatrixXd X = as<Map<MatrixXd> >(z);
+  X.resize(d,n);  
   
   //scale the normals to have covariance matrix V
-  VectorXd X = v*as<Map<VectorXd> >(z);
+  X = v*X;
   
   // center the normals
   X += as<Map<VectorXd> >(Mu);
@@ -121,7 +127,7 @@ List rNIW_extremelynaive_eigen(unsigned int n, NumericVector Mu, double kappa, N
     // changing the definition of Vi in the process
     Vi = Rcpp::wrap(as<Map<MatrixXd> >(Vi) / kappa);
     //Rcout << "Vi[1,2] = " << Vi[1,2] << std::endl; //DEBUG
-    NumericVector Xi = rmvnorm(Mu, Vi);
+    NumericVector Xi = rmvnorm(1, Mu, Vi);
     for(int j=0; j<d; j++) {
       X[d*i + j] = Xi(j);
     }
