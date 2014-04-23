@@ -152,9 +152,7 @@ void BartlettFactorCpp(int d, double df, NumericVector &A){
       A[col*d+row] = Norms[NormsCount++];
     }                   
   }
-  
-  
-  //return A; // should probably do it with pointers later
+
 }
 
 
@@ -254,6 +252,29 @@ NumericVector UpperTriMult(NumericVector M1, NumericVector M2, int d){
   return res;
 }
 
+// Tested and it works
+// // [[Rcpp::export]]
+NumericVector Mmult(NumericVector M1, NumericVector M2){
+  // R is weird:
+  NumericVector dM1 = M1.attr("dim");
+  NumericVector dM2 = M2.attr("dim");
+  int colF = dM1[0];
+  int rowF = dM2[1];
+  int d = dM1[1];
+  //assert(d = dM2[0]); not sure how assert is
+  
+  NumericVector ans(Dimension(colF, rowF));
+  for (int col = 0; col < colF; col++){
+    for (int row = 0; row < rowF; row++){
+      for( int i = 0; i < d; i++){
+        ans[col*rowF + row] += M1[i*rowF + row] * M2[col*d + i];
+      } 
+    }
+  }
+  return ans;
+}
+
+
 
 // [[Rcpp::export]]
 SEXP rNIW_Rcpp_2(int n, int d, NumericVector Mu, double kappa, NumericVector gamma_inv, double df) {
@@ -307,6 +328,22 @@ SEXP rNIW_Rcpp_2(int n, int d, NumericVector Mu, double kappa, NumericVector gam
 
 
 
+// // [[Rcpp::export]]
+NumericVector generate_z(int d, int p){
+  NumericVector norms = rnorm(d*p);
+  NumericVector ans(Dimension(d,p)); // might be off here
+  //int count = 0;
+  for (int col = 0; col < p; col++){
+    for(int row = 0; row < d; row++){
+      ans[col*d + row] = norms[col*d + row];
+    }
+  }
+  
+  return ans;
+}
+
+
+
 // d refers to size of gamma_inv
 // p refers to number of dimens
 // might take them out later and calculate them inside here rather than outside
@@ -324,7 +361,7 @@ SEXP rmNIW_Cpp(int n, int d, int p, NumericVector Mu, NumericVector kappa_Inv, N
     // Apply backsolve
   NumericVector A_inv = backSolveInverse(A,d);
   
-  NumericVector z = rnorm(d*p);
+  NumericVector z = generate_z(d,p); // need to represent as Matrix..
   
   
   NumericVector U_inv(Dimension(d,d));
@@ -353,23 +390,16 @@ SEXP rmNIW_Cpp(int n, int d, int p, NumericVector Mu, NumericVector kappa_Inv, N
   // First kappa_inv %*% z:
   // Can use fact that Kappa_inv is (at least, I think it is, might be wrong) upper triangular
   
-  NumericVector temp(Dimension(d,p));
+  NumericVector temp = Mmult(kappa_Inv,z);
+  temp = Mmult(temp, U_inv);
   
-  for(int col = 0; col < d; col++){
-    for (int row = 0; row < d; row++){
-      for (int i = 0; i < d; d++){
-          
-      }
-    } 
-  }
   
   
   
-  for(int i = 0; i < d; i++){
-    for(int j = 0; j < d; j++){
-      X_ans[k*d+i] += U_inv[j*d + i]*z[j];
+  for(int col = 0; col < d; col++){
+    for(int row = 0; row < p; row++){
+      X_ans[k*d*p +  col*p + row] = temp[col*p + row] + Mu[col*p +  row];
     }
-      X_ans[k*d + i] = X_ans[k*d + i] + Mu[i];
   }
   
   }
