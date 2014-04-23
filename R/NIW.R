@@ -558,6 +558,24 @@ rNIW.snappy3 <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
 #         anywhere we need an inverse+multiply we can use backsolve instead, which is actually faster 
 
 
+rNIW.naiveRcpp2 <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
+  # precompute what can be precomputed
+  # because the slowness of doing them in R will not be
+  # that much (only O(1), not O(n)), and is outweighed by the headache in C
+  # TODO: do these in C as well, for completeness.
+  
+  require("Rcpp")  # XXX: putting this call inside of here means R only compiles the code as needed and speeds up our dev cycle
+  Rcpp::sourceCpp("rNIW.cpp") #in the long run, we should, of course, put these calls at the top with the other imports
+  
+  # precompute some useful labels
+  d = length(Mu)
+  gamma.inv = solve(chol(solve(Psi)))
+  
+  return(rNIW_Rcpp_naive(n, d, Mu, kappa, gamma.inv, df))
+})
+
+
+
 rNIW.Rcpp2 <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
   # precompute what can be precomputed
   # because the slowness of doing them in R will not be
