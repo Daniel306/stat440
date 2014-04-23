@@ -199,7 +199,8 @@ test.integrate.multi <- function() {
 marginalize <- function(f, arity, dims, lower=-Inf, upper=+Inf, ...) {
   # numerically marginalize some chosen set of variates out of a pdf
   # 
-  # this is somewhat like currying, but each curried variable corresponds to an integrate()
+  # this is somewhat like http://en.wikipedia.org/wiki/Partial_application, but that 
+  # each variable is totally removed by an integrate() instead of fixed to a single point.
   #
   # the marginalized function is EXTREMELY slow becaues a every evaluation of it
   #  requires a length(dim)-deep stack  with at least 10, probably more  (however many integrate() decides) 
