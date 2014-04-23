@@ -125,8 +125,8 @@ D-2 (Wednesday)
 - [ ] Linear Algebra parlour tricks:
     - [ ] factor the common matrix terms to before/after the loop (call this `snappy4`)
     - [ ] does this save any time??
-- [ ] 13:00 - 14:00 blocked off
-- [ ] 14:00 - 16:00 blocked off
+- [x] 13:00 - 14:00 blocked off
+- [x] 14:00 - 16:00 blocked off
 - [ ] Better timings:
     - [ ] in the runtime tests, map the runtime matrix to averages + sds instead of having the weird aliasing problems
     - [ ] plot SDs as error bars
@@ -135,6 +135,7 @@ D-2 (Wednesday)
     - [ ] reduce the number of samples taken--we get the idea
 - [ ] figure out if using pointers/references in Rcpp is faster; specifically, does passing a NumericVector cause a COPY of that vector even in C?
 - [ ] Dig up analytic formula for the particular marginals of NIW and (note: there's 2^(# parameters) different marginals; pick wisely which to look at)
+    - [ ] marginal of the inv.wish is inv.gamma
     - [ ] implement as functions
     - [ ] wrap such functions into thingies and use them as 'ground' for the marginal plots
     - t-distributions (and the matrix-normal has multi-t)
