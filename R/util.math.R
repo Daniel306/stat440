@@ -97,3 +97,30 @@ test.integrate.multi <- function() {
   message("integral came out to: ", r, "; (it should be very nearly 1)")
 }
 #test.integrate.multi()
+
+
+
+dinvgamma <- function(x, shape, rate=1, scale=1/rate, log=FALSE) {
+  # pdf of the inverse gamma function
+
+  # from wikipedia, of course
+  # computation initially done on a logscale
+  # lgamma is a different, presumably more accurate, implementation of "ln(gamma(.))"
+  
+  p = shape*log(scale) - lgamma(shape) - (shape+1)*log(x) - scale/x
+  p[x <= 0] = -Inf     # correctly handle x which is out of the support
+                       # it would be cleaner to not compute them at all in the first place
+                       # but that would be more verbose.
+  
+  if(!log) {
+    p = exp(p);
+  }
+  
+  p
+}
+
+
+# dinvwishart <- function(x,
+# already implemented as dIW() in dNIW.R
+# ...?
+# hmmm
