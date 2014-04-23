@@ -17,9 +17,9 @@ SEXP foo(SEXP inp){
   //if(!Rcpp::isMatrix(inp))
  //   error(_"error")
     
-  NumericMatrix ab = inp;
+  NumericVector ab = inp;
   List ret;
-  ret["r"] = ab.nrow();
-  ret["c"] = ab.ncol();
+  ret["r"] = ab.dim[0];
+  ret["c"] = ab.dim[1];
   return ret;
 }
