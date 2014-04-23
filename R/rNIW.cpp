@@ -345,13 +345,13 @@ NumericVector generate_z(int d, int p){
 
 
 // d refers to size of gamma_inv
-// p refers to number of dimens
+// q refers to number of dimens of kappa_Inv
 // might take them out later and calculate them inside here rather than outside
 // [[Rcpp::export]]
-SEXP rmNIW_Cpp(int n, int d, int p, NumericVector Mu, NumericVector kappa_Inv, NumericVector gamma_inv, double df) {
+SEXP rMNIW_RCpp(int n, int d, int q, NumericVector Mu, NumericVector kappa_Inv, NumericVector gamma_inv, double df) {
   NumericVector V_ans(Dimension(d,d,n));
-  // Not sure about order of d and p
-  NumericVector X_ans(Dimension(d,p,n));
+  // Not sure about order of d and q
+  NumericVector X_ans(Dimension(d,q,n));
   
   
   NumericVector A(Dimension(d,d));
@@ -361,7 +361,7 @@ SEXP rmNIW_Cpp(int n, int d, int p, NumericVector Mu, NumericVector kappa_Inv, N
     // Apply backsolve
   NumericVector A_inv = backSolveInverse(A,d);
   
-  NumericVector z = generate_z(d,p); // need to represent as Matrix..
+  NumericVector z = generate_z(d,q); // need to represent as Matrix..
   
   
   NumericVector U_inv(Dimension(d,d));
@@ -397,8 +397,8 @@ SEXP rmNIW_Cpp(int n, int d, int p, NumericVector Mu, NumericVector kappa_Inv, N
   
   
   for(int col = 0; col < d; col++){
-    for(int row = 0; row < p; row++){
-      X_ans[k*d*p +  col*p + row] = temp[col*p + row] + Mu[col*p +  row];
+    for(int row = 0; row < q; row++){
+      X_ans[k*d*q +  col*q + row] = temp[col*q + row] + Mu[col*q +  row];
     }
   }
   
