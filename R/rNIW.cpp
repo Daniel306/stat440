@@ -1,12 +1,18 @@
+/* rNIW.cpp
+ *
+ * C-speed routines to back rNIW.R
+ *
+ * There are two APIs in use here: Rcpp and Eigen.
+ * This makes the code more verbose than what its really doing.
+ */
 #include <Rcpp.h>
+using namespace Rcpp;
+
+
 #include <RcppEigen.h>
-
-
+using namespace Eigen;
 // [[Rcpp::depends(RcppEigen)]]
 
-
-using namespace Rcpp;
-using namespace Eigen;
 
 // forward declarations
 void BartlettFactorCpp(int d, double df, NumericVector &A);
@@ -106,8 +112,14 @@ List rNIW_extremelynaive_eigen(unsigned int n, NumericVector Mu, double kappa, N
       V[d*d*i + j*d + k] = Vi(j, k); //XXX this might be the wrong order (but V is symmetric so we can't tell)
     }
     }
-    
-    NumericVector Xi = rmvnorm(Mu, Vi); // TODO: /kappa)); this is giving type errors, of course
+
+    // hack: Rcpp "helpfully" has a whole slew of pseudo-symbolic classes ("Times_Vector_Vector") that it spits out when you try to do operands
+    //  I can't tell if you can actually make it collapse things down
+    //  So i'm going to use Eigen as a workaround
+    // changing the definition of Vi in the process
+    Vi = Rcpp::wrap(as<Map<MatrixXd> >(Vi) / kappa);
+    //Rcout << "Vi[1,2] = " << Vi[1,2] << std::endl; //DEBUG
+    NumericVector Xi = rmvnorm(Mu, Vi);
     for(int j=0; j<d; j++) {
       X[d*i + j] = Xi(j);
     }
@@ -181,10 +193,10 @@ List rNIW_snappy_eigen(unsigned int n, NumericVector Mu, double kappa, NumericVe
     
   }  
 
-  return List::create(Named("X") = X, Named("V") = V,
+  return List::create(Named("X") = X, Named("V") = V
        //extra debugging stuff
-       Named("Psi.inv") = Psi_inv,
-       Named("Gamma") = Gamma
+       //, Named("Psi.inv") = Psi_inv
+       //, Named("Gamma") = Gamma
        );
 }
 
