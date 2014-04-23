@@ -44,14 +44,24 @@ List tc(NumericVector AA) {
 }
 
 
+
 // now that I can do that.. what?
 // [[Rcpp::export]]
 List rNIW_naive(unsigned int n, NumericVector Mu, double kappa, NumericVector Psi, double df) {
   // precondition: all the preconditions have been properly checked by rNIW.typechecked
-  MatrixXd Mu_(as<Map<MatrixXd> >(Mu));
-  unsigned int d = Mu_.size();
-  ArrayXd X;
-  ArrayXd V;
+  unsigned int d = Mu.length();
+
+  //MatrixXd Mu_(as<Map<MatrixXd> >(Mu));
+
+
+  NumericVector V(Dimension(d,d,n));
+  NumericVector X(Dimension(d,n));
+  
+
+  for(unsigned int i=0; i<n; i++) {
+    // step 1:
+  }  
+
   return List::create(Named("X") = X, Named("V") = V);
 }
 
