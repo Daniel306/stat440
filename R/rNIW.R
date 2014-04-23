@@ -203,18 +203,6 @@ rNIW.extremelynaive.RcppEigen <- rNIW.typechecked(function(n, Mu, kappa, Psi, df
   return(rNIW_extremelynaive_eigen(n, Mu, kappa, Psi, df))
 })
 
-rNIW.snappy.RcppEigen <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
-  # naive algorithm, but done in C, for a more fair comparison
-  
-  require("Rcpp")  # XXX: putting this call inside of here means R only compiles the code as needed and speeds up our dev cycle
-  Rcpp::sourceCpp("rNIW.cpp") #in the long run, we should, of course, put these calls at the top with the other imports
-  
-  return(rNIW_snappy_eigen(n, Mu, kappa, Psi, df))
-})
-
-
-
-
 ##################################
 ### SnappySampling by exploiting
 ### the Bartlett Decomposition.
@@ -469,6 +457,15 @@ rNIW.Rcpp2 <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
   return(rNIW_Rcpp_2(n, d, Mu, kappa, gamma.inv, df))
 })
 
+
+rNIW.snappy.RcppEigen <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
+  # naive algorithm, but done in C, for a more fair comparison
+  
+  require("Rcpp")  # XXX: putting this call inside of here means R only compiles the code as needed and speeds up our dev cycle
+  Rcpp::sourceCpp("rNIW.cpp") #in the long run, we should, of course, put these calls at the top with the other imports
+  
+  return(rNIW_snappy_eigen(n, Mu, kappa, Psi, df))
+})
 
 
 
