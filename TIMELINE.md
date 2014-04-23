@@ -182,6 +182,7 @@ D (Friday, April the 25th, 2014)
 D+k
 ---------------------
 
+- [ ] move to rbenchmark::benchmark instead of NIW.runtimes
 - [ ] write vignette()s
 - [ ] look into the curve() function, instead of lines()
 - [ ] derive how the NIW is a conjugate prior for a hierarchical normal
