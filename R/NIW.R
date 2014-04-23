@@ -174,10 +174,21 @@ rNIW.typecheck <- function(n, Mu, Kappa, Psi, df) {
   # rNIW preconditions
   
   # n must be a natural number
-  stopifnot(n==round(n) && n > 0) # is.integer() is wrong for this; see its help
+  stopifnot(length(n) == 1 && n==round(n) && n > 0) # is.integer() is wrong for this; see its help
 
   # the distribution parameters must be sane
   NIW.typecheck(Mu, Kappa, Psi, df)
+}
+
+
+rMNIW.typecheck <- function(n, Mu, Kappa, Psi, df) {
+  # rMNIW preconditions
+  
+  # n must be a natural number
+  stopifnot(length(n) == 1 && n==round(n) && n > 0) # is.integer() is wrong for this; see its help
+
+  # the distribution parameters must be sane
+  MNIW.typecheck(Mu, Kappa, Psi, df)
 }
 
 rNIW.typechecked <- function(rNIW) {
@@ -264,7 +275,7 @@ rInvWishart <- function(n, df, Sigma) {
  W
 }
 
-rNIW.extremelynaive <- rNIW.typecheck(function(n, Mu, kappa, Psi, df) {
+rNIW.extremelynaive <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
   # generate the n samples by n times doing: i) generate V, ii) generate X given V.
   # this "extremely naive" version is a 1-for-1 translation of the algorithm on wikipedia
   #  the "extreme" part is that it generates every sample one at a time in an R loop
@@ -547,7 +558,7 @@ rNIW.snappy3 <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
 #         anywhere we need an inverse+multiply we can use backsolve instead, which is actually faster 
 
 
-rNIW.Rcpp2 <- rNIW.typecheck(function(n, Mu, kappa, Psi, df) {
+rNIW.Rcpp2 <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
   # precompute what can be precomputed
   # because the slowness of doing them in R will not be
   # that much (only O(1), not O(n)), and is outweighed by the headache in C
