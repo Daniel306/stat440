@@ -24,7 +24,7 @@ main <- function() { # avoid polluting the namespace
 
     message("Starting test runs:")
     
-    for(alg in c("snappy1", "snappy2", "snappy3", "Rcpp2", "extremelynaive.RcppEigen", "snappy.RcppEigen")) { 
+    for(alg in krNIWAlgorithms) { 
         message("Beginning ",alg,"...")
         try({ #wrap so that one algorithm being broken doesn't break the others (but we'll still see error messages from them)
         

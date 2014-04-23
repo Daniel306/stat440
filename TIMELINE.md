@@ -105,11 +105,10 @@ D-3 (Tuesday)
     - [ ] factor NIW.typecheck so that it shares code with that
 - [x] split NIW.R to dNIW.R, dMNIW.R, rNIW.R and rMNIW.R
 - [x] clean up this TODO list to git
-- [ ] write naive version in Rcpp (for timing comparison)
+- [x] write naive version in Rcpp (for timing comparison)
 - [ ] in the runtime tests, map the runtime matrix to have a ratio column so that we can say "snappy2 is 4.3 times faster than naive"
+- [ ] factor the algorithm list to `test.constants.R`
 - [ ] figure out if using pointers/references in Rcpp is faster; specifically, does passing a NumericVector cause a COPY of that vector even in C?
-
-- [ ] switch to using
 
 [daniel]
 
