@@ -322,4 +322,16 @@ so column $i$ of $T^{-1}$ is
 
 so ... ?
 
+\section*{The Matrix Normal Dist}
+
+
+the matrix normal can also be thought as a single multivariate normal $N(vec(\mu), V \kron K)$
+but this loses some of the structure intrinsic to it
+
+this identity is relevant to this: $sqrt(V \kron K) vec(X) = vec(K X V)$
+note that $K \cdot X \cdot V ~ MN(0, K, V)$ if $X$ is a $q \times p$ matrix of i.i.d. standard normals.
+
+You can view the matrix normal as a set of multivariate normals: down the columns you have variance (as in a single multivariate normal)
+ and then by doing some transposes (TODO: work out this derivation) you can again cross the columns.
+
 \end{document}

@@ -1,13 +1,144 @@
+/* rNIW.cpp
+ *
+ * C-speed routines to back rNIW.R
+ *
+ * There are two APIs in use here: Rcpp and Eigen.
+ * This makes the code more verbose than what its really doing.
+ */
 #include <Rcpp.h>
 using namespace Rcpp;
 
-// Below is a simple example of exporting a C++ function to R. You can
-// source this function into an R session using the Rcpp::sourceCpp 
-// function (or via the Source button on the editor toolbar)
 
-// For more on using Rcpp click the Help button on the editor toolbar
+#include <RcppEigen.h>
+using namespace Eigen;
+// [[Rcpp::depends(RcppEigen)]]
 
-// // [[Rcpp::export]]
+
+// forward declarations
+void BartlettFactorCpp(int d, double df, NumericVector &A);
+
+
+/* References:
+ * 
+ * - http://stackoverflow.com/questions/15263996/rcpp-how-to-generate-random-multivariate-normal-vector-in-rcpp
+ *
+ */
+
+/* TODO:
+ *
+ * - investigate RcppArmadillo <http://dirk.eddelbuettel.com/code/rcpp.armadillo.html> which gives more readable LAPACK calls, among other things.
+ * - investigate RcppEigen <http://cran.r-project.org/web/packages/RcppEigen/index.html>
+ *   long versus thread on the Rcpp mailing list: http://thread.gmane.org/gmane.comp.lang.r.rcpp/3522
+ */
+
+
+/* from the RcppEigen vignette */
+/* this feels like a dirty hack */
+MatrixXd crossprod(const MatrixXd& A) {
+  int n(A.cols());
+  return MatrixXd(n,n).setZero().selfadjointView<Lower>().rankUpdate(A.adjoint());
+}
+
+MatrixXd tcrossprod(const MatrixXd& A) {
+  int n(A.cols());
+  return MatrixXd(n,n).setZero().selfadjointView<Lower>().rankUpdate(A);
+}
+
+
+// [[Rcpp::export]]
+NumericMatrix riwishart(NumericMatrix Psi, double df) {
+
+  unsigned int d = Psi.nrow();
+
+  // invert Psi  
+  MatrixXd Psi_inv = as<Map<MatrixXd> >(Psi).inverse();
+  // TODO: exploit that we know Psi is symmetric (but SelfAdjointView does not contain inverse()!! maybe knowing the matrix is symmetric doesn't help, in that case??)
+  // factor Psi
+  MatrixXd Gamma = Psi_inv.llt().matrixU();
+    
+  // step 1: generate the bartlett factor..
+  NumericVector A = NumericVector(Dimension(d,d));
+  BartlettFactorCpp(d, df, A);
+
+  // step 2: scale it
+  MatrixXd A_ = as<Map<MatrixXd> >(A);  //map into Eigen so we can use linear algebras
+  MatrixXd U  = A_*Gamma;
+
+  // construct the final symmetric covariance matrix
+  //V = (Gamma^T A^T A Gamma)^{-1} = (A Gamma)^{-1} (A Gamma)^{-1}^T = tcrossprod((A Gamma)^{-1})
+  MatrixXd V = tcrossprod(U.inverse());
+  return Rcpp::wrap(V); 
+}
+
+// [[Rcpp::export]]
+NumericMatrix riwishart_n(int n, NumericVector Psi, double df) {
+  // faster version which computes several Vs at once but only factors Psi once
+}
+
+
+// [[Rcpp::export]]
+NumericMatrix rmvnorm(int n, NumericVector Mu, NumericMatrix V) {
+  unsigned int d = Mu.size();
+  
+  // take the lower chol() of V:
+  //   vv^T = V
+  // we need lower form because var(v z ) = v var(z) v^T = v I v^T
+  MatrixXd v = as<Map<MatrixXd> >(V).llt().matrixL(); //??    
+  
+  // sample standard normals
+  NumericVector z = rnorm(d*n);
+
+  // Move them into Eigen
+  //again, Eigen to the rescue for something Rcpp missed
+  // this does dim(X) = c(d,n)
+  MatrixXd X = as<Map<MatrixXd> >(z);
+  X.resize(d,n);  
+  
+  //scale the normals to have covariance matrix V
+  X = v*X;
+  
+  // center the normals
+  X += as<Map<VectorXd> >(Mu);
+  
+  return Rcpp::wrap(X);
+}
+
+
+// [[Rcpp::export]]
+List rNIW_extremelynaive_eigen(unsigned int n, NumericVector Mu, double kappa, NumericMatrix Psi, double df) {
+  // precondition: all the preconditions have been properly checked by rNIW.typechecked
+  unsigned int d = Mu.length();
+  
+  NumericVector V(Dimension(d,d,n));
+  NumericVector X(Dimension(d,n));
+  
+  for(unsigned int i=0; i<n; i++) {
+    NumericMatrix Vi = riwishart(Psi, df);
+
+    for(int j=0; j<d; j++) {
+    for(int k=0; k<d; k++) {
+      V[d*d*i + j*d + k] = Vi(j, k); //XXX this might be the wrong order (but V is symmetric so we can't tell)
+    }
+    }
+
+    // hack: Rcpp "helpfully" has a whole slew of pseudo-symbolic classes ("Times_Vector_Vector") that it spits out when you try to do operands
+    //  I can't tell if you can actually make it collapse things down
+    //  So i'm going to use Eigen as a workaround
+    // changing the definition of Vi in the process
+    Vi = Rcpp::wrap(as<Map<MatrixXd> >(Vi) / kappa);
+    //Rcout << "Vi[1,2] = " << Vi[1,2] << std::endl; //DEBUG
+    NumericVector Xi = rmvnorm(1, Mu, Vi);
+    for(int j=0; j<d; j++) {
+      X[d*i + j] = Xi(j);
+    }
+    
+  }
+
+  return List::create(Named("X") = X, Named("V") = V);
+}
+
+
+// // [[Rcpp::export]] //<-- not exported since A was converted to a reference
 void BartlettFactorCpp(int d, double df, NumericVector &A){
   
   // Initialize A, it starts off with all 0s
@@ -25,6 +156,58 @@ void BartlettFactorCpp(int d, double df, NumericVector &A){
   
   //return A; // should probably do it with pointers later
 }
+
+
+
+// now that I can do that.. what?
+// [[Rcpp::export]]
+List rNIW_snappy_eigen(unsigned int n, NumericVector Mu, double kappa, NumericVector Psi, double df) {
+  // precondition: all the preconditions have been properly checked by rNIW.typechecked
+  unsigned int d = Mu.length();
+
+  NumericVector V(Dimension(d,d,n));
+  NumericVector X(Dimension(d,n));
+
+  // invert Psi  
+  MatrixXd Psi_inv = as<Map<MatrixXd> >(Psi).inverse();
+  // TODO: exploit that we know Psi is symmetric (but SelfAdjointView does not contain inverse()!! maybe knowing the matrix is symmetric doesn't help, in that case??)
+  // factor Psi
+  MatrixXd Gamma = Psi_inv.llt().matrixU();
+
+  NumericVector A = NumericVector(Dimension(d,d));
+  for(unsigned int i=0; i<n; i++) {
+    // step 1: generate the bartlett factor..
+    BartlettFactorCpp(d, df, A);
+    MatrixXd A_ = as<Map<MatrixXd> >(A);  //map into Eigen so we can use linear algebras
+    //TriangularView<MatrixXd, Upper> trA_ = A_.triangularView<Upper>();
+    MatrixXd U = A_*Gamma;
+    MatrixXd U_inv = U.inverse();
+    MatrixXd Vi = tcrossprod(U_inv);
+    // memcpy the result out of Eigen and into Rcpp
+    // XXX does this need to be done manually? can't we call some "copy this block of memory" operation?
+    for(int j=0; j<d; j++) {
+    for(int k=0; k<d; k++) {
+      V[d*d*i + j*d + k] = Vi(j, k); //XXX this might be the wrong order (but V is symmetric so we can't tell)
+    }
+    }
+    
+    // step 2: generate X
+    VectorXd Xi = U.triangularView<Upper>().solve(as<Map<VectorXd> >(rnorm(d))); // backsolve(U, z)
+    Xi /= sqrt(kappa);
+    Xi += as<Map<VectorXd> >(Mu);
+    for(int j=0; j<d; j++) {
+      X[d*i + j] = Xi(j);
+    }
+    
+  }  
+
+  return List::create(Named("X") = X, Named("V") = V
+       //extra debugging stuff
+       //, Named("Psi.inv") = Psi_inv
+       //, Named("Gamma") = Gamma
+       );
+}
+
 
 
 // Used only for inverse on upper triangular matrices

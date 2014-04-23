@@ -194,6 +194,14 @@ rNIW.naive <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
 })
 
 
+rNIW.extremelynaive.RcppEigen <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
+  # naive algorithm, but done in C, for a more fair comparison
+
+  require("Rcpp")  # XXX: putting this call inside of here means R only compiles the code as needed and speeds up our dev cycle
+  Rcpp::sourceCpp("rNIW.cpp") #in the long run, we should, of course, put these calls at the top with the other imports
+
+  return(rNIW_extremelynaive_eigen(n, Mu, kappa, Psi, df))
+})
 
 ##################################
 ### SnappySampling by exploiting
@@ -311,11 +319,11 @@ rNIW.snappy1 <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
 
   # lawl wat: the canconical way to make an identity matrix in R is "diag(scalar)". wowwww.
   I = diag(d)
+
+  #gamma.inv = chol(Psi) # upper triangular #<-- WRONG; I thought chol(inv(S)) = inv(chol(S)) but that's very not true
+  gamma.inv = solve(chol(solve(Psi)))
   
-  for(i in 1:n) {
-    #gamma.inv = chol(Psi) # upper triangular #<-- WRONG; I thought chol(inv(S)) = inv(chol(S)) but that's very not true
-    gamma.inv = solve(chol(solve(Psi)))
-    
+  for(i in 1:n) {    
     # note: actually getting gamma = solve(gamma.inv) is expensive and numerically unstable,
     #       so you should avoid computing it if possible
     
@@ -324,9 +332,6 @@ rNIW.snappy1 <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
     #message("Upper triangular bartlett factor") #DEBUG
     #print(A)
     
-    # okay, well, it seems we're stuck with inverting A..
-    U = gamma
-
     A.inv = backsolve(A, I)
     U.inv = gamma.inv %*% A.inv  #(U = AG and U'U = G'A'AG = W the Wishart-distributed matrix we never actually compute)
     
@@ -436,24 +441,6 @@ rNIW.snappy3 <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
 #         anywhere we need an inverse+multiply we can use backsolve instead, which is actually faster 
 
 
-rNIW.naiveRcpp2 <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
-  # precompute what can be precomputed
-  # because the slowness of doing them in R will not be
-  # that much (only O(1), not O(n)), and is outweighed by the headache in C
-  # TODO: do these in C as well, for completeness.
-  
-  require("Rcpp")  # XXX: putting this call inside of here means R only compiles the code as needed and speeds up our dev cycle
-  Rcpp::sourceCpp("rNIW.cpp") #in the long run, we should, of course, put these calls at the top with the other imports
-  
-  # precompute some useful labels
-  d = length(Mu)
-  gamma.inv = solve(chol(solve(Psi)))
-  
-  return(rNIW_Rcpp_naive(n, d, Mu, kappa, gamma.inv, df))
-})
-
-
-
 rNIW.Rcpp2 <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
   # precompute what can be precomputed
   # because the slowness of doing them in R will not be
@@ -470,6 +457,15 @@ rNIW.Rcpp2 <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
   return(rNIW_Rcpp_2(n, d, Mu, kappa, gamma.inv, df))
 })
 
+
+rNIW.snappy.RcppEigen <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
+  # naive algorithm, but done in C, for a more fair comparison
+  
+  require("Rcpp")  # XXX: putting this call inside of here means R only compiles the code as needed and speeds up our dev cycle
+  Rcpp::sourceCpp("rNIW.cpp") #in the long run, we should, of course, put these calls at the top with the other imports
+  
+  return(rNIW_snappy_eigen(n, Mu, kappa, Psi, df))
+})
 
 
 
