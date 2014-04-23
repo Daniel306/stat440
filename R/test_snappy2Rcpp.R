@@ -9,7 +9,7 @@ Rcpp::sourceCpp("rNIW.cpp")
 
 # test means:
 #n=2000000;
-#sample1 <- rNIW.Rcpp2(n, kMu, kKappa, kPsi, kDF);
+sample1 <- rNIW.Rcpp2(n, kMu, kKappa, kPsi, kDF);
 #rowMeans(sample1$X)
 #sample2 <- rNIW.snappy2(n, kMu, kKappa, kPsi, kDF);
 #rowMeans(sample2$X)

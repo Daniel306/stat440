@@ -7,11 +7,11 @@ using namespace Rcpp;
 
 // For more on using Rcpp click the Help button on the editor toolbar
 
-// [[Rcpp::export]]
-NumericVector BartlettFactorCpp(int d, double df){
+// // [[Rcpp::export]]
+void BartlettFactorCpp(int d, double df, NumericVector &A){
   
   // Initialize A, it starts off with all 0s
-  NumericVector A(Dimension(d,d));
+  //NumericVector A(Dimension(d,d));
   NumericVector Norms = rnorm((d*(d-1)/2));
   int NormsCount = 0;
   // Not sure if calculating a numeric vector of dfs makes it faster, could do it later.
@@ -23,13 +23,13 @@ NumericVector BartlettFactorCpp(int d, double df){
   }
   
   
-  return A; // should probably do it with pointers later
+  //return A; // should probably do it with pointers later
 }
 
 
 // Used only for inverse on upper triangular matrices
-// [[Rcpp::export]]
-NumericVector backSolveInverse(NumericVector A, int d){
+// // [[Rcpp::export]]
+NumericVector backSolveInverse(NumericVector &A, int d){
  //
  NumericVector A_inv(Dimension(d,d)); // sets ot to 0
 
@@ -59,10 +59,10 @@ SEXP rNIW_Rcpp_2(int n, int d, NumericVector Mu, double kappa, NumericVector gam
   NumericVector X_ans(Dimension(d,n));
   
   
-  
+  NumericVector A(Dimension(d,d));
   for (int k = 0; k < n; k++){
    // First, create A.
-  NumericVector A = BartlettFactorCpp(d,df);
+  BartlettFactorCpp(d,df, A);
     // Apply backsolve
   NumericVector A_inv = backSolveInverse(A,d);
   
