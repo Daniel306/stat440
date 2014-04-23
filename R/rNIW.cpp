@@ -76,19 +76,21 @@ NumericMatrix riwishart_n(int n, NumericVector Psi, double df) {
 }
 
 
+// [[Rcpp::export]]
 NumericVector rmvnorm(NumericVector Mu, NumericMatrix V) {
   unsigned int d = Mu.size();
   
-  // take the chol() of V:
-  // V = (v^T)v
-  MatrixXd v = as<Map<MatrixXd> >(V).llt().matrixU();  
-
+  // take the lower chol() of V:
+  //   vv^T = V
+  // we need lower form because var(v z ) = v var(z) v^T = v I v^T
+  MatrixXd v = as<Map<MatrixXd> >(V).llt().matrixL(); //??
+  
   // sample standard normals
   NumericVector z = rnorm(d);
-
+  
   //scale the normals to have covariance matrix V
   VectorXd X = v*as<Map<VectorXd> >(z);
-
+  
   // center the normals
   X += as<Map<VectorXd> >(Mu);
   
