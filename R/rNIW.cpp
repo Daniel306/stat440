@@ -1,11 +1,16 @@
 #include <Rcpp.h>
 #include <RcppEigen.h>
-// [[Rcpp::depends(RcppEigen)]]
 
+
+// [[Rcpp::depends(RcppEigen)]]
 
 
 using namespace Rcpp;
 using namespace Eigen;
+
+// forward declarations
+void BartlettFactorCpp(int d, double df, NumericVector &A);
+
 
 /* References:
  * 
@@ -44,6 +49,17 @@ List tc(NumericVector AA) {
 }
 
 
+/* from the RcppEigen vignette */
+/* this feels like a dirty hack */
+MatrixXd crossprod(const MatrixXd& A) {
+  int n(A.cols());
+  return MatrixXd(n,n).setZero().selfadjointView<Lower>().rankUpdate(A.adjoint());
+}
+
+MatrixXd tcrossprod(const MatrixXd& A) {
+  int n(A.cols());
+  return MatrixXd(n,n).setZero().selfadjointView<Lower>().rankUpdate(A);
+}
 
 // now that I can do that.. what?
 // [[Rcpp::export]]
@@ -59,16 +75,28 @@ List rNIW_naive(unsigned int n, NumericVector Mu, double kappa, NumericVector Ps
 
   // invert Psi  
   MatrixXd Psi_inv = as<Map<MatrixXd> >(Psi).inverse();
-  // TODO: exploit that we know Psi is symmetric
+  // TODO: exploit that we know Psi is symmetric (but SelfAdjointView does not contain inverse()!! maybe knowing the matrix is symmetric doesn't help, in that case??)
+  // factor Psi
+  MatrixXd Gamma = Psi_inv.llt().matrixU();
 
+  NumericVector A = NumericVector(Dimension(d,d));
   for(unsigned int i=0; i<n; i++) {
-    // step 1: generate the bartlette factor..
+    // step 1: generate the bartlett factor..
+    BartlettFactorCpp(d, df, A);
+    MatrixXd A_ = as<Map<MatrixXd> >(A);  //map into Eigen so we can use linear algebras
+    //TriangularView<MatrixXd, Upper> trA_ = A_.triangularView<Upper>();
+    MatrixXd U = A_*Gamma;
+    MatrixXd Vi = crossprod(U);
+    // memcpy the result out of Eigen and into Rcpp
+    // XXX does this need to be done manually?
+    //V[d*d +
     // step 2: 
   }  
 
   return List::create(Named("X") = X, Named("V") = V,
        //extra debugging stuff
-       Named("Psi.inv") = Psi_inv
+       Named("Psi.inv") = Psi_inv,
+       Named("Gamma") = Gamma
        );
 }
 
