@@ -39,6 +39,7 @@ D-7 (Friday)
 - [x] runtime testing harness
     - [x] measure over n
     - [ ] measure over d (requires randomization to be in place) 
+    
 
 [daniel]
 
@@ -102,18 +103,10 @@ D-3 (Tuesday)
 
 - [x] MNIW.typecheck()
     - [ ] factor NIW.typecheck so that it shares code with that
-- [ ] split NIW.R to dNIW.R, dMNIW.R, rNIW.R and rMNIW.R
+- [x] split NIW.R to dNIW.R, dMNIW.R, rNIW.R and rMNIW.R
 - [x] clean up this TODO list to git
-- [ ] write naive version in Rcpp (for timing comparison)
-- [ ] figure out if using pointers/references in Rcpp is faster; specifically, does passing a NumericVector cause a COPY of that vector even in C?
-- [ ] Dig up analytic formula for the particular marginals of NIW and (note: there's 2^(# parameters) different marginals; pick wisely which to look at)
-    - t-distributions (and the matrix-normal has multi-t)
-        - analytically
-        - [x] against ground samples
-- [ ] in the runtime tests, map the runtime matrix to have a ratio column so that we can say "snappy2 is 4.3 times faster than naive"
-- [ ] Linear Algebra parlour tricks:
-    - [ ] factor the common matrix terms to before/after the loop (call this `snappy4`)
-    - [ ] does this save any time??
+- [x] write naive version in Rcpp (for timing comparison)
+- [x] factor the algorithm list to `test.constants.R`
 
 [daniel]
 
@@ -129,8 +122,24 @@ D-2 (Wednesday)
 ---
 
 [nick]
-
+- [ ] Linear Algebra parlour tricks:
+    - [ ] factor the common matrix terms to before/after the loop (call this `snappy4`)
+    - [ ] does this save any time??
 - [ ] 13:00 - 14:00 blocked off
+- [ ] 14:00 - 16:00 blocked off
+- [ ] Better timings:
+    - [ ] in the runtime tests, map the runtime matrix to averages + sds instead of having the weird aliasing problems
+    - [ ] plot SDs as error bars
+    - [ ] map the averages to have a ratio column so that we can say "snappy2 is 4.3 times faster than naive"
+    - [ ] use lty=id so that the lines are distinguished by shape as well as colour (nicer on greyscale printouts and on colourblind folks)
+    - [ ] reduce the number of samples taken--we get the idea
+- [ ] figure out if using pointers/references in Rcpp is faster; specifically, does passing a NumericVector cause a COPY of that vector even in C?
+- [ ] Dig up analytic formula for the particular marginals of NIW and (note: there's 2^(# parameters) different marginals; pick wisely which to look at)
+    - [ ] implement as functions
+    - [ ] wrap such functions into thingies and use them as 'ground' for the marginal plots
+    - t-distributions (and the matrix-normal has multi-t)
+        - analytically
+        - [x] against ground samples
 
 [daniel]
 
@@ -178,12 +187,18 @@ D (Friday, April the 25th, 2014)
 D+k
 ---------------------
 
+- [ ] move to rbenchmark::benchmark instead of NIW.runtimes
 - [ ] write vignette()s
 - [ ] look into the curve() function, instead of lines()
 - [ ] derive how the NIW is a conjugate prior for a hierarchical normal
     - [ ] record in `mathematics.tex`
 - [ ] Hierarchical normal regression via Gibbs sampling (this is a separate piece of code; it may share some subroutines, but its core is an entirely different beast)
-
+- [ ] write versions of every function which are cholesky-parameterized (credit to LaplacesDemon for the simple and elegant idea);
+    - [ ] use these versions to collapse large portions of the code
+- [ ] move to using RUnit
+- [ ] test for and quantify numerical instability
+- [ ] runtimes
+    - [ ] measure over d (requires randomization to be in place) 
 
 Open Questions
 ================
@@ -206,3 +221,4 @@ Open Questions
     - [ ] brace style (?)
     - [ ]  ????
     - [ ] find all the TODOs and deal with them
+
