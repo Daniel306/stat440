@@ -39,6 +39,7 @@ D-7 (Friday)
 - [x] runtime testing harness
     - [x] measure over n
     - [ ] measure over d (requires randomization to be in place) 
+    
 
 [daniel]
 
@@ -108,6 +109,7 @@ D-3 (Tuesday)
 - [ ] in the runtime tests, map the runtime matrix to have a ratio column so that we can say "snappy2 is 4.3 times faster than naive"
 - [ ] figure out if using pointers/references in Rcpp is faster; specifically, does passing a NumericVector cause a COPY of that vector even in C?
 
+- [ ] switch to using
 
 [daniel]
 
@@ -186,6 +188,10 @@ D+k
     - [ ] record in `mathematics.tex`
 - [ ] Hierarchical normal regression via Gibbs sampling (this is a separate piece of code; it may share some subroutines, but its core is an entirely different beast)
 
+- [ ] move to using RUnit
+- [ ] test for and quantify numerical instability
+- [ ] runtimes
+    - [ ] measure over d (requires randomization to be in place) 
 
 Open Questions
 ================
@@ -208,3 +214,4 @@ Open Questions
     - [ ] brace style (?)
     - [ ]  ????
     - [ ] find all the TODOs and deal with them
+

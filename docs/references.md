@@ -1,6 +1,8 @@
 
 
+
 http://scythe.wustl.edu/ <-- " Programs written using Scythe are generally much faster than those written in commonly used interpreted languages, 
+http://gallery.rcpp.org/articles/dmvnorm_arma/ 
 
 [WP:Invertible Matrix](https://en.wikipedia.org/wiki/Invertible_matrix#Blockwise_inversion) has a surprising amount of insight.
 
