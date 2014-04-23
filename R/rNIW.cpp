@@ -61,14 +61,90 @@ MatrixXd tcrossprod(const MatrixXd& A) {
   return MatrixXd(n,n).setZero().selfadjointView<Lower>().rankUpdate(A);
 }
 
-// now that I can do that.. what?
+
 // [[Rcpp::export]]
-List rNIW_naive(unsigned int n, NumericVector Mu, double kappa, NumericVector Psi, double df) {
+NumericMatrix riwishart(NumericMatrix Psi, double df) {
+
+  unsigned int d = Psi.nrow();
+
+  // invert Psi  
+  MatrixXd Psi_inv = as<Map<MatrixXd> >(Psi).inverse();
+  // TODO: exploit that we know Psi is symmetric (but SelfAdjointView does not contain inverse()!! maybe knowing the matrix is symmetric doesn't help, in that case??)
+  // factor Psi
+  MatrixXd Gamma = Psi_inv.llt().matrixU();
+    
+  // step 1: generate the bartlett factor..
+  NumericVector A = NumericVector(Dimension(d,d));
+  BartlettFactorCpp(d, df, A);
+
+  // step 2: scale it
+  MatrixXd A_ = as<Map<MatrixXd> >(A);  //map into Eigen so we can use linear algebras
+  MatrixXd U  = A_*Gamma;
+
+  // construct the final symmetric covariance matrix
+  //V = (Gamma^T A^T A Gamma)^{-1} = (A Gamma)^{-1} (A Gamma)^{-1}^T = tcrossprod((A Gamma)^{-1})
+  MatrixXd V = tcrossprod(U.inverse());
+  return Rcpp::wrap(V); 
+}
+
+// [[Rcpp::export]]
+NumericMatrix riwishart_n(int n, NumericVector Psi, double df) {
+  // faster version which computes several Vs at once but only factors Psi once
+}
+
+
+NumericVector rmvnorm(NumericVector Mu, NumericMatrix V) {
+  unsigned int d = Mu.size();
+  
+  // take the chol() of V:
+  // V = (v^T)v
+  MatrixXd v = as<Map<MatrixXd> >(V).llt().matrixU();  
+
+  // sample standard normals
+  NumericVector z = rnorm(d);
+
+  //scale the normals to have covariance matrix V
+  VectorXd X = v*as<Map<VectorXd> >(z);
+
+  // center the normals
+  X += as<Map<VectorXd> >(Mu);
+  
+  return Rcpp::wrap(X);
+}
+
+
+// [[Rcpp::export]]
+List rNIW_extremelynaive(unsigned int n, NumericVector Mu, double kappa, NumericMatrix Psi, double df) {
   // precondition: all the preconditions have been properly checked by rNIW.typechecked
   unsigned int d = Mu.length();
+  
+  NumericVector V(Dimension(d,d,n));
+  NumericVector X(Dimension(d,n));
+  
+  for(unsigned int i=0; i<n; i++) {
+    NumericMatrix Vi = riwishart(Psi, df);
 
-  //MatrixXd Mu_(as<Map<MatrixXd> >(Mu));
+    for(int j=0; j<d; j++) {
+    for(int k=0; k<d; k++) {
+      V[d*d*i + j*d + k] = Vi(j, k); //XXX this might be the wrong order (but V is symmetric so we can't tell)
+    }
+    }
+    
+    NumericVector Xi = rmvnorm(Mu, Vi); // TODO: /kappa)); this is giving type errors, of course
+    for(int j=0; j<d; j++) {
+      X[d*i + j] = Xi(j);
+    }
+    
+  }
 
+  return List::create(Named("X") = X, Named("V") = V);
+}
+
+// now that I can do that.. what?
+// [[Rcpp::export]]
+List rNIW_snappy(unsigned int n, NumericVector Mu, double kappa, NumericVector Psi, double df) {
+  // precondition: all the preconditions have been properly checked by rNIW.typechecked
+  unsigned int d = Mu.length();
 
   NumericVector V(Dimension(d,d,n));
   NumericVector X(Dimension(d,n));
@@ -86,11 +162,24 @@ List rNIW_naive(unsigned int n, NumericVector Mu, double kappa, NumericVector Ps
     MatrixXd A_ = as<Map<MatrixXd> >(A);  //map into Eigen so we can use linear algebras
     //TriangularView<MatrixXd, Upper> trA_ = A_.triangularView<Upper>();
     MatrixXd U = A_*Gamma;
-    MatrixXd Vi = crossprod(U);
+    MatrixXd U_inv = U.inverse();
+    MatrixXd Vi = tcrossprod(U_inv);
     // memcpy the result out of Eigen and into Rcpp
-    // XXX does this need to be done manually?
-    //V[d*d +
-    // step 2: 
+    // XXX does this need to be done manually? can't we call some "copy this block of memory" operation?
+    for(int j=0; j<d; j++) {
+    for(int k=0; k<d; k++) {
+      V[d*d*i + j*d + k] = Vi(j, k); //XXX this might be the wrong order (but V is symmetric so we can't tell)
+    }
+    }
+    
+    // step 2: generate X
+    VectorXd Xi = U.triangularView<Upper>().solve(as<Map<VectorXd> >(rnorm(d))); // backsolve(U, z)
+    Xi /= sqrt(kappa);
+    Xi += as<Map<VectorXd> >(Mu);
+    for(int j=0; j<d; j++) {
+      X[d*i + j] = Xi(j);
+    }
+    
   }  
 
   return List::create(Named("X") = X, Named("V") = V,
