@@ -25,29 +25,6 @@ void BartlettFactorCpp(int d, double df, NumericVector &A);
  *   long versus thread on the Rcpp mailing list: http://thread.gmane.org/gmane.comp.lang.r.rcpp/3522
  */
 
-/* test function
- * for playing around with things!
- */
-// [[Rcpp::export]]
-MatrixXd c(NumericVector M) {
-  const LLT<MatrixXd> cholesky_decomposition(as<Map<MatrixXd> >(M)); ///the incantation to get this took forever
-  return cholesky_decomposition.matrixU();
-}
-
-
-// example from the Eigen vignette
-// [[Rcpp::export]]
-List tc(NumericVector AA) {
-  using Eigen::Map;
-  using Eigen::MatrixXi;
-  using Eigen::Lower;
-  const Map<MatrixXd> A(as<Map<MatrixXd> >(AA));
-  const int m(A.rows()), n(A.cols());
-  MatrixXd AtA(MatrixXd(n, n).setZero().selfadjointView<Lower>().rankUpdate(A.adjoint()));
-  MatrixXd AAt(MatrixXd(m, m).setZero().selfadjointView<Lower>().rankUpdate(A));
-  return List::create(Named("crossprod(A)") = AtA, Named("tcrossprod(A)") = AAt);
-}
-
 
 /* from the RcppEigen vignette */
 /* this feels like a dirty hack */
@@ -114,7 +91,7 @@ NumericVector rmvnorm(NumericVector Mu, NumericMatrix V) {
 
 
 // [[Rcpp::export]]
-List rNIW_extremelynaive(unsigned int n, NumericVector Mu, double kappa, NumericMatrix Psi, double df) {
+List rNIW_extremelynaive_eigen(unsigned int n, NumericVector Mu, double kappa, NumericMatrix Psi, double df) {
   // precondition: all the preconditions have been properly checked by rNIW.typechecked
   unsigned int d = Mu.length();
   
@@ -140,9 +117,31 @@ List rNIW_extremelynaive(unsigned int n, NumericVector Mu, double kappa, Numeric
   return List::create(Named("X") = X, Named("V") = V);
 }
 
+
+// // [[Rcpp::export]] //<-- not exported since A was converted to a reference
+void BartlettFactorCpp(int d, double df, NumericVector &A){
+  
+  // Initialize A, it starts off with all 0s
+  //NumericVector A(Dimension(d,d));
+  NumericVector Norms = rnorm((d*(d-1)/2));
+  int NormsCount = 0;
+  // Not sure if calculating a numeric vector of dfs makes it faster, could do it later.
+  for(int col = 0; col < d; col++){
+    A[col*(d+1)] = sqrt(rchisq(1,df-col)[0]);
+    for(int row = 0; row < col; row++){ 
+      A[col*d+row] = Norms[NormsCount++];
+    }                   
+  }
+  
+  
+  //return A; // should probably do it with pointers later
+}
+
+
+
 // now that I can do that.. what?
 // [[Rcpp::export]]
-List rNIW_snappy(unsigned int n, NumericVector Mu, double kappa, NumericVector Psi, double df) {
+List rNIW_snappy_eigen(unsigned int n, NumericVector Mu, double kappa, NumericVector Psi, double df) {
   // precondition: all the preconditions have been properly checked by rNIW.typechecked
   unsigned int d = Mu.length();
 
@@ -189,24 +188,6 @@ List rNIW_snappy(unsigned int n, NumericVector Mu, double kappa, NumericVector P
        );
 }
 
-// // [[Rcpp::export]] //<-- not exported since A was converted to a reference
-void BartlettFactorCpp(int d, double df, NumericVector &A){
-  
-  // Initialize A, it starts off with all 0s
-  //NumericVector A(Dimension(d,d));
-  NumericVector Norms = rnorm((d*(d-1)/2));
-  int NormsCount = 0;
-  // Not sure if calculating a numeric vector of dfs makes it faster, could do it later.
-  for(int col = 0; col < d; col++){
-    A[col*(d+1)] = sqrt(rchisq(1,df-col)[0]);
-    for(int row = 0; row < col; row++){ 
-      A[col*d+row] = Norms[NormsCount++];
-    }                   
-  }
-  
-  
-  //return A; // should probably do it with pointers later
-}
 
 
 // Used only for inverse on upper triangular matrices
