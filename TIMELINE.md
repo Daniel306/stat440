@@ -194,6 +194,7 @@ Open Questions
     - **Answer**: probably not; recall that changes of variables necessarily involve a scaling factor--the Jacobian--which pulls in a determinant; the particular algebra is beyond our ken at this point, though.
 - [ ] the iid multivariate normals all share a single variance matrix V; please re-explain what this means; shouldn't the variances be scaled? What is the interpretation of this model?
 - [ ] Why is snappy2 faster than snappy3? Shouldn't using backsolve()s be faster than %*%?
+- [ ] Is psi the precision matrix or the variance matrix? Why do you invert a matrix to get a covariance-esque matrix? What is going on?
 - [ ] "lint" the code:
     - [ ] naming conventions are followed
         - [ ] distribution parameters are capitalized, except for df
