@@ -125,6 +125,35 @@ rNIW.typechecked <- function(rNIW) {
 }
 
 
+rMNIW.typechecked <- function(rMNIW) {
+  # wrap an rMNIW implementation "rNIW" in the common safety code that
+  #  all rNIW implementations should share.
+  # this enforces all the pre (and post) conditions necessary.
+  # in particular, inside of rNIW it is safe to say "d = length(Mu)" (XXX would it be nice to pass d INTO rNIW...??)  
+  
+  function(n, Mu, Kappa, Psi, df) {
+    rMNIW.typecheck(n, Mu, Kappa, Psi, df)
+    d = nrow(Psi)
+    q = nrow(Kappa)
+    # IMPLEMENTATION
+    ans = rMNIW(n, Mu, Kappa, Psi, df);
+    
+    # POSTCONDITIONS
+    
+    # make sure the results exist
+    stopifnot(class(ans) == "list")
+    stopifnot(all(sort(names(ans)) == c("V", "X")))
+    
+    # check dimensionality of the results
+    stopifnot(dim(ans$X) == c(d,q,n))
+    stopifnot(dim(ans$V) == c(d,d,n))
+    
+    # XXX similarly, we don't check that Vs are positive definite (or even symmetric), though they should be
+    
+    return(ans)
+  }
+}
+
 ##############################################################################
 #                           Implementations
 ##############################################################################
@@ -468,6 +497,19 @@ rNIW.snappy.RcppEigen <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
 })
 
 
+rMNIW <- rMNIW.typechecked(function(n, Mu, Kappa, Psi, df){
+  
+  require("Rcpp")  # XXX: putting this call inside of here means R only compiles the code as needed and speeds up our dev cycle
+  Rcpp::sourceCpp("rNIW.cpp") #in the long run, we should, of course, put these calls at the top with the other imports
+  
+  d = dim(Mu)[1];
+  q = dim(Mu)[2];
+  show(Kappa)
+  kappa_inv <- solve(kappa);
+  show(Kappa_Inv)
+  gamma.inv = solve(chol(solve(Psi)));
+  return(rMNIW_RCpp(n,d,q,Mu,kappa_Inv, gamma.inv, df));
+})
 
 # ???
 #rMNIW = rMNIW.Rcpp2
@@ -489,4 +531,6 @@ rNIW.based_on_multi <- rNIW.typechecked(function(n, Mu, Kappa, Psi, df) { # TODO
 
 # TODO: make a final decision:
 # rNIW = rNIW.therealslimshady
+
+
 
