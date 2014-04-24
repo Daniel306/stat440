@@ -43,7 +43,7 @@ plot.compare <- function(ground, sample, ...) { #XXX NAME
   hist(sample, probability=TRUE, breaks=40, ...)
   
   # overlay the pdf
-  if(is.call(ground)) {
+  if(is.function(ground)) {
     lines(sample, ground(sample), col="blue", lty="twodash")
   } else {
     # if caller has not given us a pdf directly, then
@@ -56,7 +56,7 @@ plot.compare <- function(ground, sample, ...) { #XXX NAME
   # omitted code, which could be used instead of the special casing in lines() above
   ## replace ground with a (callable!) pdf function 
   ## via kernel density estimation
-  # if(!is.call(ground)) {
+  # if(!is.function(ground)) {
   # p = density(ground)
   # ground = function(x) {
   #   approx(p$x, p$y, x, rule=2)$y # rule=2 means 'support extrapolation'
