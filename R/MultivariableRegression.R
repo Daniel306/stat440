@@ -151,11 +151,12 @@ lm.multivariable <- function(n ,X , Y, Psi, df, Lambda, Omega) { # TODO: Not sur
         - t(X.sq %*% beta.hat + Omega %*% Lambda) %*% solve(Kappa) %*% (X.sq %*% beta.hat + Omega %*% Lambda);
   
   # construct the posterior parameters
-  mNIW.Mu <- A %*% Lambda + diag(p);
+  mNIW.Mu <- A %*% Lambda + (diag(p)- A) %*% beta.hat;
   mNIW.Psi <- Psi + S + C;
   mNIW.df <- df + p; #XXX checkme
   mNIW.Kappa <- Kappa;
-  
+
+  # sample the posterior
   return(rMNIW.Rcpp(n, mNIW.Mu, mNIW.Kappa, mNIW.Psi, mNIW.df))
 }
 
@@ -233,4 +234,3 @@ test.EversonMorris <- function(n=27, m=1000) {
   # but for this simple test, getting the right coefficients is good enough.
 }
 test.EversonMorris()
-
