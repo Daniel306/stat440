@@ -133,9 +133,10 @@ lm.multivariable <- function(m, X, Y, Lambda=NULL, Omega=NULL, Psi=NULL, df=71) 
   #   $B
   #   $V
   
-  q <- dim(Psi)[1];
-  p <- dim(Omega)[1];
   n <- dim(X)[1];
+  stopifnot(n == dim(Y)[1])
+  q <- dim(Y)[2];
+  d <- dim(X)[2];
   
   # TODO: can add some checks here
   
@@ -154,24 +155,29 @@ lm.multivariable <- function(m, X, Y, Lambda=NULL, Omega=NULL, Psi=NULL, df=71) 
   # now incorporate the prior parameters
   # the flat priors are special-cased to avoid
   # numerical instability and R's thorny gorgon's type system
-  if(Omega == NULL) {
+  
+  if(is.null(Psi)) { Psi = 0 } #let scalar splaying sort it out
+  
+  if(is.null(Omega)) {
+    mNIW.Mu <- beta.hat
     mNIW.Kappa <- X.sq;
+    mNIW.Psi <- Psi + S;
     mNIW.df <- df + n - d;
-    
-    A = 0;
-    C = 0;
   } else {
     
-    if(Lambda == NULL) {
+    if(is.null(Lambda)) {
       stop("You must specify Lambda if you use a non-flat prior on Omega");
     }
     
     # calculate kappa, also used in calculating C.
     # while C needs inverse, rMNIW already does the inverse, so not doing it here
+    
     mNIW.Kappa <- X.sq + Omega;
     mNIW.df <- df + n - d;
     
-    A <- solve(Kappa, Omega);
+    A <- solve(Kappa, Omega);    
+    I = diag(d) #identity matrix
+    mNIW.Mu <- A %*% Lambda  +  (I-A) %*% beta.hat
     
     # could swap X'XB with XY, not sure if we should
     # this formula is long and grueling
@@ -182,13 +188,9 @@ lm.multivariable <- function(m, X, Y, Lambda=NULL, Omega=NULL, Psi=NULL, df=71) 
              + mahalanobis(Lambda, 0, Omega, inverted=TRUE) 
              #- t(L) %*% solve(mNIW.Kappa) %*% (L);
              - mahalanobis(L, 0, mNIW.Kappa);  #<-- more compact
+             
+    mNIW.Psi <- Psi + S + C;
   }
-  
-  if(Psi == NULL) { Psi = 0 } #let scalar splaying sort it out
-  
-  I = diag(p) #identity matrix
-  mNIW.Mu <- A %*% Lambda  +  (I-A) %*% beta.hat
-  mNIW.Psi <- Psi + S + C;
   
   # finally, do the heavy lifting given these posterior parameters
   result = rMNIW.Rcpp(n, mNIW.Mu, mNIW.Kappa, mNIW.Psi, mNIW.df)
@@ -209,7 +211,7 @@ test.rMNIW <- function() {
 
 
 
-test.EversonMorris <- function(n=27, m=1000) {
+test.EversonMorris <- function(n=27, m=1e5) {
   # Smoketest for lm.multivariable
   #
   # simulate multivariable normal test data
@@ -250,11 +252,14 @@ test.EversonMorris <- function(n=27, m=1000) {
 
   message("Sampling posterior distribution")
   m = 2 #DEBUG
-  result <- lm.multivariable(m, data$X, data$Y, NULL, NULL, NULL, NULL) #FIXME
+  result <- lm.multivariable(m, data$X, data$Y)
+ 
+  d = dim(result$B)[1]
+  q = dim(result$V)[1]
   
+  message("Recovered dimensionality: q = ", q, " and d = ", d)
   message("Estimated B")
-  # the rMNIW returns (X,V), but in this case, the posterior X *is* B.
-  B.hat = apply(result$X, -3, mean) #take mean()s across the 3rd dimension;
+  B.hat = apply(result$B, -3, mean) #take mean()s across the 3rd dimension;
                             # results in a q x d matrix (after unflattening apply's results)
   dim(B.hat) = c(q,d)
   print(B.hat)
@@ -262,8 +267,8 @@ test.EversonMorris <- function(n=27, m=1000) {
 
   message("Estimated V")
   V.hat = apply(result$V, -3, mean) #take mean()s across the 3rd dimension;
-                            # results in a d x d matrix (or it would, but apply flattens its results)
-  dim(V.hat) = c(d,d)
+                            # results in a q x q matrix (or it would, but apply flattens its results)
+  dim(V.hat) = c(q,q)
   print(V.hat)
   message() #newline
   
