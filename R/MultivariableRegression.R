@@ -75,19 +75,20 @@ rmultivariableregression <- function(points, B, V) {
     } else {
       m = 1/m;
     }
-    X = t(rmvnorm(n, rep(0, d), diag(m)))
+    X = rmvnorm(n, rep(0, d), diag(m)) #MASS's mvrnorm returns a n x d matrix, which is just what we need
     dim.stash = dim(X)
     dim(X) = NULL
     X[is.nan(X) | is.infinite(X)] = -pi #deal with more badness
     dim(X) = dim.stash
-    message("badness is at")
-    print(which(!is.finite(X)))
   } else {
     n = dim(X)[1]
     X = points
   }
   
-  E = t(rmvnorm(n, rep(0,q), V))
+  stopifnot(dim(X)[1] == n)
+  stopifnot(dim(X)[2] == d)
+  
+  E = rmvnorm(n, rep(0,q), V) #MASS's mvrnorm returns a n x d matrix, which is just what we need
   if(any(!is.finite(E))) { #introduce bias to quickly repair numerical instability
     dim.stash = dim(E)
     E[!is.finite(E)] = -0.1;
@@ -168,13 +169,13 @@ test.rMNIW <- function() {
 
 
 
-test.EversonMorris <- function(n=33, m=1000) {
+test.EversonMorris <- function(n=27, m=1000) {
   # Smoketest for lm.multivariable
   #
   # simulate multivariable normal test data
   # then see if the bayesian fitter can pull out the
   # correct (artificial and frequentist) coefficients.
-  # Parameters based on Everson & Morris [2002]
+  # Parameters based on Everson & Morris [2000]
   #
   #
   # args:
@@ -186,20 +187,20 @@ test.EversonMorris <- function(n=33, m=1000) {
   # returns:
   #  nothing; instead, results are printed as work is done.
 
-  d = 9;
+  d = 1;
   q = 2;
-  V = matrix(c(0,0,0,0), q, q)
-  B = matrix(rnorm(d*q, 0, 5), d, q)
-
-  message("True B")
+  A = matrix(c(3.38,-.77,-.77,2.55), q, q)
+  B = matrix(c(0,0), d, q)
+	
+  message("True coefficients")
   print(B)
-  message("True V")
-  print(V)
+  message("True covariance")
+  print(A)
   
-  data = rmultivariableregression(n, B, V);
-
+  data = rmultivariableregression(n, B, A);
+  
   message("Hiding true values from ourselves")
-  rm(B, V, d, q)
+  rm(B, A, d, q)
   
   message("Data is:")
   message("Y:")
@@ -231,5 +232,5 @@ test.EversonMorris <- function(n=33, m=1000) {
   # additionally, we have a whole sample from which we can do bootstrap-like things, compute functions of the data, etc
   # but for this simple test, getting the right coefficients is good enough.
 }
-#test.EversonMorris()
+test.EversonMorris()
 
