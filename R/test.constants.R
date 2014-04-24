@@ -11,8 +11,8 @@ kPsi  = t(kPsi)%*%kPsi #after I added digits (to go from p=3 to p=4) at random,
 kDF = 7.32 # must be at least as large as the dimension of kV
 
 krNIWAlgorithms = c(
-            #"extremelynaive",
-            #"naive",
+            "extremelynaive",
+            "naive",
             "snappy1",
             "snappy2",
             "snappy3",

@@ -69,38 +69,29 @@ NIW.runtime.createTable <- function(R, baseFunction){
   
   algorithms <- unique(R$algorithm)
   
-  table <- data.frame(matrix(NA, length(algorithms), 3))
+  table <- data.frame(matrix(NA, length(algorithms), 4))
   
-  colnames(table) = c("algorithm","ratio", "sd")
+  colnames(table) = c("algorithm","slope", "ratio", "sd")
   #print(table);
   
   baseFactor <- NA
   i = 0;
   for(a in algorithms){
-    M <- lm(time~n,R[R$algorithm==a,,]);
+    M <- lm(n~time,R[R$algorithm==a,,]);
     if (a == baseFunction){
         baseFactor <-  M$coef[2];
     }
     i = i+1;
     table[i, "algorithm"] = a;
-    table[i, "ratio"] = M$coef[2]; # currently not ratio, fixed later
-    table[i, "sd"] = sqrt(vcov(M)[2,2];
+    table[i, "slope"] = M$coef[2]; # currently not ratio, fixed later
+    table[i, "sd"] = sqrt(vcov(M)[2,2]);
   }
-  
+  print(table);
   # Now to fix ratios and sd by factor
   for (a in 1:i){
-    table[a,"sd"] = table[a,"sd"] * (baseFactor/table[a,"ratio"]); # not sure about this
-    table[a,"ratio"] = baseFactor/table[a,"ratio"];
+    table[a,"sd"] = table[a,"sd"] / baseFactor; # not sure about this
+    table[a,"ratio"] = table[a,"slope"]/baseFactor;
   }
  return (table);
 }
-
-
-R <- NIW.runtimes(c("Rcpp2", "snappy2", "naive"))
-table <- NIW.runtime.createTable(R,"naive")
-table
-#example from one run
-#algorithm     ratio        sd
-#1     Rcpp2 8.7011074 2.5359325
-#2   snappy2 0.7468129 0.1213526
-#3     naive 1.0000000 0.1674202
+#NIW.runtime.createTable(R, "naive")
