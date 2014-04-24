@@ -47,8 +47,10 @@ rmultivariableregression <- function(points, B, V) {
   #  a list with components
   #  X: a c(n, d)
   #  Y: a c(n, q) matrix
-
-  # TODO: typechecks
+  
+  if(length(V) == 1) {
+    V = matrix(V)
+  }
   stopifnot(is.symmetric(V))
   # coerce B t
   if(is.vector(B)) {
@@ -56,6 +58,9 @@ rmultivariableregression <- function(points, B, V) {
   }
   d = dim(B)[1]
   q = dim(B)[2]
+  
+  stopifnot(q == dim(V)[1] && q == dim(V)[2])
+  
   
   if(length(points) == 1) {
     n = points
@@ -66,15 +71,14 @@ rmultivariableregression <- function(points, B, V) {
     m = apply(B, 1, mean) #this computes the mean size of the coefficient for each predictor 
     stopifnot(length(m) == d) # DEBUG
     
-    X = rmvnorm(n, rep(0, d), diag(1/m))
+    X = t(rmvnorm(n, rep(0, d), diag(1/m)))
   } else {
     n = dim(X)[1]
     X = points
   }
-
-  E = rmvnorm(n, rep(0,q), V)
-  Y = X %*% B + E
   
+  E = t(rmvnorm(n, rep(0,q), V))
+  Y = X %*% B + E
   return(Y)
 }
 
