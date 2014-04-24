@@ -100,64 +100,103 @@ rmultivariableregression <- function(points, B, V) {
 }
 
 
-lm.multivariable <- function(n ,X , Y, Psi, df, Lambda, Omega) { # TODO: Not sure what to name this.
+lm.multivariable <- function(m, X, Y, Lambda=NULL, Omega=NULL, Psi=NULL, df=71) { # TODO: Not sure what to name this.
   # Multivariable Regression via Bayesian Reasoning
   # 
   # This fits the model Y = XB + E where (E_i)^T ~iid MultiNormal(0, V)
   #  but it doesn't fit it in the frequentist sense of constructing
   #  true values for B and V -- instead it produces samples from the
   #  Bayesian Posterior.
-  #
+  # The posterior, like a good little bayesian, is conjugate in this case:
+  #  both the prior and the posterior are Matrix-Normal|Inverse-Wisharts.
   #
   # args:
-  #  n: the number of samples to take
+  #  m: the number of samples to take
   #  X, Y: the observed data; these should be (n,q) and (n,d)
   #  Psi, df, Lambda, Omega: your prior knowledge, encoded
   #    as parameters of the Normal|Inverse-Wishart distribution.
-  #  TODO: document how to set them to improper priors
+  #   You should provide a df (though this won't make a huge difference)
+  #    but, for convenience, by default the other parameters are set
+  #    to give "flat" (aka uninformative aka improper) priors. 
+  #   The flat prior on Omega causes Lambda to be ignored
+  #    (hence its default value: NULL), and, as a special exception,
+  #    causes the degrees of freedom of the posterior to change
+  #     from (df+n) to (df+n-d).
+  #  The flat prior on Psi is orthogonal to the flat prior on Omega (XXX is this true? surely it has some effect, even if only numerical/speed/something)
+  #  (the argument order is chosen to reflect the distribution,
+  #  which is the result of sampling
+  #      MatrixNormal(Lambda, Omega, InverseWishart(Psi, df)), 
+  #   though it does makes calling this function awkward)
   # 
   # returns:
-  #  a list containing
+  #  a list containing the posterior samples:
   #   $B
   #   $V
   
   q <- dim(Psi)[1];
   p <- dim(Omega)[1];
+  n <- dim(X)[1];
   
   # TODO: can add some checks here
   
   #X'X is used often, only time X is used by itself is in S
   X.sq <- crossprod(X)
   
-  # calculate kappa, also used in calculating C.
-  # while C needs inverse, rMNIW already does the inverse, so not doing it here
-  Kappa <- X.sq + Omega;
-
   # this posterior is neat:
   # it actually involves taking the usual frequentist fit (as produced by lm())
   #  B = (X'X)^{-1}X'y
   # and trading off between that fit and the information from the prior.
-  
-  
-  beta.hat <- backsolve(X.sq, t(X) %*% Y);
-  
+  # So, compute the OLS fit beta.hat and its squared-error (SSE) S 
+  beta.hat <- solve(X.sq, t(X) %*% Y);
   residuals <- (Y - X %*% beta.hat);
   S <- crossprod(residuals)
   
-  A <- backsolve(X.sq + Omega, Omega);
+  # now incorporate the prior parameters
+  # the flat priors are special-cased to avoid
+  # numerical instability and R's thorny gorgon's type system
+  if(Omega == NULL) {
+    mNIW.Kappa <- X.sq;
+    mNIW.df <- df + n - d;
+    
+    A = 0;
+    C = 0;
+  } else {
+    
+    if(Lambda == NULL) {
+      stop("You must specify Lambda if you use a non-flat prior on Omega");
+    }
+    
+    # calculate kappa, also used in calculating C.
+    # while C needs inverse, rMNIW already does the inverse, so not doing it here
+    mNIW.Kappa <- X.sq + Omega;
+    mNIW.df <- df + n - d;
+    
+    A <- solve(Kappa, Omega);
+    
+    # could swap X'XB with XY, not sure if we should
+    # this formula is long and grueling
+    L = X.sq %*% beta.hat  + Omega %*% Lambda  #this term is used twice
+    C <- #t(beta.hat) %*% X.sq %*% beta.hat
+            mahalanobis(beta.hat, 0, X.sq, inverted=TRUE)
+             #+ t(Lambda) %*% Omega %*% Lambda
+             + mahalanobis(Lambda, 0, Omega, inverted=TRUE) 
+             #- t(L) %*% solve(mNIW.Kappa) %*% (L);
+             - mahalanobis(L, 0, mNIW.Kappa);  #<-- more compact
+  }
   
-  # could swap X'XB with XY, not sure if we should
-  C <- t(beta.hat) %*% X.sq %*% beta.hat + t(Lambda) %*% Omega %*% Lambda 
-        - t(X.sq %*% beta.hat + Omega %*% Lambda) %*% solve(Kappa) %*% (X.sq %*% beta.hat + Omega %*% Lambda);
+  if(Psi == NULL) { Psi = 0 } #let scalar splaying sort it out
   
-  # construct the posterior parameters
-  mNIW.Mu <- A %*% Lambda + (diag(p)- A) %*% beta.hat;
+  I = diag(p) #identity matrix
+  mNIW.Mu <- A %*% Lambda  +  (I-A) %*% beta.hat
   mNIW.Psi <- Psi + S + C;
-  mNIW.df <- df + p; #XXX checkme
-  mNIW.Kappa <- Kappa;
-
-  # sample the posterior
-  return(rMNIW.Rcpp(n, mNIW.Mu, mNIW.Kappa, mNIW.Psi, mNIW.df))
+  
+  # finally, do the heavy lifting given these posterior parameters
+  result = rMNIW.Rcpp(n, mNIW.Mu, mNIW.Kappa, mNIW.Psi, mNIW.df)
+  
+  # rename the posterior samples to match the API
+  names(result)[names(result) == "X"] = "B" 
+  
+  return(result)
 }
 
 
@@ -233,4 +272,5 @@ test.EversonMorris <- function(n=27, m=1000) {
   # additionally, we have a whole sample from which we can do bootstrap-like things, compute functions of the data, etc
   # but for this simple test, getting the right coefficients is good enough.
 }
-test.EversonMorris()
+#test.EversonMorris()
+
