@@ -5,25 +5,77 @@ rMN <- function(n, Mu, U, V) {
   # sample the Matrix Normal distribution
   # XXX this code is partially repeated in rMNIW.Rcpp
 
-  
+    
 }
 
-f <- function(X, B, V) {
-  # sample from the multivariable normal d
+
+require(MASS) #COPYPASTA; TODO: factor
+rmvnorm = MASS::mvrnorm #repair naming convention
+
+rmultivariableregression <- function(points, B, V) {
+  # sample from the multivariable normal model
   #
-  # the model this generates from is Y = XB + E
-  #  with 
-  # if q = 1, this is the usual multivariate normal (e.g. mvrnorm())
+  # The model this generates from is Y = XB + E where (E_i)^T ~iid MultiNormal(0, V)
+  # which is like the usual least squares model, but now with
+  #  multiple columns of Y (and hence, multiple columns of coefficients B)
+  # In detail:
+  #  let q be the number of response variates
+  #  let d be the number of predictors
+  #  let n be the number of (i.i.d.) samples
+  #  then
+  #       Y a c(n, q)
+  #       X a c(n, d)
+  #       B a c(d, q)
+  #       E a c(n, q)
+  #         E_i each *row* of E a (1, q)
+  #       V is c(q,q) and gives the covariance *within* each single multivariate sample.
+  #       
+  # if q = 1, this is the usual univariate regression model with normal (e.g. mvrnorm())
   #  
   # 
   # args:
-  #  X: a c(q, d) matrix
+  #  points: either
+  #     a c(q, d) matrix X, giving the predictor points to pretend to do measurements at
+  #     or, as a convenience,
+  #     a scalar n, then number of samples, which is used to construct X
+  #           #XXX what about the degenerate case when q=d=1?
   #  B: the coefficient matrix; a c(d, q) matrix
   #  V: the covariance of elements down the rows(XXX columns?) of Y; this is a c(d,d) matrix.
   #
   #
   # returns:
-  #  Y: a c(q, d) matrix
+  #  a list with components
+  #  X: a c(n, d)
+  #  Y: a c(n, q) matrix
+
+  # TODO: typechecks
+  stopifnot(is.symmetric(V))
+  # coerce B t
+  if(is.vector(B)) {
+     dim(B) = c(length(B), 1)
+  }
+  d = dim(B)[1]
+  q = dim(B)[2]
+  
+  if(length(points) == 1) {
+    n = points
+    # special case: generate X sensibly
+    # since we don't know where to sample, we might as well sample
+    #  i. near the origin
+    # ii. such that X is roughly on a scale that evens out
+    m = apply(B, 1, mean) #this computes the mean size of the coefficient for each predictor 
+    stopifnot(length(m) == d) # DEBUG
+    
+    X = rmvnorm(n, rep(0, d), diag(1/m))
+  } else {
+    n = dim(X)[1]
+    X = points
+  }
+
+  E = rmvnorm(n, rep(0,q), V)
+  Y = X %*% B + E
+  
+  return(Y)
 }
 
 ff <- function() {
