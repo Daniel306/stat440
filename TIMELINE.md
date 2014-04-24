@@ -111,20 +111,16 @@ D-3 (Tuesday)
 [daniel]
 
 - [x] (9am-11:30) ACTSC exam
-- [ ] rmNIW
-- [ ] dmNIW (matrix Normal inverse Wishart)
-- 
-- [ ] i.i.d. Matrix-Normal Sampler
-- [ ] Multivariable Regression algorithm
-- [ ] Test multivar regression against the Matrix-Normal sampler
+
 
 D-2 (Wednesday)
 ---
 
 [nick]
+
 - [ ] Linear Algebra parlour tricks:
     - [ ] factor the common matrix terms to before/after the loop (call this `snappy4`)
-    - [ ] does this save any time??
+    - [ ] diagonalization?? (`snappy5`)
 - [x] 13:00 - 14:00 blocked off
 - [x] 14:00 - 16:00 blocked off
 - [ ] Better timings:
@@ -133,33 +129,30 @@ D-2 (Wednesday)
     - [ ] map the averages to have a ratio column so that we can say "snappy2 is 4.3 times faster than naive"
     - [ ] use lty=id so that the lines are distinguished by shape as well as colour (nicer on greyscale printouts and on colourblind folks)
     - [ ] reduce the number of samples taken--we get the idea
-- [ ] figure out if using pointers/references in Rcpp is faster; specifically, does passing a NumericVector cause a COPY of that vector even in C?
+- Rcpp stuff:
+    - [ ] make a stub Rcpp package with a makefile or whatever 
+        - [ ] figure out if using pointers/references in Rcpp is faster; specifically, does passing a NumericVector cause a COPY of that vector even in C?
 - [ ] Dig up analytic formula for the particular marginals of NIW and (note: there's 2^(# parameters) different marginals; pick wisely which to look at)
     - [x] marginal of the inv.wish is inv.gamma
     - [ ] implement as functions
         - [x] diagonals of iwish
         - [ ] off-diagonals of iwish
-        - [ ] entries of X from the single NIW
-        - [ ] entries of Matrix-Normal thingy
-    - [ ] wrap such functions into thingies and use them as 'ground' for the marginal plots
-    - t-distributions (and the matrix-normal has multi-t)
-        - analytically
-        - [x] against ground samples
-
+        - [ ] entries of X from the single NIW (this should be 't' ish??)
+        - [ ] entries of Matrix-Normal thingy ((can be derived from the single NIW one))
+    - [ ] partial-apply such functions and use them as 'ground' for the marginal plots
+- [ ] i.i.d. Matrix-Normal Sampler
+- [ ] Test multivar regression against the Matrix-Normal sampler
+- [x] Request sample real world dataset.
+    
 [daniel]
-
-- [ ] double-check (or possibly, first-check) the marginals nick dug up
-
-[daniel] [nick]
-
-- [ ] Mathematics writeup vetted and tightened; relevant parts clipped into `report.tex`
+- [x] rMNIW
+- [x] Multivariable Regression algorithm
 
 D-1 (Thursday)
 ----
 
 [daniel]
 
-- [ ] Request sample real world dataset.
 - [ ] Apply Multivariable Regression to sample real world dataset.
 
 [nick]
@@ -178,6 +171,12 @@ D-1 (Thursday)
     - [ ] prototype + testing
     - [ ] write R help files for each function
 - [ ] extract the prototype code (i.e., apart from the final package), package it up reusably
+
+[daniel] [nick]
+
+- [ ] Mathematics writeup vetted and tightened; relevant parts clipped into `report.tex`
+
+
 
 D (Friday, April the 25th, 2014)
 ---------------------------------
@@ -205,8 +204,10 @@ D+k
 - [ ] runtimes
     - [ ] measure over d (requires randomization to be in place) 
 
-Open Questions
+Open Questions and Future Work
 ================
+- [ ] dmNIW (Matrix Normal inverse Wishart density) 
+- [ ] investigate diagonalization: can we efficiently take U = HDH^T (with HH^T=I) somehow? If crossprod(U) = H D^2 H^T; does this speed things up?
 - how do we test dNIW? `marginalize()` is too slow to be used on more than 3 variates, which outruns the dimensionality of the smallest interesting NIW distribution
 - [x] the existence of the kroenecker product breaks the rNIW and dNIW APIs
      - **Answer**: yes, it does; change the API: rMNIW() for the Matrix-Normal|Inverse-Wishart distribution 
