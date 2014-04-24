@@ -19,7 +19,11 @@ message("                     ")
 
 main <- function() { #avoid polluting the namespace
     message("Collecting runtimes")
-    results = NIW.runtimes(krNIWAlgorithms, max=1e5, freq=3, rep=1) # Thorough: max=1e6, rep=5)
+    results = NIW.runtimes(krNIWAlgorithms, max=50000, freq=3, rep=1) # Thorough: max=1e6, rep=5)
+
+    message("Largest runtimes:") # DEBUG
+    print(results[results$n == max(results$n),]) #DEBUG
+
     message("                     ")
     
     message("Plotting")
