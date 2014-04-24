@@ -13,7 +13,7 @@ require(MASS) #COPYPASTA; TODO: factor
 rmvnorm = MASS::mvrnorm #repair naming convention
 
 rmultivariableregression <- function(points, B, V) {
-  # sample from the multivariable normal model
+  # simulate from the multivariable normal model.
   #
   # The model this generates from is Y = XB + E where (E_i)^T ~iid MultiNormal(0, V)
   # which is like the usual least squares model, but now with
@@ -98,21 +98,27 @@ rmultivariableregression <- function(points, B, V) {
   list(X = X, Y = Y)
 }
 
-ff <- function() {
-  # generate multivariable normal test data
-  
-}
 
-# Can't think of how to name the function
-# It generates a q by q by n matrix for Vs and
-# p by q by n matrix for the betas.
-# it can either generate n or use them, not sure which
-# currently only have generating n
-generate.Multivariables <- function(n ,X , Y, Psi, df, Lambda, Omega){
-  # Multivariable Regression in a Bayes
+lm.multivariable <- function(n ,X , Y, Psi, df, Lambda, Omega) { # TODO: Not sure what to name this.
+  # Multivariable Regression via Bayesian Reasoning
   # 
+  # This fits the model Y = XB + E where (E_i)^T ~iid MultiNormal(0, V)
+  #  but it doesn't fit it in the frequentist sense of constructing
+  #  true values for B and V -- instead it produces samples from the
+  #  Bayesian Posterior.
+  #
+  #
   # args:
   #  n: the number of samples to take
+  #  X, Y: the observed data; these should be (n,q) and (n,d)
+  #  Psi, df, Lambda, Omega: your prior knowledge, encoded
+  #    as parameters of the Normal|Inverse-Wishart distribution.
+  #  TODO: document how to set them to improper priors
+  # 
+  # returns:
+  #  a list containing
+  #   $B
+  #   $V
   
   q <- dim(Psi)[1];
   p <- dim(Omega)[1];
@@ -126,13 +132,18 @@ generate.Multivariables <- function(n ,X , Y, Psi, df, Lambda, Omega){
   # while C needs inverse, rMNIW already does the inverse, so not doing it here
   Kappa <- X.sq + Omega;
 
-  # compute the matrix
+  # this posterior is neat:
+  # it actually involves taking the usual frequentist fit (as produced by lm())
+  #  B = (X'X)^{-1}X'y
+  # and trading off between that fit and the information from the prior.
+  
+  
   beta.hat <- backsolve(X.sq, t(X) %*% Y);
   
-  temp <- (Y - X %*% beta.hat);
-  S <- crossprod(temp)
+  residuals <- (Y - X %*% beta.hat);
+  S <- crossprod(residuals)
   
-  A <- solve(X.sq + Omega) %*% Omega;
+  A <- backsolve(X.sq + Omega, Omega);
   
   # could swap X'XB with XY, not sure if we should
   C <- t(beta.hat) %*% X.sq %*% beta.hat + t(Lambda) %*% Omega %*% Lambda 
@@ -143,7 +154,6 @@ generate.Multivariables <- function(n ,X , Y, Psi, df, Lambda, Omega){
   mNIW.Psi <- Psi + S + C;
   mNIW.df <- df + p; #XXX checkme
   mNIW.Kappa <- Kappa;
-  mNIW.n <- samples
   
   return(rMNIW.Rcpp(n, mNIW.Mu, mNIW.Kappa, mNIW.Psi, mNIW.df))
 }
@@ -157,35 +167,69 @@ test.rMNIW <- function() {
 #test.rMNIW()
 
 
-message("Data is:")
-message("Y:")
-#print(Y)
-message("X:")
-#print(X)
 
-message("Sampling posterior distribution")
-n = 1000
-#n = 2 #DEBUG
-q = 2 # number of response variates
-d = 3 # number of predictor variates
-result<- rMNIW.Rcpp(n, matrix(1:(q*d),q,d), diag(q), diag(d), 10) #XXX THIS ISN'T A POSTERIOR; that will come later
-#print(result) #DEBUG
+test.EversonMorris <- function(n=33, m=1000) {
+  # Smoketest for lm.multivariable
+  #
+  # simulate multivariable normal test data
+  # then see if the bayesian fitter can pull out the
+  # correct (artificial and frequentist) coefficients.
+  # Parameters based on Everson & Morris [2002]
+  #
+  #
+  # args:
+  #  n: number of observed samples to take
+  #     the default is purposely small, to reflect
+  #     a realistic data-gathering situation.
+  #  m: number of posterior samples to take
+  #
+  # returns:
+  #  nothing; instead, results are printed as work is done.
 
-message("Estimated B")
-# the rMNIW returns (X,V), but in this case, the posterior X *is* B.
-B.hat = apply(result$X, -3, mean) #take mean()s across the 3rd dimension;
-                          # results in a q x d matrix (after unflattening apply's results)
-dim(B.hat) = c(q,d)
-print(B.hat)
-message() #newline
+  d = 9;
+  q = 2;
+  V = matrix(c(0,0,0,0), q, q)
+  B = matrix(rnorm(d*q, 0, 5), d, q)
 
-message("Estimated V")
-V.hat = apply(result$V, -3, mean) #take mean()s across the 3rd dimension;
-                          # results in a d x d matrix (or it would, but apply flattens its results)
-dim(V.hat) = c(d,d)
-print(V.hat)
-message() #newline
+  message("True B")
+  print(B)
+  message("True V")
+  print(V)
+  
+  data = rmultivariableregression(n, B, V);
 
-# TODO: compute (with 'quantile') the confidence intervals for each B and V
-# additionally, we have a whole sample from which we can do bootstrap-like things, compute functions of the data, etc
-# but for this simple test, getting the 
+  message("Hiding true values from ourselves")
+  rm(B, V, d, q)
+  
+  message("Data is:")
+  message("Y:")
+  print(data$Y)
+  message("X:")
+  print(data$X)
+
+  message("Sampling posterior distribution")
+  m = 2 #DEBUG
+  result <- lm.multivariable(m, data$X, data$Y, NULL, NULL, NULL, NULL) #FIXME
+  
+  message("Estimated B")
+  # the rMNIW returns (X,V), but in this case, the posterior X *is* B.
+  B.hat = apply(result$X, -3, mean) #take mean()s across the 3rd dimension;
+                            # results in a q x d matrix (after unflattening apply's results)
+  dim(B.hat) = c(q,d)
+  print(B.hat)
+  message() #newline
+
+  message("Estimated V")
+  V.hat = apply(result$V, -3, mean) #take mean()s across the 3rd dimension;
+                            # results in a d x d matrix (or it would, but apply flattens its results)
+  dim(V.hat) = c(d,d)
+  print(V.hat)
+  message() #newline
+  
+  # TODO: compute (with 'quantile') the confidence intervals for each B and V
+  #
+  # additionally, we have a whole sample from which we can do bootstrap-like things, compute functions of the data, etc
+  # but for this simple test, getting the right coefficients is good enough.
+}
+#test.EversonMorris()
+
