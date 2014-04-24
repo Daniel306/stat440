@@ -85,16 +85,6 @@ rNIW.typecheck <- function(n, Mu, Kappa, Psi, df) {
 }
 
 
-rMNIW.typecheck <- function(n, Mu, Kappa, Psi, df) {
-  # rMNIW preconditions
-  
-  # n must be a natural number
-  stopifnot(length(n) == 1 && n==round(n) && n > 0) # is.integer() is wrong for this; see its help
-
-  # the distribution parameters must be sane
-  MNIW.typecheck(Mu, Kappa, Psi, df)
-}
-
 rNIW.typechecked <- function(rNIW) {
     # wrap an rNIW implementation "rNIW" in the common safety code that
     #  all rNIW implementations should share.
@@ -125,6 +115,16 @@ rNIW.typechecked <- function(rNIW) {
 }
 
 
+rMNIW.typecheck <- function(n, Mu, Kappa, Psi, df) {
+  # rMNIW preconditions
+  
+  # n must be a natural number
+  stopifnot(length(n) == 1 && n==round(n) && n > 0) # is.integer() is wrong for this; see its help
+  
+  # the distribution parameters must be sane
+  MNIW.typecheck(Mu, Kappa, Psi, df)
+}
+
 rMNIW.typechecked <- function(rMNIW) {
   # wrap an rMNIW implementation "rNIW" in the common safety code that
   #  all rNIW implementations should share.
@@ -145,7 +145,7 @@ rMNIW.typechecked <- function(rMNIW) {
     stopifnot(all(sort(names(ans)) == c("V", "X")))
     
     # check dimensionality of the results
-    stopifnot(dim(ans$X) == c(d,q,n))
+    stopifnot(dim(ans$X) == c(q,d,n))
     stopifnot(dim(ans$V) == c(d,d,n))
     
     # XXX similarly, we don't check that Vs are positive definite (or even symmetric), though they should be
@@ -497,18 +497,17 @@ rNIW.snappy.RcppEigen <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
 })
 
 
-rMNIW <- rMNIW.typechecked(function(n, Mu, Kappa, Psi, df){
+rMNIW.Rcpp <- rMNIW.typechecked(function(n, Mu, Kappa, Psi, df){
   
   require("Rcpp")  # XXX: putting this call inside of here means R only compiles the code as needed and speeds up our dev cycle
   Rcpp::sourceCpp("rNIW.cpp") #in the long run, we should, of course, put these calls at the top with the other imports
   
-  d = dim(Mu)[1];
-  q = dim(Mu)[2];
-  show(Kappa)
-  kappa_inv <- solve(kappa);
-  show(Kappa_Inv)
+  d = dim(Mu)[2];
+  q = dim(Mu)[1];
+  
+  Kappa_Inv <- chol(solve(Kappa)); # to give sqrt of kappa_Inv later
   gamma.inv = solve(chol(solve(Psi)));
-  return(rMNIW_RCpp(n,d,q,Mu,kappa_Inv, gamma.inv, df));
+  return(rMNIW_Rcpp(n,d,q,Mu,Kappa_Inv, gamma.inv, df));
 })
 
 # ???

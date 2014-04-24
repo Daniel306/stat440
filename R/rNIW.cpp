@@ -252,18 +252,21 @@ NumericVector UpperTriMult(NumericVector M1, NumericVector M2, int d){
   return res;
 }
 
-// Tested and it works
-// // [[Rcpp::export]]
+// Tested and it works apparantly it didn't.. back to testing.
+ // [[Rcpp::export]]
 NumericVector Mmult(NumericVector M1, NumericVector M2){
   // R is weird:
   NumericVector dM1 = M1.attr("dim");
   NumericVector dM2 = M2.attr("dim");
-  int colF = dM1[0];
-  int rowF = dM2[1];
+  int rowF = dM1[0];
+  int colF = dM2[1];
   int d = dM1[1];
   //assert(d = dM2[0]); not sure how assert is
+  if (d != dM2[0]){
+    Rcout << "Dimensions error MMult" << std::endl;
+  }
   
-  NumericVector ans(Dimension(colF, rowF));
+  NumericVector ans(Dimension(rowF, colF));
   for (int col = 0; col < colF; col++){
     for (int row = 0; row < rowF; row++){
       for( int i = 0; i < d; i++){
@@ -327,8 +330,7 @@ SEXP rNIW_Rcpp_2(int n, int d, NumericVector Mu, double kappa, NumericVector gam
 }
 
 
-
-// // [[Rcpp::export]]
+ // [[Rcpp::export]]
 NumericVector generate_z(int d, int p){
   NumericVector norms = rnorm(d*p);
   NumericVector ans(Dimension(d,p)); // might be off here
@@ -344,14 +346,14 @@ NumericVector generate_z(int d, int p){
 
 
 
-// d refers to size of gamma_inv
-// q refers to number of dimens of kappa_Inv
+// d refers to size of gamma_inv, also number of columns in final
+// q refers to number of dimens of kappa_Inv, also number of rows in final
 // might take them out later and calculate them inside here rather than outside
 // [[Rcpp::export]]
-SEXP rMNIW_RCpp(int n, int d, int q, NumericVector Mu, NumericVector kappa_Inv, NumericVector gamma_inv, double df) {
+SEXP rMNIW_Rcpp(int n, int d, int q, NumericVector Mu, NumericVector kappa_Inv, NumericVector gamma_inv, double df) {
   NumericVector V_ans(Dimension(d,d,n));
   // Not sure about order of d and q
-  NumericVector X_ans(Dimension(d,q,n));
+  NumericVector X_ans(Dimension(q,d,n));
   
   
   NumericVector A(Dimension(d,d));
@@ -361,7 +363,7 @@ SEXP rMNIW_RCpp(int n, int d, int q, NumericVector Mu, NumericVector kappa_Inv, 
     // Apply backsolve
   NumericVector A_inv = backSolveInverse(A,d);
   
-  NumericVector z = generate_z(d,q); // need to represent as Matrix..
+  NumericVector z = generate_z(q,d); // need to represent as Matrix..
   
   
   NumericVector U_inv(Dimension(d,d));
@@ -391,9 +393,8 @@ SEXP rMNIW_RCpp(int n, int d, int q, NumericVector Mu, NumericVector kappa_Inv, 
   // Can use fact that Kappa_inv is (at least, I think it is, might be wrong) upper triangular
   
   NumericVector temp = Mmult(kappa_Inv,z);
+  
   temp = Mmult(temp, U_inv);
-  
-  
   
   
   for(int col = 0; col < d; col++){

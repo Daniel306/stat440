@@ -37,11 +37,14 @@ generate.Multivariables <- function(samples ,X , Y, Psi, df, Lambda, Omega){
   mNIW.Kappa <- Kappa;
   mNIW.n <- samples
   
-  result <- rMNIW(mNIW.n, mNIW.Mu, mNIW.Kappa, mNIW.Psi, mNIW.df);
+  result <- rMNIW.Rcpp(mNIW.n, mNIW.Mu, mNIW.Kappa, mNIW.Psi, mNIW.df);
   
 }
-X <- matrix(c(1,2,3,4),2,2)
-Y <- X
+
 source("rNIW.R")
 source("dNIW.R")
-generate.Multivariables(1,X,Y,diag(2),10, diag(2),diag(2))
+result <- generate.Multivariables(1000,X,Y,diag(2),10, diag(2),diag(2))
+rowMeans(result$X, dims = 2)
+
+result<- rMNIW.Rcpp(1000, matrix(1:6,2,3), diag(2), diag(3), 10)
+rowMeans(result$X, dims = 2)

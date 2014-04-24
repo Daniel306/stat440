@@ -7,23 +7,18 @@ using namespace Rcpp;
 
 // For more on using Rcpp click the Help button on the editor toolbar
 
-// [[Rcpp::export]]
-int timesTwo(int x) {
-   return x * 2;
-}
-
 
 // [[Rcpp::export]]
 NumericVector Mmult(NumericVector M1, NumericVector M2){
   // R is weird:
   NumericVector dM1 = M1.attr("dim");
   NumericVector dM2 = M2.attr("dim");
-  int colF = dM1[0];
-  int rowF = dM2[1];
+  int rowF = dM1[0];
+  int colF = dM2[1];
   int d = dM1[1];
   //assert(d = dM2[0]); not sure how assert is
   
-  NumericVector ans(Dimension(colF, rowF));
+  NumericVector ans(Dimension(rowF, colF));
   for (int col = 0; col < colF; col++){
     for (int row = 0; row < rowF; row++){
       for( int i = 0; i < d; i++){
