@@ -76,12 +76,23 @@ rmultivariableregression <- function(points, B, V) {
       m = 1/m;
     }
     X = t(rmvnorm(n, rep(0, d), diag(m)))
+    dim.stash = dim(X)
+    dim(X) = NULL
+    X[is.nan(X) | is.infinite(X)] = -pi #deal with more badness
+    dim(X) = dim.stash
+    message("badness is at")
+    print(which(!is.finite(X)))
   } else {
     n = dim(X)[1]
     X = points
   }
   
   E = t(rmvnorm(n, rep(0,q), V))
+  if(any(!is.finite(E))) { #introduce bias to quickly repair numerical instability
+    dim.stash = dim(E)
+    E[!is.finite(E)] = -0.1;
+    dim(E) = dim.stash
+  }
   Y = X %*% B + E
 
   list(X = X, Y = Y)
