@@ -70,8 +70,12 @@ rmultivariableregression <- function(points, B, V) {
     # ii. such that X is roughly on a scale that evens out
     m = apply(B, 1, mean) #this computes the mean size of the coefficient for each predictor 
     stopifnot(length(m) == d) # DEBUG
-    
-    X = t(rmvnorm(n, rep(0, d), diag(1/m)))
+    if(!all(is.finite(m) && m != 0)) { # hack around a bad corner case
+      m = rep(1, d)
+    } else {
+      m = 1/m;
+    }
+    X = t(rmvnorm(n, rep(0, d), diag(m)))
   } else {
     n = dim(X)[1]
     X = points
@@ -79,7 +83,8 @@ rmultivariableregression <- function(points, B, V) {
   
   E = t(rmvnorm(n, rep(0,q), V))
   Y = X %*% B + E
-  return(Y)
+
+  list(X = X, Y = Y)
 }
 
 ff <- function() {
