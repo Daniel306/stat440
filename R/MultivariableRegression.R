@@ -31,7 +31,7 @@ generate.Multivariables <- function(samples ,X , Y, Psi, df, Lambda, Omega){
         - t(X.sq %*% beta.hat + Omega %*% Lambda) %*% solve(Kappa) %*% (X.sq %*% beta.hat + Omega %*% Lambda);
   
   
-  mNIW.Mu <- A %*% Lambda + diag(p);
+  mNIW.Mu <- A %*% Lambda + (diag(p)- A) %*% beta.hat;
   mNIW.Psi <- Psi + S + C;
   mNIW.df <- df + n;
   mNIW.Kappa <- Kappa;
@@ -43,8 +43,22 @@ generate.Multivariables <- function(samples ,X , Y, Psi, df, Lambda, Omega){
 
 source("rNIW.R")
 source("dNIW.R")
-result <- generate.Multivariables(1000,X,Y,diag(2),10, diag(2),diag(2))
-rowMeans(result$X, dims = 2)
+source("testcorrectness.R")
+#
+#X <- matrix(c(1,2,3,5,8,13),3,2)
+#Y <- matrix(c(3,5,8), 3, 1)
+#result <- generate.Multivariables(100000,X,Y,matrix(0,1,1),10, matrix(0,2,1),matrix(0,2,2))
+#rowMeans(result$X, dims = 2)
+#rowMeans(result$V, dims = 2)
 
-result<- rMNIW.Rcpp(1000, matrix(1:6,2,3), diag(2), diag(3), 10)
-rowMeans(result$X, dims = 2)
+
+mNIW.n <- 10000
+mNIW.Mu <- matrix(0, 3,4)
+mNIW.Kappa <- diag(3)
+mNIW.Psi <- diag(4)
+mNIW.df <- 5
+result <- rMNIW.Rcpp(mNIW.n, mNIW.Mu, mNIW.Kappa, mNIW.Psi, mNIW.df);
+
+f = IW.marginal(1,1,mNIW.Psi,mNIW.df)
+curve(f, from = 0, to =1)
+plot.compare(f,result$V[1,1,])
