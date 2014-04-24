@@ -12,7 +12,7 @@ kDF = 7.32 # must be at least as large as the dimension of kV
 
 krNIWAlgorithms = c(
             #"extremelynaive",
-            #"naive",
+            "naive",
             "snappy1",
             "snappy2",
             "snappy3",

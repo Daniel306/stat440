@@ -6,7 +6,7 @@ source("test.constants.R")
 # TODO: there's some appeal in a NIW.runtime() which only runs one algorithm at a time
 #       and then writing NIW.runtimes() to just rbinds the results from that all together?
 
-NIW.runtimes <- function(algorithms, max=1e5, freq=25, N=floor(exp(seq(0, log(max), length.out=freq))), rep=5) {
+NIW.runtimes <- function(algorithms, max=1e4, freq=21, N=floor(exp(seq(0, log(max), length.out=freq))), reps=5) {
   # Record the runtimes of a suite of Normal-Inverse-Wishart samplers, for comparison.
   #
   # args:
@@ -15,11 +15,11 @@ NIW.runtimes <- function(algorithms, max=1e5, freq=25, N=floor(exp(seq(0, log(ma
   #  N:   the points at which to sample the runtimes algorithm (n being the number of samples to ask each NIW to generate)
   #  max: the largest n to test, if N is left at its default (and unused otherwise)
   #  freq: the number of points to sample at, if N is left at is default (and unused otherwise) (XXX bad name)
-  #  rep: the number of times to sample each runtime
+  #  reps: the number of times to sample each runtime
   #
   # returns:
   #   the results in a matrix (n, algorithm, time)
-  #   there should be 'rep' many rows for each pair (n, algorithm)
+  #   there should be 'reps' many rows for each pair (n, algorithm)
   #   and algorithm is a factor column.
   #
   #  TODO:
@@ -28,7 +28,7 @@ NIW.runtimes <- function(algorithms, max=1e5, freq=25, N=floor(exp(seq(0, log(ma
   #         and the naive algorithm should show bad degredation as length(Mu) == dim(V)[1] == dim(V)[2] grows))
   #     currently just uses the values in test.constants.R
  
-  R = data.frame(matrix(NA, length(N)*length(algorithms)*rep, 3))
+  R = data.frame(matrix(NA, length(N)*length(algorithms)*reps, 3))
   colnames(R) = c("n","algorithm","time")
 
   # i is the index into R; really I wish for an "enumerate()" to loop over a crossproduct
@@ -37,7 +37,7 @@ NIW.runtimes <- function(algorithms, max=1e5, freq=25, N=floor(exp(seq(0, log(ma
   for(a in algorithms) {               # These loops are
     A = get(paste("rNIW", a, sep=".")) # purposely flat
   for(n in N) {                        # to match the flat matrix
-  for(r in 1:rep) {                    # they generate.
+  for(r in 1:reps) {                    # they generate.
     message("runtime a=",a,", n=", n, ", rep=",r)  #DEBUG
     tic = proc.time()
     A(n, kMu, kKappa, kPsi, kDF) #generate samples
@@ -63,11 +63,14 @@ NIW.runtimes <- function(algorithms, max=1e5, freq=25, N=floor(exp(seq(0, log(ma
   return(R)
 }
 
-NIW.runtime.createTable <- function(R, baseFunction){
+NIW.runtime.createTable <- function(R, baseFunction="naive"){
   # Creates table with algorithm name, relative speed (higher is better)
   # output is table with (functionName, relativespeed, sd of relative speed) in every row
-  
+
+  #print(R)
+ 
   algorithms <- unique(R$algorithm)
+  stopifnot(baseFunction %in% algorithms)
   
   table <- data.frame(matrix(NA, length(algorithms), 3))
   
@@ -84,8 +87,11 @@ NIW.runtime.createTable <- function(R, baseFunction){
     i = i+1;
     table[i, "algorithm"] = a;
     table[i, "ratio"] = M$coef[2]; # currently not ratio, fixed later
-    table[i, "sd"] = sqrt(vcov(M)[2,2];
+    table[i, "sd"] = sqrt(vcov(M)[2,2]);
   }
+  
+  message("table before scaling is")
+  print(table)
   
   # Now to fix ratios and sd by factor
   for (a in 1:i){
@@ -96,7 +102,8 @@ NIW.runtime.createTable <- function(R, baseFunction){
 }
 
 
-R <- NIW.runtimes(c("Rcpp2", "snappy2", "naive"))
+test.runtime.createTable <- function() {
+R <- NIW.runtimes(c("Rcpp2", "snappy2", "naive"), max=1e3, reps=1)
 table <- NIW.runtime.createTable(R,"naive")
 table
 #example from one run
@@ -104,3 +111,5 @@ table
 #1     Rcpp2 8.7011074 2.5359325
 #2   snappy2 0.7468129 0.1213526
 #3     naive 1.0000000 0.1674202
+}
+#test.runtime.createTable()

@@ -6,14 +6,23 @@
 #   "if __name__ == '__main__'" 
 #  block.
 
+
+message("Loading test harness")
 source("test.speed.R")
 source("test.constants.R")
+message("                     ")
+
+message("Loading extension module")
+require("Rcpp")
+Rcpp::sourceCpp("rNIW.cpp") #make sure the sourcing of this doesn't interfere with the runtime measurements
+message("                     ")
 
 main <- function() { #avoid polluting the namespace
-
-  # TODO: pull the alg names out into a constant..    
-    results = NIW.runtimes(krNIWAlgorithms, max=1e6, rep=3)
-
+    message("Collecting runtimes")
+    results = NIW.runtimes(krNIWAlgorithms, max=1e5, freq=3, rep=1) # Thorough: max=1e6, rep=5)
+    message("                     ")
+    
+    message("Plotting")
     # plot runtime plots yay
     plot(c(), xlim=range(results$n), ylim=range(results$time),
         main="rNIW implementation runtimes",
@@ -25,13 +34,16 @@ main <- function() { #avoid polluting the namespace
         
         lines(a.results$n, a.results$time, col = int.a, lty="solid")
     }
-
+    message("                     ")
+    
     qq=1:length(levels(results$algorithm))
     #print(qq) #DEBUG
     yy = rep("solid", length(levels(results$algorithm)))
     #print(yy) #DEBUG
     legend("topleft", levels(results$algorithm), col=qq, lty=yy)
 
+    message("Summary table:")
+    # TODO: ... createTable() goes here
 }
 
 main()
