@@ -45,9 +45,13 @@ main <- function() { #avoid polluting the namespace
     yy = rep("solid", length(levels(results$algorithm)))
     #print(yy) #DEBUG
     legend("topleft", levels(results$algorithm), col=qq, lty=yy)
-
+    
     message("Summary table:")
-    # TODO: ... createTable() goes here
+    table <- NIW.runtime.createTable(results,"extremelynaive")
+    print(table)
 }
 
 main()
+
+
+

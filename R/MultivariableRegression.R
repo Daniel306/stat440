@@ -196,7 +196,7 @@ lm.multivariable <- function(m, X, Y, Lambda=NULL, Omega=NULL, Psi=NULL, df=71) 
   }
   
   # finally, do the heavy lifting given these posterior parameters
-  result = rMNIW.Rcpp(n, mNIW.Mu, mNIW.Kappa, mNIW.Psi, mNIW.df)
+  result = rMNIW.Rcpp(m, mNIW.Mu, mNIW.Kappa, mNIW.Psi, mNIW.df)
   
   # rename the posterior samples to match the API
   names(result)[names(result) == "X"] = "B" 
@@ -214,7 +214,7 @@ test.rMNIW <- function() {
 
 
 # originally n = 27, m = 1e5
-test.EversonMorris <- function(n=27, m=1e5) {
+test.EversonMorris <- function(n=27, m=1e7) {
   # Smoketest for lm.multivariable
   #
   # simulate multivariable normal test data
@@ -262,7 +262,7 @@ test.EversonMorris <- function(n=27, m=1e5) {
   print(beta.hat1)
   
   message("Sampling posterior distribution")
-  m = 2 #DEBUG
+#  m = 2 #DEBUG
   result <- lm.multivariable(m, data$X, data$Y)
  
   d = dim(result$B)[1]
@@ -287,6 +287,7 @@ test.EversonMorris <- function(n=27, m=1e5) {
   #
   # additionally, we have a whole sample from which we can do bootstrap-like things, compute functions of the data, etc
   # but for this simple test, getting the right coefficients is good enough.
+  list(V = result$V, B = result$B, X = data$X, Y = data$Y)
 }
-test.EversonMorris()
+ans <- test.EversonMorris();
 
