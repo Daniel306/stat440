@@ -18,7 +18,7 @@ NIW.runtimes <- function(algorithms, max=1e5, freq=25, N=floor(exp(seq(0, log(ma
   #  rep: the number of times to sample each runtime
   #
   # returns:
-  #   the results in a matrix (n, algorithm, time, sd)
+  #   the results in a matrix (n, algorithm, time)
   #   there should be 'rep' many rows for each pair (n, algorithm)
   #   and algorithm is a factor column.
   #
@@ -28,13 +28,12 @@ NIW.runtimes <- function(algorithms, max=1e5, freq=25, N=floor(exp(seq(0, log(ma
   #         and the naive algorithm should show bad degredation as length(Mu) == dim(V)[1] == dim(V)[2] grows))
   #     currently just uses the values in test.constants.R
  
-  R = data.frame(matrix(NA, length(N)*length(algorithms), 3))
+  R = data.frame(matrix(NA, length(N)*length(algorithms)*rep, 3))
   colnames(R) = c("n","algorithm","time")
 
   # i is the index into R; really I wish for an "enumerate()" to loop over a crossproduct
   # but this will do for now.
   i = 1;
-  times <- rep(NA, rep);
   for(a in algorithms) {               # These loops are
     A = get(paste("rNIW", a, sep=".")) # purposely flat
   for(n in N) {                        # to match the flat matrix
@@ -44,18 +43,16 @@ NIW.runtimes <- function(algorithms, max=1e5, freq=25, N=floor(exp(seq(0, log(ma
     A(n, kMu, kKappa, kPsi, kDF) #generate samples
     toc = proc.time()
     #print(toc - tic) #DEBUG
-    times[r] = (toc - tic)["elapsed"]
-  }
+
     # because R is a jerk
     # these lines need to be done one at a time
     # otherwise the presence of the string a makes the whole tuple type "character"
     # and that causes the whole dataframe to be "character" typed
     R[i,"n"] = n
     R[i, "algorithm"] = a
-    R[i,"time"] = mean(times)
-    R[i,"sd"] = sd(times)
+    R[i,"time"] = (toc - tic)["elapsed"]
     i = i + 1;
-  
+  }
   }
   }
   
@@ -66,4 +63,44 @@ NIW.runtimes <- function(algorithms, max=1e5, freq=25, N=floor(exp(seq(0, log(ma
   return(R)
 }
 
-NIW.runtimes(c("Rcpp2"))
+NIW.runtime.createTable <- function(R, baseFunction){
+  # Creates table with algorithm name, relative speed (higher is better)
+  # output is table with (functionName, relativespeed, sd of relative speed) in every row
+  
+  algorithms <- unique(R$algorithm)
+  
+  table <- data.frame(matrix(NA, length(algorithms), 3))
+  
+  colnames(table) = c("algorithm","ratio", "sd")
+  #print(table);
+  
+  baseFactor <- NA
+  i = 0;
+  for(a in algorithms){
+    M <- lm(time~n,R[R$algorithm==a,,]);
+    if (a == baseFunction){
+        baseFactor <-  M$coef[2];
+    }
+    i = i+1;
+    table[i, "algorithm"] = a;
+    table[i, "ratio"] = M$coef[2]; # currently not ratio, fixed later
+    table[i, "sd"] = sqrt(vcov(M)[2,2];
+  }
+  
+  # Now to fix ratios and sd by factor
+  for (a in 1:i){
+    table[a,"sd"] = table[a,"sd"] * (baseFactor/table[a,"ratio"]); # not sure about this
+    table[a,"ratio"] = baseFactor/table[a,"ratio"];
+  }
+ return (table);
+}
+
+
+R <- NIW.runtimes(c("Rcpp2", "snappy2", "naive"))
+table <- NIW.runtime.createTable(R,"naive")
+table
+#example from one run
+#algorithm     ratio        sd
+#1     Rcpp2 8.7011074 2.5359325
+#2   snappy2 0.7468129 0.1213526
+#3     naive 1.0000000 0.1674202
