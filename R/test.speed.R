@@ -62,3 +62,45 @@ NIW.runtimes <- function(algorithms, max=1e5, freq=25, N=floor(exp(seq(0, log(ma
   R$algorithm = as.factor(R$algorithm)
   return(R)
 }
+
+NIW.runtime.createTable <- function(R, baseFunction){
+  # Creates table with algorithm name, relative speed (higher is better)
+  # output is table with (functionName, relativespeed, sd of relative speed) in every row
+  
+  algorithms <- unique(R$algorithm)
+  
+  table <- data.frame(matrix(NA, length(algorithms), 3))
+  
+  colnames(table) = c("algorithm","ratio", "sd")
+  #print(table);
+  
+  baseFactor <- NA
+  i = 0;
+  for(a in algorithms){
+    M <- lm(time~n,R[R$algorithm==a,,]);
+    if (a == baseFunction){
+        baseFactor <-  M$coef[2];
+    }
+    i = i+1;
+    table[i, "algorithm"] = a;
+    table[i, "ratio"] = M$coef[2]; # currently not ratio, fixed later
+    table[i, "sd"] = sqrt(vcov(M)[2,2];
+  }
+  
+  # Now to fix ratios and sd by factor
+  for (a in 1:i){
+    table[a,"sd"] = table[a,"sd"] * (baseFactor/table[a,"ratio"]); # not sure about this
+    table[a,"ratio"] = baseFactor/table[a,"ratio"];
+  }
+ return (table);
+}
+
+
+R <- NIW.runtimes(c("Rcpp2", "snappy2", "naive"))
+table <- NIW.runtime.createTable(R,"naive")
+table
+#example from one run
+#algorithm     ratio        sd
+#1     Rcpp2 8.7011074 2.5359325
+#2   snappy2 0.7468129 0.1213526
+#3     naive 1.0000000 0.1674202

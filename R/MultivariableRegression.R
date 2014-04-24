@@ -213,7 +213,7 @@ test.rMNIW <- function() {
 #test.rMNIW()
 
 
-
+# originally n = 27, m = 1e5
 test.EversonMorris <- function(n=27, m=1e5) {
   # Smoketest for lm.multivariable
   #
@@ -256,6 +256,11 @@ test.EversonMorris <- function(n=27, m=1e5) {
   message("X:")
   print(data$X)
 
+  X.sq <- crossprod(data$X);
+  beta.hat1 <- solve(X.sq, t(data$X) %*% data$Y);
+  message("beta hat point estimate")
+  print(beta.hat1)
+  
   message("Sampling posterior distribution")
   m = 2 #DEBUG
   result <- lm.multivariable(m, data$X, data$Y)
@@ -283,5 +288,5 @@ test.EversonMorris <- function(n=27, m=1e5) {
   # additionally, we have a whole sample from which we can do bootstrap-like things, compute functions of the data, etc
   # but for this simple test, getting the right coefficients is good enough.
 }
-#test.EversonMorris()
+test.EversonMorris()
 
