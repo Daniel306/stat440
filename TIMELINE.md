@@ -140,8 +140,8 @@ D-2 (Wednesday)
         - [ ] entries of X from the single NIW (this should be 't' ish??)
         - [ ] entries of Matrix-Normal thingy ((can be derived from the single NIW one))
     - [ ] partial-apply such functions and use them as 'ground' for the marginal plots
-- [ ] i.i.d. Matrix-Normal Sampler
-- [ ] Test multivar regression against the Matrix-Normal sampler
+- [x] i.i.d. Matrix-Normal Sampler
+- [x] Test multivar regression against the Matrix-Normal sampler
 - [x] Request sample real world dataset.
     
 [daniel]
@@ -153,6 +153,7 @@ D-1 (Thursday)
 
 [daniel]
 
+- [ ] fix V bug in multivariable regression
 - [ ] Apply Multivariable Regression to sample real world dataset.
 
 [nick]
