@@ -55,7 +55,7 @@ main <- function() { # avoid polluting the namespace
             # ..I might have to move the marginals_do to this function
             analytic = NIW.densities(kMu, kKappa, kPsi, kDF, n)
             plot.densities(analytic$X, samples$X, "NIW X", sub=paste(alg, "(analytically)"))
-            plot.densities(analytic$V, samples$V, "NIW V", sub=paste(alg, "(analytically"))
+            plot.densities(analytic$V, samples$V, "NIW V", sub=paste(alg, "(analytically)"))
             
             ## MOMENTS
             # make first moment convergence plots
