@@ -346,6 +346,8 @@ marginals_do <- function(M, f) { #TODO: pull out into util
   # recursive something someting  
   # This is something like the sum of map() and enumerate() (which are not R functions)
   #   but it is dimensionality aware.
+  # TODO: give a flag that marks M as symmetric, so that this only computes on the upper triangle
+  #       this is a very-very-special-case flag, though... the cleaner (but inefficient) solution might be to force the lower triangle to NA before running marginals_do
   
   kept_dimensions = 1:(length(dim(M))-1) #drop the last dimension
     

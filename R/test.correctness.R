@@ -256,11 +256,14 @@ NIW.var <- function(Mu, Kappa, Psi, df, samples) {
 ##########################################
 ## Kolmogorov-Smirnov Tests
 
-ks.tests <- function(ground, sample, title=) {
+ks.tests <- function(ground, sample, title=NULL, alpha=0.05) {
   # ground and sample must both be MultiSs of the same dimensionality
+  # title is as in plot.densities and plot.convergence
+  # alpha is the p-value cutoff for "different"
   marginals_do(sample, function(idx, sample) {
-    ground_sample = ..getitem..(ground, idx)
-    
+    ground = ..getitem..(ground, idx)   #only overwrites locally
+    p = ks.test(sample, ground)$p.value #NB: ks.test() takes its args swapped from our convention
+    message("\t", marginal.title(title, idx), ": ", if(p > alpha) { "same" } else { paste("different", " (", p, ")", sep="")  })
   })
 }
 
@@ -287,24 +290,10 @@ NIW.ks.test <- function(ground, sample) {
   }
   # since we know sample came from rNIW, we have stronger conditions than the above:
   # 
-  d = dim(ground$X)[1]
+  
   # and we also know that V is symmetric, so we can do only (1:d)x(i:d)
   # --> this tidbit will be difficult to factor out
   
-  # X marginals
   ks.tests(sample$X, sample$X, title="X")
-  par(mfrow=c(2,2))
-  for(i in 1:d) {
-    p = ks.test(sample$X[i,], ground$X[i,])$p.value #NB: order that ks.test takes its args is swapped from our order
-    message("\t X[",i,"]", ": ", if(p > 0.05) { "same" } else { paste("different", " (", p, ")", sep="")  })
-  }
-  
-  # V marginals
-  par(mfrow=c(2,2))
-  for(i in 1:d) {
-    for(j in i:d) { #purposely not indented
-      p = ks.test(sample$V[i,j,], ground$V[i,j,])$p.value #NB: order that ks.test takes its args is swapped from our order
-      message("\t V[",i,",",j,"]", ": ", if(p > 0.05) { "same" } else { paste("different", " (", p, ")", sep="") })
-    }
-  }
+  ks.tests(sample$V, sample$V, title="V")
 }
