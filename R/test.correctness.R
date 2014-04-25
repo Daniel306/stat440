@@ -11,7 +11,7 @@ source("NIW.R")
 
 # utilties
 
-cumulate <- function(M, margin, f) {
+cumulate <- function(M, margin, f, PRECUMULATED=FALSE) {
   # apply 'f' across 'margin'
   # this generalizes "cumsum", but so much slower.
   # f must take a vector and return a scalar
@@ -19,14 +19,21 @@ cumulate <- function(M, margin, f) {
   # this function is slow: it necessarily has at least quadratic runtime
   # use case: taking the cumulative variance in a (p,q,n) matrix (a matrix of n (p,q) design matrices, say)
   #  : cumulate(M, -3, var)
-  # TODO: provide a feature so that you can flag to cumulate that f is already in cumulator form (eg so you can pass cumsum directly);
-  #   this hope being that this will be faster
+  # PRECUUMATED flags that f is already in cumulator form (eg so you can pass cumsum directly);
+  #   If you use this right, you can avoid the quadratic runtime this algorithm otherwise demands.
+  #  (but the output from f must strictly be vectorized or else things will crash, and must properly implement accumulation or else behaviour will be wrong)
   
   original.dims = dim(M)
-  M = apply(M, margin, function(v) { 
-            sapply(1:length(v), function(i) { f(v[1:i]) })
-            })
-  dim(M) = original.dims #XXX if 
+  if(PRECUMULATED) {
+    acc <- f
+  } else {
+    acc <- function(v) { 
+      sapply(1:length(v), function(i) { f(v[1:i]) })
+    }
+  }
+            
+  M = apply(M, margin, acc)
+  dim(M) = original.dims #unflatten
   return(M)
 }
 
