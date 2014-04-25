@@ -155,9 +155,31 @@ IW.marginal <- function(i, j, Psi, df) {
 ##########################################
 ## Moments
 
-# Wikipedia gives some useful analytic formulas:
-# https://en.wikipedia.org/wiki/Inverse-Wishart_distribution#Moments
-# and it's relatively obvious that the mean of X is just Mu.
+
+# utilties
+# TODO: its pretty obvious these functions are identical and can be factored
+# but how is eluding me right now
+# the trouble is that these intimately depend on the knowledge that cummean/cumvar return a vector the same size as the input
+# and I don't see how to safely factorize out over that
+# a day with the apply manpage might change my mind.
+
+cummean.marginals = function(M) {
+  # precondition: 
+  original.dims = dim(M)
+  n_dim = length(original.dims)
+  M = apply(M, -n_dim, cummean)
+  dim(M) = original.dims #unflatten what apply() flattened
+  return(M)
+}
+
+cumvar.marginals = function(M) {
+  # precondition: 
+  original.dims = dim(M)
+  n_dim = length(original.dims)
+  M = apply(M, -n_dim, cumvar)
+  dim(M) = original.dims #unflatten what apply() flattened
+  return(M)
+}
 
 plot.converging.moment <- function(ground, samples, ...) {
   # 
@@ -191,7 +213,8 @@ plot.converging.moment.multi <- function(ground, samples, title=NULL, sub=NULL) 
   # TODO: merge plot.converging.moment into this, so that it handles multivariates smoothly in line with univariates?
   #    con: the plotting arguments, main=, sub=, etc, will be finicky to do if it's merged
   #    pro: it might (might) be faster to do the cummeans all at once
-
+  # TODO: factor the bit that loops down dimensions to a subroutine
+  
   # TODO: typechecks
   
   # our convention is: the LAST dimension is 'n'  
@@ -215,7 +238,7 @@ plot.converging.moment.multi <- function(ground, samples, title=NULL, sub=NULL) 
     # unacceptable!!
     stop("Inconsistent dimenesions between ground and sample")
   }
-
+  
   # loop over all interesting_dimensions and plot each marginal
   # recursive something someting  
   R<-function(idx, dims) { #TODO: pull out into util.R
@@ -249,7 +272,7 @@ plot.converging.moment.multi <- function(ground, samples, title=NULL, sub=NULL) 
       }
     }
   }
-  R(c(), interesting_dimensions)
+  R(c(), interesting_dimensions) #kick off the recursive loop
 }
 # sketchy test:
 #test.plot.converging.moment.multi <- function() {
