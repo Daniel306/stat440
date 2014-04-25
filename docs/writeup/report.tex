@@ -39,15 +39,21 @@
 
 % .5 pages
 \Section{Introduction}
+% some of section below from wikipedia
+The NIW distribution is a multivariate four-parameter family of continous probability distributions.
+%.....
 
-The NIW distribution is 
-.....
+%its history
+%its relationship to other others (it's a generalized Normal-Inverse-ChiSq)
 
-its history
-its relationship to other others (it's a generalized Normal-Inverse-ChiSq)
+%In bayesian statistics, it is the conjugate prior in (...this situation...)
 
-In bayesian statistics, it is the conjugate prior in (...this situation...)
+Its main use is as the conjugate prior for a multivariate normal distribution with unknown mean and covariance matrix.
 
+%Due to its common use in bayesian statistics, Generating samples from this distribution is often the bottleneck in generating the %credible interval. 
+
+Unlike for normal or $\chi^2$, there is no built in function in R to generate samples. Our goal is to provide such functionality for R, and as generating samples is often the bottleneck in %need to figure out what to call this% 
+	we intended to do it as efficiently as possible.
 % (4 pages)
 \Section{Program Package}
 
@@ -149,7 +155,10 @@ The NIW distribution is a extremely common conjugate prior. Here, we use our alg
 
 
 % 1.25 pages
-\Subsection{Thingy I}
+\Subsection{Multivariable Regression}
+
+
+
 
 % 1.25 pages
 \Subsection{Gibbs Sampler}

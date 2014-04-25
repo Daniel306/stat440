@@ -262,7 +262,7 @@ test.EversonMorris <- function(n=27, m=1e7) {
   print(beta.hat1)
   
   message("Sampling posterior distribution")
-#  m = 2 #DEBUG
+  #  m = 2 #DEBUG
   result <- lm.multivariable(m, data$X, data$Y)
  
   d = dim(result$B)[1]

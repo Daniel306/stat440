@@ -133,7 +133,8 @@ D-1 (Thursday)
 
 [daniel]
 
-- [x] fix V bug in multivariable regression (_it wasn't a bug, it was small sample size_)
+
+- [x] fix V bug in multivariable regression
 - [ ] Apply Multivariable Regression to sample real world dataset.
 - [ ] Better timings:
     - [ ] in the runtime tests, map the runtime matrix to averages + sds instead of having the weird aliasing problems
