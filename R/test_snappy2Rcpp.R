@@ -8,8 +8,8 @@ require("Rcpp")
 Rcpp::sourceCpp("rNIW.cpp")
 
 # test means:
-#n=2000000;
-sample1 <- rNIW.Rcpp2(n, kMu, kKappa, kPsi, kDF);
+n=2000000;
+sample1 <- rNIW.Rcpp(n, kMu, kKappa, kPsi, kDF);
 #rowMeans(sample1$X)
 #sample2 <- rNIW.snappy2(n, kMu, kKappa, kPsi, kDF);
 #rowMeans(sample2$X)
@@ -22,7 +22,7 @@ sample1 <- rNIW.Rcpp2(n, kMu, kKappa, kPsi, kDF);
 
 
 # tested the multiplication of inverses (by extracting values and doing calculation in R too)
-rNIW.Rcpp2(1, kMu, kKappa, kPsi, kDF);
+rNIW.Rcp2(1, kMu, kKappa, kPsi, kDF);
 rNIW.snappy2(1, kMu, kKappa, kPsi, kDF);
 # Test for bartlett decomposition
 #Rcpp::sourceCpp("rNIW.cpp")
