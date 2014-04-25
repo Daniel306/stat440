@@ -122,7 +122,7 @@ NIW.densities <- function(Mu, kappa, Psi, df, n) {
 }
 
 
-plot.density <- function(ground, sample, ...) { #XXX NAME
+plot.density <- function(ground, sample, breaks=40, ...) { #XXX NAME
   # plot histograms of the marginals in sample, overlaid with "ground truth" probability density.
   # 
   # ground: the "ground truth"
@@ -131,10 +131,15 @@ plot.density <- function(ground, sample, ...) { #XXX NAME
   #  But the latter cannot be tainted by mistakes in your naive generator.
   # sample: the "sample"
   #  this is is the sample
+  # breaks: 'breaks' parameter of hist() (see help(hist) for usage)
   # ...: extra arguments to plot()
+
+  stopifnot(is.vector(sample))
+  
+  n = length(sample)
   
   # display the histogram
-  hist(sample, probability=TRUE, breaks=40, xlab="", ...)
+  hist(sample, probability=TRUE, breaks=breaks, xlab="", ...)
 
   if(is.null(ground) || is.na(ground)) {
     warning("plot.density got a null ground; not printing the pdf overlay")
@@ -143,6 +148,8 @@ plot.density <- function(ground, sample, ...) { #XXX NAME
   
   # overlay the pdf
   if(is.function(ground)) {
+    sample = reasonable_subset(sample, 77) #Reduce the number of points plotted
+    sample = sort(sample)                  # this set must be sorted so that lines() dont zigzag everywhere
     lines(sample, ground(sample), col="blue", lty="twodash")
   } else {
     # if caller has not given us a pdf directly, then

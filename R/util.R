@@ -135,13 +135,18 @@ reasonable_subset <- function(D, length.out=250) {
   # plotting too many points causes lag
   # reasonable_subset evenly reduces the number of samples in D evenly
   # (in other places, this operation is called decimation(TODO: FACTCHECK))
+  # input: a data.frame or some other 2d structure (in particular, the samples this subsets over run DOWN columns)
+  #        or a vector
   #
   # returns:
   #  the dataframe reduced to length.out or its original length, whichever is smaller.
-
-  n = dim(D)[1]
+  if(is.vector(D)) { n = length(D) }
+  else {  n = dim(D)[1] }
+  
   idx = intseq(1, n, length.out=length.out)
-  D[idx,]  
+
+  if(is.vector(D)) { return(D[idx]); }
+  else { return(D[idx,]); }
 }
 
 
