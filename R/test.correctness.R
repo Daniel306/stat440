@@ -50,70 +50,7 @@ marginal.title <- function(title, idx) {
 ##################################################
 ## Density Plots
 
-plot.density <- function(ground, sample, ...) { #XXX NAME
-  # plot histograms of the marginals in sample, overlaid with "ground truth" probability density.
-  # 
-  # ground: the "ground truth"
-  #  this can either be a vector of samples, which will be kernel-density estimated, or a pdf function (which must be vectorized!!)
-  #  the former is quicker to use: just generate samples in a naive and easy to validate way
-  #  But the latter cannot be tainted by mistakes in your naive generator.
-  # sample: the "sample"
-  #  this is is the sample
-  # ...: extra arguments to plot()
-  
-  # display the histogram
-  hist(sample, probability=TRUE, breaks=40, xlab="", ...)
-  
-  # overlay the pdf
-  if(is.function(ground)) {
-    lines(sample, ground(sample), col="blue", lty="twodash")
-  } else {
-    # if caller has not given us a pdf directly, then
-    # assume ground is a vector for us to kernel-density estimate
-    stopifnot(is.vector(ground) && is.numeric(ground)) #typecheck
-    
-    lines(density(ground), col="blue", lty="twodash")
-  }
-  
-  # omitted code, which could be used instead of the special casing in lines() above
-  ## replace ground with a (callable!) pdf function 
-  ## via kernel density estimation
-  # if(!is.function(ground)) {
-  # p = density(ground)
-  # ground = function(x) {
-  #   approx(p$x, p$y, x, rule=2)$y # rule=2 means 'support extrapolation'
-  # }
-  #}
-}
 
-plot.densities <- function(ground, sample, title=NULL, layout=c(2,2), ...) { #XXX name
-  # compare the marginals of the given sample to their expected p.d.f. curves
-  #
-  # this is basically just a loop over plot.density(),
-  #  but it usefully accounts for labelling the plots uniformly
-  #
-  # args:
-  #   ground: either, a MultiS, the same dimensionality as sample, in which case
-  #         ground is assumed to be samples from the true distribution, and creates kernel density estimates
-  #       -or-
-  #       (( some kind of weird matrix-list containing p.d.f.s )) 
-  #   sample: a MultiS or a vector
-  #   layout: how to pack the plots (row by column)
-  #   title: optional title to label thigns with
-  #       
-  
-  # TODO: typechecks
-  par(mfrow=layout)
-  marginals_do(sample, function(idx, sample) {
-    ground = ..getitem..(ground, idx)
-    if(class(ground) == "list") { #special case: you can pass a 'matrix' of density functions, by passing a list
-      stopifnot(length(ground) == 1)
-      ground = ground[[1]]
-      stopifnot(class(ground) == "function")
-    }
-    plot.density(ground, sample, main=marginal.title(title, idx), ...)
-  })   
-}
 
 
 ############
@@ -183,6 +120,73 @@ NIW.densities <- function(Mu, kappa, Psi, df, n) {
   
   list(X = X, V = V)
 }
+
+
+plot.density <- function(ground, sample, ...) { #XXX NAME
+  # plot histograms of the marginals in sample, overlaid with "ground truth" probability density.
+  # 
+  # ground: the "ground truth"
+  #  this can either be a vector of samples, which will be kernel-density estimated, or a pdf function (which must be vectorized!!)
+  #  the former is quicker to use: just generate samples in a naive and easy to validate way
+  #  But the latter cannot be tainted by mistakes in your naive generator.
+  # sample: the "sample"
+  #  this is is the sample
+  # ...: extra arguments to plot()
+  
+  # display the histogram
+  hist(sample, probability=TRUE, breaks=40, xlab="", ...)
+  
+  # overlay the pdf
+  if(is.function(ground)) {
+    lines(sample, ground(sample), col="blue", lty="twodash")
+  } else {
+    # if caller has not given us a pdf directly, then
+    # assume ground is a vector for us to kernel-density estimate
+    stopifnot(is.vector(ground) && is.numeric(ground)) #typecheck
+    
+    lines(density(ground), col="blue", lty="twodash")
+  }
+  
+  # omitted code, which could be used instead of the special casing in lines() above
+  ## replace ground with a (callable!) pdf function 
+  ## via kernel density estimation
+  # if(!is.function(ground)) {
+  # p = density(ground)
+  # ground = function(x) {
+  #   approx(p$x, p$y, x, rule=2)$y # rule=2 means 'support extrapolation'
+  # }
+  #}
+}
+
+plot.densities <- function(ground, sample, title=NULL, layout=c(2,2), ...) { #XXX name
+  # compare the marginals of the given sample to their expected p.d.f. curves
+  #
+  # this is basically just a loop over plot.density(),
+  #  but it usefully accounts for labelling the plots uniformly
+  #
+  # args:
+  #   ground: either, a MultiS, the same dimensionality as sample, in which case
+  #         ground is assumed to be samples from the true distribution, and creates kernel density estimates
+  #       -or-
+  #       (( some kind of weird matrix-list containing p.d.f.s )) 
+  #   sample: a MultiS or a vector
+  #   layout: how to pack the plots (row by column)
+  #   title: optional title to label thigns with
+  #       
+  
+  # TODO: typechecks
+  par(mfrow=layout)
+  marginals_do(sample, function(idx, sample) {
+    ground = ..getitem..(ground, idx)
+    if(class(ground) == "list") { #special case: you can pass a 'matrix' of density functions, by passing a list
+      stopifnot(length(ground) == 1)
+      ground = ground[[1]]
+      stopifnot(class(ground) == "function")
+    }
+    plot.density(ground, sample, main=marginal.title(title, idx), ...)
+  })   
+}
+
 
 ##########################################
 ## Moments
