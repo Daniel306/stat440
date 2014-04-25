@@ -164,7 +164,8 @@ IW.marginal <- function(i, j, Psi, df) {
 # a day with the apply manpage might change my mind.
 
 cummean.marginals = function(M) {
-  # precondition: 
+  # precondition: M's dim is (a,b,c,d,...,n); marginals are taken of that last dimension, n
+  # postcondition: a matrix the same size as M, with each of those marginal vectors replaced by its cumulative mean
   original.dims = dim(M)
   n_dim = length(original.dims)
   M = apply(M, -n_dim, cummean)
@@ -174,11 +175,45 @@ cummean.marginals = function(M) {
 
 cumvar.marginals = function(M) {
   # precondition: 
+  # precondition: M's dim is (a,b,c,d,...,n); marginals are taken of that last dimension, n
+  # postcondition: a matrix the same size as M, with each of those marginal vectors replaced by its cumulative variance
   original.dims = dim(M)
   n_dim = length(original.dims)
   M = apply(M, -n_dim, cumvar)
   dim(M) = original.dims #unflatten what apply() flattened
   return(M)
+}
+
+marginals_do <- function(M, f) {
+  
+  # precondition: M's dim is (a,b,c,d,...,n); marginals are taken of that last dimension, n    
+  # precondition: f is f(idx, v) where idx will be a vector containing the length(dim)-1 indexes and v is the marginal vector
+  # postcondition: nothing; you need to do every with side-effects in f
+  # loop over all interesting_dimensions and plot each marginal
+  # recursive something someting  
+  R<-function(idx, dims) { #TODO: pull out into util.R
+    if(length(dims)==0) {
+      # base case
+      # we've bottomed out and have an actual index in hand
+      # so use it
+      #message("bottomed out at idx=")
+      #print(idx) #DEBUG
+      
+      v = do.call(`[`, c(M, as.list(idx))) # this line courtesy of mrflick in #R
+      v = as.vector(v) # just in case (i think if idx == c(), which should correspond to M[], we will *not* get a vector out: R will preserve the dimensions (but only in that case (which shouldn't be possible, if the recursion is correct))
+      f(idx,  v)
+    } else {
+      # recursive case
+      # split the top dimensions from the body
+      # note how we extract the *number* of elements in the dimension d from the index of the dimension itself dims[1]
+      d = dim(samples)[dims[1]]; dims = dims[-1];
+      for(i in 1:d) {
+        R(append(idx, i), dims)
+      }
+    }
+  }
+  R(c(), interesting_dimensions) #kick off the recursive loop  
+  return(NULL)
 }
 
 plot.converging.moment <- function(ground, samples, ...) {
@@ -225,10 +260,9 @@ plot.converging.moment.multi <- function(ground, samples, title=NULL, sub=NULL) 
   #dim(ground) = dim(samples)[interesting_dimensions] #for some reason, using mean() means the result ground loses all its dimensions and becomes a vector. go figure.
   #samples = apply(samples, -n_dimension, cummean) # PAY ATTENTION: this line changes samples from (d,d,n) to (n,d,d)
     
-  # deal with the special case of ground being a single value
+  # deal with the special case of ground being a single value (use case: an analytic reference value)
   # by giving it an extra dimension of length 1
-  # (and the beginnings of typechecks while we're at it) 
-  # ...TODO: should this part be killed? It's replicating work that happens in functions that call it.
+  
   if( length(dim(ground)) == length(dim(samples)) ) {
     # acceptable
   } else if(length(dim(ground)) == length(dim(samples)) - 1) { #TODO: also check the dimensions that match actually do match
@@ -238,41 +272,24 @@ plot.converging.moment.multi <- function(ground, samples, title=NULL, sub=NULL) 
     # unacceptable!!
     stop("Inconsistent dimenesions between ground and sample")
   }
-  
-  # loop over all interesting_dimensions and plot each marginal
-  # recursive something someting  
-  R<-function(idx, dims) { #TODO: pull out into util.R
-    if(length(dims)==0) {
-      # base case
-      # we've bottomed out and have an actual index in hand
-      # so use it
-      #message("bottomed out at idx=")
-      #print(idx) #DEBUG
-      
-      # FIXME: I don't understand how to handle variable arity functions in R
-      #  (I would really like to say "samples[*idx]" like I can in python)
-      # so I've hardcoded the cases we're actually using
-      # this needs to be repaired!
-      if(length(idx) == 0) {
-        plot.converging.moment(ground[], samples[],  main=paste(title, sep=""), sub=sub);
-      } else if(length(idx) == 1) {
-        i = idx[1];
-        plot.converging.moment(ground[i,], samples[i,],  main=paste(title,"[",i,"]", sep=""), sub=sub);
-      } else if(length(idx) == 2) {
-        i = idx[1]; j = idx[2];
-        plot.converging.moment(ground[i,j,], samples[i,j,],  main=paste(title, "[",i,",",j,"]", sep=""), sub=sub);
-      }
-    } else {
-      # recursive case
-      # split the top dimensions from the body
-      # note how we extract the *number* of elements in the dimension d from the index of the dimension itself dims[1]
-      d = dim(samples)[dims[1]]; dims = dims[-1];
-      for(i in 1:d) {
-        R(append(idx, i), dims)
-      }
+
+  marginals_do(samples, function(idx, v) {    
+    main_title = paste(idx, collapse=",") #could also do this with a complicated do.call, but paste() covers this case helpfully for us with 'collapse'
+    if(length(idx) > 0) { #special case: no indices means all the indecies #XXX untested
+      main_title = paste("[", main_title, "]") #but otherwise wrap the indecies in square brackets
     }
-  }
-  R(c(), interesting_dimensions) #kick off the recursive loop
+     if(!is.null(title)) {
+      main_title = paste(title, main_title, sep="") #prefix the index with an overarching title, if given
+    }
+    
+    # awkward: marginals_do is looping down samples, but we really are *simultaneously* looping over ground
+    #  maybe some sort of zip()-like construct would help
+    # for now, copying the magic line from marginals_do and just reaching up one scope works:
+    ground_marginal = do.call(`[`, c(ground, as.list(idx)))
+    plot.converging.moment(ground_marginal, v, main=main_title, sub=sub);
+     # ^ TODO: factor this
+    })
+      
 }
 # sketchy test:
 #test.plot.converging.moment.multi <- function() {
