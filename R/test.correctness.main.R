@@ -38,22 +38,54 @@ main <- function() { # avoid polluting the namespace
             toc = proc.time()
             runtime = (toc - tic)["elapsed"] #XXX this is an indulgence; runtimes should be done systematically with test.speed.main.R
             message("Runtime for ", alg,"(",n,",...): ", runtime,"s")
-            
+
+            ## (marginal) DISTRIBUTIONS
             # make density plots
             plot.NIW.densities(ground, samples, alg)
+            # plot.densities(ground, samples, sub=alg) ...
+            # plot.densities(analytic(),samples, sub=alg)
             
+            ## MOMENTS
             # make first moment convergence plots
             #plot.NIW.moment.first.computational(ground, samples)
             plot.NIW.moment.mean.analytic(kMu, kKappa, kPsi, kDF, samples)
+
+            # first moments (matrix and non-matrix)
+            # 1) computationally
+            plot.convergence(ground$X, sample$X, mean, "NIW X")
+            plot.convergence(ground$V, sample$V, mean, "NIW V")
+            # 2) analytically
+            plot.convergence(NIW.X.mean(kMu, kKappa, kPsi, kDF), sample$X, mean, "NIW X", sub="(analytically)")
+            plot.convergence(NIW.V.mean(kMu, kKappa, kPsi, kDF), sample$V, mean, "NIW V", sub="(analytically)")
+            
+            
+            # first variances
+            # 1) computationally
+            plot.convergence(ground$X, sample$X, var, "NIW X")
+            plot.convergence(ground$V, sample$V, var, "NIW V")
+            # 2) analytically
+            plot.convergence(NIW.X.var(kMu, kKappa, kPsi, kDF), sample$X, var, "NIW X", sub="(analytically)")
+            plot.convergence(NIW.V.var(kMu, kKappa, kPsi, kDF), sample$V, var, "NIW V", sub="(analytically)")
+            
+            # second matrix moments: the means of the outer products
+            # 1) computationally
+            plot.convergence(fancy_matrix_square(ground$X), square(sample$X), mean)
+            plot.convergence(fancysquare(ground$V), square(sample$V), mean)
+            # 2) we do not do this analytically
+            
+            # variances of the second matrix moments are unknown and uninteresting
+            #  --the 2nd moments themselves are already close to a variance.
+            # None of this handles element-element covariance, which is a whole other headtrip.
                         
             # make second moment convergence plots
             #plot.NIW.moment.second.computational(ground, samples)
             #plot.NIW.moment.variance.analytic(kMu, kKappa, kPsi, kDF, samples)
-            
-            # test for equidistribution numerically 
-            NIW.ks.test(ground, samples, alg)
-            
-            
+
+            ## KS TESTS
+            # this tests for equidistribution numerically
+            message("KS test results for ", alg)
+            NIW.ks.test(ground, samples)
+                        
         })
         
         message()

@@ -214,6 +214,7 @@ D+k
 
 Open Questions and Future Work
 ================
+- [ ] some of the convergence plots look like they disagree with their ground truth. curious. the ks tests don't complain, though.
 - [ ] dmNIW (Matrix Normal inverse Wishart density) 
 - [ ] investigate diagonalization: can we efficiently take U = HDH^T (with HH^T=I) somehow? If crossprod(U) = H D^2 H^T; does this speed things up?
 - how do we test dNIW? `marginalize()` is too slow to be used on more than 3 variates, which outruns the dimensionality of the smallest interesting NIW distribution
