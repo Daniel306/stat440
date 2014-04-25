@@ -290,8 +290,8 @@ plot.convergence <- function(ground, samples, statistic, accumulator, title=NULL
     
     if(!is.null(ground)) { # special case: ground can be NULL!
       ground = ..getitem..(ground, idx)
-      if(length(ground) > 1) { #special case: DON'T stat the ground truth if there's only one of it:
-                                   #instead, assume it is the desired value of that statistic
+      if(length(ground) > 1) {   #special case: DON'T stat the ground truth if there's only one of it:
+                                 #instead, assume it is the desired value of that statistic
         ground = statistic(ground)
       }
       stopifnot(length(ground) == 1) # at this point, ground MUST be scalar

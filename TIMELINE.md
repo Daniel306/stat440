@@ -165,12 +165,12 @@ D-1 (Thursday)
 
 - [ ] Dig up analytic formula for the particular marginals of NIW and (note: there's 2^(# parameters) different marginals; pick wisely which to look at)
     - [x] marginal of the inv.wish is inv.gamma
-    - [ ] implement as functions
+    - [+] implement as functions
         - [x] diagonals of iwish
         - [-] off-diagonals of iwish (Lysy: " I don't think that anyone knows the analytic marginal distribution of the off-diagonal elements.")
         - [ ] entries of X from the single NIW (this should be 't' ish??)
         - [ ] entries of Matrix-Normal thingy ((can be derived from the single NIW one))
-    - [ ] partial-apply such functions and use them as 'ground' for the marginal plots
+    - [x] partial-apply such functions and use them as 'ground' for the marginal plots
 
 
 [daniel] [nick]
@@ -188,6 +188,15 @@ D (Friday, April the 25th, 2014)
     - [ ] factor the common matrix terms to before/after the loop (call this `snappy4`)
     - [ ] diagonalization?? (`snappy5`)
 
+- Demonstrate that the algorithm works
+  - [ ] prove that the Matrix Normal part is correct (hmmm.... tricksy hobbitsses... we should probably do this just by )
+  - [x] show that the marginal moments check out
+      - [x] means
+      - [x] variances
+      - [x] means of the squares
+  - [ ] show that the distributions (that we know about) check out
+      - [ ] Xs are t
+      - [ ] Vii are invgamma
 
 [daniel] [nick]
 
@@ -211,9 +220,16 @@ D+k
 - [ ] test for and quantify numerical instability
 - [ ] runtimes
     - [ ] measure over d (requires randomization to be in place) 
+- [ ] matrix transpose
 
 Open Questions and Future Work
 ================
+
+- [ ] since the speedup of the actual algorithm is minimal (<-- not necessarily true since our tests only vary n) (10pts to nick), would it be more effective to, say,
+   have a multivariate algorithm which takes
+    ((it seems like this almost exists here and there; for example, you can use mvrnorm to generate a Matrix-Normal(Mu, I, V)
+        if you could write the output Xs for NIW as a MN somehow ?))
+         --- doing MNIW on top of such a beast would be tricky; would it be giving a 3d matrix of X?
 - [ ] some of the convergence plots look like they disagree with their ground truth. curious. the ks tests don't complain, though.
 - [ ] dmNIW (Matrix Normal inverse Wishart density) 
 - [ ] investigate diagonalization: can we efficiently take U = HDH^T (with HH^T=I) somehow? If crossprod(U) = H D^2 H^T; does this speed things up?
