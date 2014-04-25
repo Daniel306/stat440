@@ -163,10 +163,37 @@ Let $X_{n\times p} = [x_{ij}]$ and $Y_{n\times q} = [y_{ij}]$ be matrices of p p
 
 \[Y = X\beta + E, (\epsilon_{i1},\hdots,\epsilon_{i q})\sim N_q(0,V)\]
 
-where $\beta_{p\times q} = [\beta_{ij}] $ and $V_{q\times q}$\\
+where $\beta_{p\times q} = [\beta_{ij}] $ and $V_{q\times q}$. The conjugate prior for the model is:
 
-Since 
+\begin{align*}
+	V &\sim  Inv-W_q(\Psi,\nu)\\
+	\beta|V &\sim N_{pq}\{\Lambda, V  \otimes \Omega^{-1}\}
+\end{align*}
 
+The parameters of the prior are $\Psi_{q\times q}, \nu_{1\times 1}, \Lambda_{p\times q}, \Omega_{p\times p}$\\
+
+The resulting posterior distribution is.
+
+
+\begin{align*}
+	V|Y,X &\sim  Inv\text{-}W_q(\Psi+S+C,\nu+n)\\
+	\beta|V,Y,X &\sim N_{pq}\{A\Lambda + (I-A)\hat{\beta}, V  \otimes (X'X +\Omega)^{-1}\}
+\end{align*}
+where 
+\begin{align*}
+\hat{\beta} &= (X'X)^{-1}X'Y\\
+S &= (Y-X\hat{\beta})(Y-X\hat{\beta})\\ 
+A &= (X'X + \Omega)^{-1}\Omega\\
+C &= \hat{\beta}'(X'X)\hat{\beta} + \Lambda'\Omega\Lambda - (X'X\hat{\beta} + \Omega\Lambda)'(X'X+\Omega)^{-1}(X'X\hat{\beta} + \Omega\Lambda)
+\end{align*}
+
+The following code generate B and V given $X, Y, \Lambda, \Omega, \nu, \Psi$
+
+% Insert R code here? alternatively just say algorithm does it.
+
+\Subsubsection{specific example}
+
+Using data from 
 
 % 1.25 pages
 %\Subsection{Gibbs Sampler}

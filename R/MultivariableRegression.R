@@ -178,19 +178,22 @@ lm.multivariable <- function(m, X, Y, Lambda=NULL, Omega=NULL, Psi=NULL, df=71) 
     mNIW.Kappa <- X.sq + Omega;
     mNIW.df <- df + n - d;
     
-    A <- solve(Kappa, Omega);    
+    A <- solve(mNIW.Kappa, Omega);    
     I = diag(d) #identity matrix
     mNIW.Mu <- A %*% Lambda  +  (I-A) %*% beta.hat
     
     # could swap X'XB with XY, not sure if we should
     # this formula is long and grueling
     L = X.sq %*% beta.hat  + Omega %*% Lambda  #this term is used twice
-    C <- #t(beta.hat) %*% X.sq %*% beta.hat
-            mahalanobis(beta.hat, 0, X.sq, inverted=TRUE)
-             #+ t(Lambda) %*% Omega %*% Lambda
-             + mahalanobis(Lambda, 0, Omega, inverted=TRUE) 
-             #- t(L) %*% solve(mNIW.Kappa) %*% (L);
-             - mahalanobis(L, 0, mNIW.Kappa);  #<-- more compact
+    
+    # in all lines below, mahalanobis gives this error 
+    # Error in x %*% cov : non-conformable arguments
+    C <- t(beta.hat) %*% X.sq %*% beta.hat
+           # mahalanobis(beta.hat, 0, X.sq, inverted=TRUE)
+             + t(Lambda) %*% Omega %*% Lambda
+             #+ mahalanobis(Lambda, 0, Omega, inverted=TRUE) 
+             - t(L) %*% solve(mNIW.Kappa) %*% (L);
+             #- mahalanobis(L, 0, mNIW.Kappa);  #<-- more compact
              
     mNIW.Psi <- Psi + S + C;
   }
@@ -210,4 +213,6 @@ test.rMNIW <- function() { #TODO: move this somewhere more appropriate
   print(rMNIW.Rcpp(n, matrix(1:6,2,3), diag(2), diag(3), 10))
   message("---------------------------------")
 }
+
 #test.rMNIW()
+
