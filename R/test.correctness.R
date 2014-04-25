@@ -152,7 +152,7 @@ IW.marginal.density <- function(i, j, Psi, df) {
 dt.density <- function(df, mu, sd) {
   # produce particular t-distribution density function
   # this is a simple partial evaluation wrapper around dt() from base
-  #(I am worried the closure won't work right unless this is a whole separate function)
+  #(I am worried the closure won't work right unless this is a whole separate function
   function(x) {
     dt((x - mu)/sd, df)
   }
@@ -178,7 +178,7 @@ NIW.densities <- function(Mu, kappa, Psi, df, n) {
 
   for(i in 1:d) {
     df.t = df+n-d+1
-    X[[i, 1]] = dt.density(dt.t, Mu[i], Psi[i,i]/(kappa+n)/(df.t))
+    X[[i, 1]] = dt.density(df.t, Mu[i], Psi[i,i]/(kappa+n)/(df.t))
   }
   
   list(X = X, V = V)

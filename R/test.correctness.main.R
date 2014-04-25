@@ -53,10 +53,9 @@ main <- function() { # avoid polluting the namespace
             # ^ does this step return like.. a.. tuple of matrices of functions?
             # does R even support such a beast?
             # ..I might have to move the marginals_do to this function
-            #analytic = NIW.densities(kMu, kKappa, kPsi, kDF)
-            #plot.densities(analytic$X, samples$X) #TODO: work out just how this is...
-            #plot.densities(analytic$V, samples$V) #I only know the diagonal not know what this is, so skip it
-            
+            analytic = NIW.densities(kMu, kKappa, kPsi, kDF, n)
+            plot.densities(analytic$X, samples$X, "NIW X", sub=paste(alg, "(analytically")) #TODO: work out just how this is...
+            plot.densities(analytic$V, samples$V, "NIW V", sub=paste(alg, "(analytically")) #I only know the diagonal not know what this is, so skip it
             
             ## MOMENTS
             # make first moment convergence plots
