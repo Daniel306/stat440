@@ -53,14 +53,20 @@ main <- function() { #avoid polluting the namespace
 
 main()
 
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 #age   E   C   N   O   A
+=======
+>>>>>>> 58458f39b9940897196939964eba71f7149c50dd
 #example from one run
 #algorithm     ratio        sd
 #1     Rcpp2 8.7011074 2.5359325
 #2   snappy2 0.7468129 0.1213526
 #3     naive 1.0000000 0.1674202
+<<<<<<< HEAD
 =======
 
 >>>>>>> ccba96ba072fc6fb88cd80b6b47f0d2dc4b9f514
+=======
+>>>>>>> 58458f39b9940897196939964eba71f7149c50dd

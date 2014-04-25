@@ -150,3 +150,52 @@ fancy_matrix_square <- function(M) { #pull out into util.math.R?
   return(R)
 }
 
+
+
+cummean <- function(v) {
+  # compute the "cumulative mean" of a vector
+  #
+  # considering each entry as a new sample point,
+  #  give the sample mean up to that point
+  # 
+  # args:
+  #  v: a numeric vector
+  #
+  # returns:
+  #   a vector the same length as v
+  
+  cumsum(v) / (1:length(v))
+}
+
+cumvar <- function(v) {
+  # compute the "cumulative variance" of a vector
+  #
+  # considering each entry as a new sample point,
+  #  give the sample variance up to that point
+  # 
+  # args:
+  #  v: a numeric vector to compute variances over
+  #
+  # returns:
+  #   a vector one less than the length of v; we drop the first value which is always NA.
+
+  n = length(v)
+  r = (cumsum(v^2) - cumsum(v)^2/1:n)/(1:n - 1) #TODO: document this derivation
+  r = r[-1] # the first entry is always NA because the variance of a single point is undefined.
+            # drop this point, because it is the worst
+  
+  return(r[-1])
+}
+
+test.cumvar <- function() { #TODO: broken after API change
+  x = rnorm(66);
+  v_known = sapply(1:length(x), function(i) { var(x[1:i]) })
+  v_test = cumvar(x)
+
+  # the first value is always NA, which fails the numerical test
+  # we special case it
+  stopifnot(is.na(v_test[1]))
+  n = length(x)
+  stopifnot(max(v_known[2:n] - v_test[2:n]) < 1e-13)
+}
+#test.cumvar()
