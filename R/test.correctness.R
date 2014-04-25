@@ -216,10 +216,8 @@ plot.convergence <- function(ground, samples, statistic, accumulator, title=NULL
   #  you might not have enough samples or your choice of accumulator might not pick a duck out of a hat (an i.i.d. set of ducks, of course) and measure its beak length with some random error.
   #  using accumulator=mean or accumulator=var will definitely
   # IT IS UP TO YOU TO MAKE SURE statistic AND accumulator ARE COMPUTING THE SAME STATISTIC.
-  
+  #
   # ... : args to plot()
-  
-  
 
 
   # extract the name of the cumulation function for labelling
@@ -236,6 +234,9 @@ plot.convergence <- function(ground, samples, statistic, accumulator, title=NULL
   # TODO: factor this (how??) -- this step is like an inverse of drop(), except that drop() can't have a proper inverse
   if( length(dim(ground)) == length(dim(samples)) ) {
     # acceptable
+  } else if(is.null(dim(ground))) {
+    # we have a vector; also fixable
+    dim(ground) = c(length(ground), 1)
   } else if(length(dim(ground)) == length(dim(samples)) - 1) { #TODO: also check the dimensions that match actually do match
     # fixable
     dim(ground) = c(dim(ground), 1)

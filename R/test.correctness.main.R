@@ -68,8 +68,8 @@ main <- function() { # avoid polluting the namespace
             # 2) analytically
             #message("m1analytic") #DEBUG
             analytic = NIW.mean(kMu, kKappa, kPsi, kDF)
-            plot.convergence(analytic$X, samples$X, mean, "NIW X", sub="(analytically)")
-            plot.convergence(analytic$V, samples$V, mean, "NIW V", sub="(analytically)")
+            plot.mean.convergence(analytic$X, samples$X, mean, "NIW X", sub="(analytically)")
+            plot.mean.convergence(analytic$V, samples$V, mean, "NIW V", sub="(analytically)")
                         
             # first variances
             # 1) computationally
