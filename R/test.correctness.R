@@ -118,6 +118,11 @@ plot.NIW.densities <- function(ground, sample, alg=NULL) { #XXX name
 
 
 
+############
+## Analytic densities
+# we do not know analytic forms for many of the densities
+# but we do know these two:
+
 IW.marginal <- function(i, j, Psi, df) {
   # Inverse Wishart marginals
   #
@@ -145,6 +150,7 @@ IW.marginal <- function(i, j, Psi, df) {
   }
 }
 
+# TODO: NIW.X.marginal()
 
 ##########################################
 ## Moments
@@ -254,6 +260,8 @@ plot.converging.moment.multi <- function(ground, samples, title=NULL, sub=NULL) 
 #}
 #test.plot.converging.moment.multi()
 
+#######
+## Computational matrix-moments
 
 moment.first <- identity
 
@@ -308,6 +316,9 @@ plot.moment.second <- function(ground, samples, title=NULL) {
 # Note well: the marginals of the first moment are the same as the first moments of the marginals
 # BUT, this is not true in general
 
+######################
+## Computational (that is, kernel-density-estimated) Normal|Inverse-Wishart marginal moments 
+
 plot.NIW.moment.first.computational <- function(ground, sample) { 
   # given a 'ground' sample (eg. from the naive implementation), compare
   # the marginals of the first (matrix-)moments of the rNIW samples visually
@@ -323,17 +334,35 @@ plot.NIW.moment.second.computational <- function(ground, sample) {
   plot.moment.second(ground$V, sample$V, "NIW V")
 }
 
-plot.NIW.moment.mean.analytic <- function(Mu, Kappa, Psi, df, sample) {
+###########
+#### Analytic Normal|Inverse-Wishart marginal moments 
+
+plot.NIW.moment.mean.analytic <- function(Mu, Kappa, Psi, df, samples) {
   # plot the second moments
   # this is not called ".first" because its cousin below plots variances, not second moments
   
   d = dim(Psi)[1]
   
-  # the means of all Xs is just Mu, because X | V ~ N(Mu, V)
-  plot.converging.moment.multi(Mu, moment.first(samples), title="NIW X", sub="(expected value from analytic formulas)")
+  # the Xs are t-distributed
+  # which means their variances are ...
+  # ..TODO
   
-  # the means of all Vs is Psi scaled by its degrees of freedom
-  plot.converging.moment.multi(Psi/(df-p-1), moment.first(samples), title="NIW V", sub="(expected value from analytic formulas)")
+  # the variances of the entries are
+  # Var(V_ij) = (df-d+1)Psi_ij^2 + (v-p-1)*Psi_ii*Psi_jj) / (df-d)(df-d-1)^2(df-d-3)
+  #
+  # TODO: vectorize this formula
+  # part of it vectorizes nicely, but the way to do the rest 
+  # is not jumping out at me.
+  # so a loop it is
+  V_var = (df- d + 1)*Psi^2
+  for(i in 1:d) {
+  for(j in 1:d) {
+    V_var[i,j] = V_var[i,j] + (df - p - 1) * Psi[i,i]*Psi[j,j]
+  }}  
+  V_var = V_var / (df-d) / (df-d-1)^2 / (df-d-3)
+  
+  # cite: https://en.wikipedia.org/wiki/Inverse-Wishart_distribution
+  plot.converging.variance.multi(v_var, samples$V, title="NIW variance of V", sub="(expected value from analytic formulas)")
 }
 
 # TODO: the formulas on wikipedia include the covariances of each element of V; we aren't computing covariances here, but maybe we should.
