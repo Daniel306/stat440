@@ -2,7 +2,7 @@
 \alias{rMNIW}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-%%  ~~function to do ... ~~
+GENERATE SAMPLES FROM MATRIX INVERSE-NORMAL WISHART
 }
 \description{
 Package has functions relating to the Normal-Inverse Wishart distribution.
@@ -54,7 +54,7 @@ df need not be integer, but it must be larger than d-1.
 %% ...
 }
 \references{
-%% ~put references to the literature/web site here ~
+http://en.wikipedia.org/wiki/Normal-inverse-Wishart_distribution
 }
 \author{
 Daniel Galperin and Nick Guenther
