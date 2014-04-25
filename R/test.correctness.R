@@ -144,7 +144,7 @@ IW.marginal <- function(i, j, Psi, df) {
 
 
 
-plot.convergence <- function(ground, samples, accumulator, title=NULL, ...) {
+plot.convergence <- function(ground, samples, accumulator, title=NULL, ylab=NULL, ...) {
   #
   # note: plot.convergence does not actually guarantee you will see convergence; 
   #  you might not have enough samples or your choice of accumulator might not pick a duck out of a hat (an i.i.d. set of ducks, of course) and measure its beak length with some random error.
@@ -173,21 +173,30 @@ plot.convergence <- function(ground, samples, accumulator, title=NULL, ...) {
 
   # extract the name of the cumulation function for labelling
   accumulator.name = deparse(substitute(accumulator))
-  
-  if(missing(ylab)) {
-    ylab = paste("sample", accumulator.name) #use  unless the user overrides
+
+  if(is.null(ylab)) {
+     ylab = paste("sample", accumulator.name) #use  unless the user overrides
   }
   
   # Plot the means converging properlike
   kept_dimensions = (1:marginalized_dimension)[-marginalized_dimension] #precompute the list opposite of marginalized_dimension
                                              #doing it this way ensures this works even if ground is missing the last dimension
+                             message("fucking indents")
   samples = cumulate(samples, kept_dimensions, accumulator)
-  ground = apply(ground, kept_dimensions, accumulator) # flattens
-  dim(ground) = kept_dimensions
-  stopifnot(dim(ground) == dim(samples)[1:2])
+  ground = apply(ground, kept_dimensions, accumulator) # apply() flattens
+  dim(ground) = dim(ground)[kept_dimensions]           # unflatten
+  message("SAMPLES")
+  print(samples)
+  message("GROUND")
+  print(ground)
+  print(class(ground))
+  print(dim(ground))
   
+  stopifnot(dim(ground) == dim(samples)[1:2])
+  message("looping motherfuckiners")
   marginals_do(samples, function(idx, samples) {
-    plot(samples, xlab="samples taken (n)", ylab="sample mean", main=marginal.title(title, idx))
+    print(idx)
+    plot(samples, xlab="samples taken (n)", ylab=ylab, main=marginal.title(title, idx))
     abline(h=..getitem..(ground, idx), lty="dashed", col="blue")
     legend(paste(paste("True", accumulator.name), round(ground, 2)), lty="solid", col="blue")
   })
