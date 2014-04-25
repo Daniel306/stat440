@@ -361,8 +361,9 @@ marginals_do <- function(M, f) { #TODO: pull out into util
 
       idx = c(idx,NA) #this has to be extended by one NA in order to extract the vector we care about; see ..getitem..
       v = ..getitem..(M, idx)
-      message("WE EXTRACTED THIS")
-      print(v)
+      #message("WE EXTRACTED THIS") #DEBUG
+      #print(v)
+      
       v = as.vector(v) # just in case (i think if idx == c(), which should correspond to M[], we will *not* get a vector out: R will preserve the dimensions (but only in that case (which shouldn't be possible, if the recursion is correct))
       f(idx,  v)
       
@@ -396,7 +397,7 @@ idx2str <- function(idx) {
   if(idx == "") { #special case: no indices means all the indecies #XXX untested
     return(idx)
   } else {
-    return(paste("[", idx, "]")) #but otherwise wrap the indecies in square brackets
+    return(paste("[", idx, "]", sep="")) #but otherwise wrap the indecies in square brackets
   }
 }
 

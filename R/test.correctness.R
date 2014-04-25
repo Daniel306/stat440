@@ -47,7 +47,7 @@ plot.density <- function(ground, sample, ...) { #XXX NAME
   #}
 }
 
-plot.densities <- function(ground, sample, title=NULL, ...) { #XXX name
+plot.densities <- function(ground, sample, title=NULL, layout=c(2,2), ...) { #XXX name
   # compare the marginals of the given sample to their expected p.d.f. curves
   #
   # this is basically just a loop over plot.density(),
@@ -59,13 +59,17 @@ plot.densities <- function(ground, sample, title=NULL, ...) { #XXX name
   #       -or-
   #       (( some kind of weird matrix-list containing p.d.f.s )) 
   #   sample: a MultiS or a vector
+  #   layout: how to pack the plots (row by column)
+  #   title: optional title to label thigns with
   #       
   
   # TODO: typechecks
-  
+  par(mfrow=layout)
   marginals_do(sample, function(idx, sample) {
     # case 1: ground is a matrix of samples
-    plot.density(..getitem..(ground, idx), sample, main=paste(title, idx2str(idx)), ...)
+    idx.str = idx2str(idx[-length(idx)]) #for the purposes of labelling, we REMOVE the last (NA) index, because that is just what we marginalize over -- we're pretending (to the user) that it's not there.
+    title = paste(title, idx.str, sep="")
+    plot.density(..getitem..(ground, idx), sample, main=title, ...)
     # case 2:
     # TODO: ground is a matrix of pdfs
   })   

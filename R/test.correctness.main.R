@@ -58,22 +58,27 @@ main <- function() { # avoid polluting the namespace
             
             # first moments (matrix and non-matrix)
             # 1) computationally
+            message("m1comp") #DEBUG
             plot.convergence(ground$X, sample$X, mean, "NIW X")
             plot.convergence(ground$V, sample$V, mean, "NIW V")
             # 2) analytically
+                        message("m1analytic") #DEBUG
             #plot.convergence(NIW.X.mean(kMu, kKappa, kPsi, kDF), sample$X, mean, "NIW X", sub="(analytically)")
             #plot.convergence(NIW.V.mean(kMu, kKappa, kPsi, kDF), sample$V, mean, "NIW V", sub="(analytically)")
                         
             # first variances
             # 1) computationally
+            message("v1comp") #DEBUG
             plot.convergence(ground$X, sample$X, var, "NIW X")
             plot.convergence(ground$V, sample$V, var, "NIW V")
             # 2) analytically
+            message("v1analytic") #DEBUG
             #plot.convergence(NIW.X.var(kMu, kKappa, kPsi, kDF), sample$X, var, "NIW X", sub="(analytically)")
             #plot.convergence(NIW.V.var(kMu, kKappa, kPsi, kDF), sample$V, var, "NIW V", sub="(analytically)")
             
             # second matrix moments: the means of the outer products
             # 1) computationally
+            message("mm1comp") #DEBUG
             plot.convergence(fancy_matrix_square(ground$X), fancy_matrix_square(sample$X), mean)
             plot.convergence(fancy_matrix_square(ground$V), fancy_matrix_square(sample$V), mean)
             # 2) we do not do this analytically
