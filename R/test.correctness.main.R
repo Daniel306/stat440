@@ -14,7 +14,7 @@ main <- function() { # avoid polluting the namespace
     # number of samples to trial
     # note that ground uses a different number, because rNIW.naive is slow
     n = 32343
-    #n = 3 #DEBUG
+    n = 33 #DEBUG
 
     m = 15500
     #m = 15 #DEBUG
@@ -63,8 +63,8 @@ main <- function() { # avoid polluting the namespace
             # first moments (matrix and non-matrix)
             # 1) computationally
             message("m1comp") #DEBUG
-            plot.convergence(ground$X, samples$X, mean, "NIW X")
-            plot.convergence(ground$V, samples$V, mean, "NIW V")
+            plot.convergence(ground$X, samples$X, cummean, ylab="sample mean", "NIW X", PRECUMULATED=T)
+            plot.convergence(ground$V, samples$V, cummean, ylab="sample mean", "NIW V", PRECUMULATED=T)
             # 2) analytically
             message("m1analytic") #DEBUG
             #plot.convergence(NIW.X.mean(kMu, kKappa, kPsi, kDF), samples$X, mean, "NIW X", sub="(analytically)")
@@ -73,8 +73,8 @@ main <- function() { # avoid polluting the namespace
             # first variances
             # 1) computationally
             message("v1comp") #DEBUG
-            plot.convergence(ground$X, samples$X, var, "NIW X")
-            plot.convergence(ground$V, samples$V, var, "NIW V")
+            plot.convergence(ground$X, samples$X, cumvar, "NIW X", PRECUMULATED=T)
+            plot.convergence(ground$V, samples$V, cumvar, "NIW V", PRECUMULATED=T)
             # 2) analytically
             message("v1analytic") #DEBUG
             #plot.convergence(NIW.X.var(kMu, kKappa, kPsi, kDF), samples$X, var, "NIW X", sub="(analytically)")
@@ -83,19 +83,15 @@ main <- function() { # avoid polluting the namespace
             # second matrix moments: the means of the outer products
             # 1) computationally
             message("mm1comp") #DEBUG
-            plot.convergence(fancy_matrix_square(ground$X), fancy_matrix_square(samples$X), mean)
-            plot.convergence(fancy_matrix_square(ground$V), fancy_matrix_square(samples$V), mean)
+            plot.convergence(fancy_matrix_square(ground$X), fancy_matrix_square(samples$X), cummean, "XX^T", PRECUMULATED=T)
+            plot.convergence(fancy_matrix_square(ground$V), fancy_matrix_square(samples$V), cummean, "VV^T", PRECUMULATED=T)
             # 2) we do not do this analytically
             # that's all she wrote, folks!
             
             # variances of the second matrix moments are unknown and uninteresting
             #  --the 2nd moments themselves are already close to a variance.
             # None of this handles element-element covariance, which is a whole other headtrip.
-                        
-            # make second moment convergence plots
-            #plot.NIW.moment.second.computational(ground, samples)
-            #plot.NIW.moment.variance.analytic(kMu, kKappa, kPsi, kDF, samples)
-
+            
             ## KS TESTS
             # this tests for equidistribution numerically
             message("KS test results for ", alg) #this is sort of awkward, that there's message()s in this call

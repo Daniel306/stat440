@@ -11,30 +11,25 @@ source("NIW.R")
 
 # utilties
 
-cumulate <- function(M, margin, f, PRECUMULATED=FALSE) {
-  # apply 'f' across 'margin'
+cumulate <- function(s) {
+  # wrap a statistic s(x) into a cumulative version
+  #
   # this generalizes "cumsum", but so much slower.
-  # f must take a vector and return a scalar
-  # unlike apply(), this function protects the dimensions of M
-  # this function is slow: it necessarily has at least quadratic runtime
+  #
+  # this function is slow: it necessarily has at least quadratic runtime,
+  #  maybe more depending on how you write s.
+  #
+  # args:
+  #  s: must take a vector and return a scalar
+
   # use case: taking the cumulative variance in a (p,q,n) matrix (a matrix of n (p,q) design matrices, say)
-  #  : cumulate(M, -3, var)
-  # PRECUUMATED flags that f is already in cumulator form (eg so you can pass cumsum directly);
-  #   If you use this right, you can avoid the quadratic runtime this algorithm otherwise demands.
-  #  (but the output from f must strictly be vectorized or else things will crash, and must properly implement accumulation or else behaviour will be wrong)
+  #  : apply(M, -3, cumulate(var))
+  # if you can, use a more efficient specialized method
   
-  original.dims = dim(M)
-  if(PRECUMULATED) {
-    acc <- f
-  } else {
-    acc <- function(v) { 
-      sapply(1:length(v), function(i) { f(v[1:i]) })
+  function(v) { 
+      sapply(1:length(v), function(i) { s(v[1:i]) })
     }
   }
-            
-  M = apply(M, margin, acc)
-  dim(M) = original.dims #unflatten
-  return(M)
 }
 
 marginal.title <- function(title, idx) {
@@ -213,7 +208,7 @@ NIW.var <- function(Mu, Kappa, Psi, df, samples) {
 
 
 
-plot.convergence <- function(ground, samples, accumulator, title=NULL, ylab=NULL, ...) {
+plot.convergence <- function(ground, samples, accumulator, title=NULL, ylab=NULL, PRECUMULATED=F, ...) {
   #
   # note: plot.convergence does not actually guarantee you will see convergence; 
   #  you might not have enough samples or your choice of accumulator might not pick a duck out of a hat (an i.i.d. set of ducks, of course) and measure its beak length with some random error.
@@ -231,8 +226,7 @@ plot.convergence <- function(ground, samples, accumulator, title=NULL, ylab=NULL
   if(is.null(ylab)) {
      ylab = paste("sample", accumulator.name) #use  unless the user overrides
   }
-
-
+  
   # coerce ground to have the same shape as samples
   # ...
   # deal with the special case of ground being a single value (use case: an analytic reference value)
@@ -257,15 +251,20 @@ plot.convergence <- function(ground, samples, accumulator, title=NULL, ylab=NULL
 
   stopifnot(dim(ground)[kept_dimensions] == dim(samples)[kept_dimensions])
 
-  # cumulate..
-  message("Computing cumulated statistic..") #DEBUG  
-  samples = cumulate(samples, kept_dimensions, accumulator)
-  
   # squish the ground truth down to its cumulant (eg the mean/var/whatever taken over the WHOLE set)
   message("Computing statistic on ground truth") #DEBUG
   ground = apply(ground, kept_dimensions, accumulator) # apply() flattens
   dim(ground) = c(dim(samples)[kept_dimensions], 1)    # unflatten, and undrop() the last dimension
                                                        # such that ground matches the original size.
+                # BEWARE: ^ because over overwriting accumulator, this MUST happen first
+
+  # cumulate..
+  if(!PRECUMULATED) {
+     accumulator = cumulate(accumulator) 
+  }
+  message("Computing cumulated statistic..")      #DEBUG  
+  samples = apply(samples, kept_dimensions, accumulator)
+  
 
   message("Looping") #DEBUG
   marginals_do(samples, function(idx, samples) {
