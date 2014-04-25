@@ -8,7 +8,7 @@ X <- D[c("chas", "nox", "rm", "age", "dis", "rad", "ptratio", "medv")]
 
 # One example using flat priors and df of 73
 
-#Result <- lm.multivariable(100000,as.matrix(X),as.matrix(Y))
+Result <- lm.multivariable(100000,as.matrix(X),as.matrix(Y))
 
 # Now that we have that, we can generate 95% credibility interval
 #by generating lower and upper quantiles

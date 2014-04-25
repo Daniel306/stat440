@@ -206,7 +206,7 @@ D (Friday, April the 25th, 2014)
 
 [daniel]
 
-- [ ] Apply Multivariable Regression to sample real world dataset (the Boston housing data).
+- [x] Apply Multivariable Regression to sample real world dataset (the Boston housing data).
 
 
 [daniel] [nick]

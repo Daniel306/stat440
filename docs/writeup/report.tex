@@ -377,11 +377,14 @@ hist(Result$B[1,1,], breaks = 100, probability = TRUE)
 % .5 pages
 \Section{Conclusion}
 
-blah blah blah yay code we like R
+In this report, we have demonstrated the accuracy and speed of our implementation of the NIW sampler as well as provided examples on how it can be used. 
 
+We hope it will help those who wish to use a normal inverse-wishart prior for their Bayesian statistics complete their work both more quickly and more easily.
+
+% Not sure what else we can add to the conclusion
 
 ((APPENDIX??!?!?! WITH THE CODE AND STUFF YEAH))
-
+\Section{Appendix}
 \begin{lstlisting}[frame=single, language=R]
 lm.multivariable <- function(m, X, Y, Lambda=NULL, Omega=NULL, Psi=NULL, df=71) { # TODO: Not sure what to name this.
   # Multivariable Regression via Bayesian Reasoning
