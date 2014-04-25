@@ -105,10 +105,13 @@ plot.densities <- function(ground, sample, title=NULL, layout=c(2,2), ...) { #XX
   # TODO: typechecks
   par(mfrow=layout)
   marginals_do(sample, function(idx, sample) {
-    # case 1: ground is a matrix of samples
-    plot.density(..getitem..(ground, idx), sample, main=marginal.title(title, idx), ...)
-    # case 2:
-    # TODO: ground is a matrix of pdfs
+    ground = ..getitem..(ground, idx)
+    if(class(ground) == "list") { #special case: you can pass a 'matrix' of density functions, by passing a list
+      stopifnot(length(ground) == 1)
+      ground = ground[[1]]
+      stopifnot(class(ground) == "function")
+    }
+    plot.density(ground, sample, main=marginal.title(title, idx), ...)
   })   
 }
 
