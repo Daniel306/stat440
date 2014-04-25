@@ -17,7 +17,7 @@ main <- function() { # avoid polluting the namespace
     n = 33 #DEBUG
 
     m = 15500
-    #m = 15 #DEBUG
+    m = 15 #DEBUG
     
     message()
     message("------------------------------------")
@@ -77,14 +77,15 @@ main <- function() { # avoid polluting the namespace
             plot.var.convergence(ground$V, samples$V, "NIW V")
             # 2) analytically
             message("v1analytic") #DEBUG
-            #plot.convergence(NIW.X.var(kMu, kKappa, kPsi, kDF), samples$X, var, "NIW X", sub="(analytically)")
-            #plot.convergence(NIW.V.var(kMu, kKappa, kPsi, kDF), samples$V, var, "NIW V", sub="(analytically)")
+            #plot.var.convergence(NIW.X.var(kMu, kKappa, kPsi, kDF), samples$X, "NIW X", sub="(analytically)")
+            #plot.var.convergence(NIW.V.var(kMu, kKappa, kPsi, kDF), samples$V, "NIW V", sub="(analytically)")
+            #  ^ this specialcase is going to bite!
             
             # second matrix moments: the means of the outer products
             # 1) computationally
             message("mm1comp") #DEBUG
-            plot.mean.convergence(fancy_matrix_square(ground$X), fancy_matrix_square(samples$X), cummean, "XX^T", PRECUMULATED=T)
-            plot.var.convergence(fancy_matrix_square(ground$V), fancy_matrix_square(samples$V), cummean, "VV^T", PRECUMULATED=T)
+            plot.mean.convergence(fancy_matrix_square(ground$X), fancy_matrix_square(samples$X), "XX^T")
+            plot.var.convergence(fancy_matrix_square(ground$V), fancy_matrix_square(samples$V), "VV^T")
             # 2) we do not do this analytically
             # that's all she wrote, folks!
             

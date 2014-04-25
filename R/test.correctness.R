@@ -19,6 +19,8 @@ cumulate <- function(s) {
   # this function is slow: it necessarily has at least quadratic runtime,
   #  maybe more depending on how you write s.
   #
+  # Do you understand that this function is slow, yet?
+  #
   # args:
   #  s: must take a vector and return a scalar
 
@@ -249,24 +251,24 @@ plot.convergence <- function(ground, samples, statistic, accumulator, title=NULL
   kept_dimensions = (1:marginalized_dimension)[-marginalized_dimension] #precompute the list opposite of marginalized_dimension
                                              #doing it this way ensures this works even if ground is missing the last dimension
 
+  # Typecheck
   stopifnot(dim(ground)[kept_dimensions] == dim(samples)[kept_dimensions])
 
-  # squish the ground truth down to its cumulant (eg the mean/var/whatever taken over the WHOLE set)
-  message("Computing statistic on ground truth") #DEBUG
-  ground = apply(ground, kept_dimensions, statistic) # apply() flattens
-  dim(ground) = c(dim(samples)[kept_dimensions], 1)    # unflatten, and undrop() the last dimension
-                                                       # such that ground matches the original size.
-  
-  message("Computing cumulated statistic..")      #DEBUG  
-  samples = apply(samples, kept_dimensions, accumulator)
-
   message("Looping") #DEBUG
+  
   marginals_do(samples, function(idx, samples) {
-    print(idx) #DEBUG
-    plot(samples, xlab="samples taken (n)", ylab=ylab, main=marginal.title(title, idx))        
+    samples = accumulator(samples)
+    
+    if(any(is.na(samples))) { return } #variances have their first element being NA, which causes problems; this check avoids all such problems with a hammer against a tree trunk
+    
     ground = ..getitem..(ground, idx)
-    abline(h=ground, lty="dashed", col="blue")
-    legend("topleft", paste(paste("True", statistic.name), round(ground, 2)), lty="solid", col="blue")
+    ground = statistic(ground)
+
+    # plot the converging samples against a reference horizontal line
+    # and print the location of the horizontal line in the legend
+    plot(samples, xlab="samples taken (n)", ylab=ylab, main=marginal.title(title, idx))        
+    abline(h=ground, lty="solid", col="blue")
+    legend("topleft", paste("True", statistic.name, "=", round(ground, 2)), lty="solid", col="blue")
   })
 }
 
@@ -275,7 +277,7 @@ plot.mean.convergence <- function(ground, samples, title=NULL, ...) {
   plot.convergence(ground, samples, mean, cummean, title=paste("Sample mean of", title), ...);
 }
 
-plot.var.convergence <- function(ground, samples, TITLE=NULL, ...) {
+plot.var.convergence <- function(ground, samples, title=NULL, ...) {
   plot.convergence(ground, samples, var, cumvar, title=paste("Sample variance of", title), ...);
 }
 
