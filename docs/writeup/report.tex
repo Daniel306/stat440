@@ -40,7 +40,7 @@
 % .5 pages
 \Section{Introduction}
 % some of section below from wikipedia
-The NIW distribution is a multivariate four-parameter family of continous probability distributions.
+The Normal-Inverse Wishart distribution is a multivariate four-parameter family of continous probability distributions.
 %.....
 
 %its history
@@ -157,15 +157,23 @@ The NIW distribution is a extremely common conjugate prior. Here, we use our alg
 % 1.25 pages
 \Subsection{Multivariable Regression}
 
+One use of the NIW distribution is to get distributions and credible intervals for parameters and variance in multivariable regression.\\
 
+Let $X_{n\times p} = [x_{ij}]$ and $Y_{n\times q} = [y_{ij}]$ be matrices of p predictors and q respones for each of n observations, and let $E_{n\times q}$ be the matrix of errors. The regression model is
+
+\[Y = X\beta + E, (\epsilon_{i1},\hdots,\epsilon_{i q})\sim N_q(0,V)\]
+
+where $\beta_{p\times q} = [\beta_{ij}] $ and $V_{q\times q}$\\
+
+Since 
 
 
 % 1.25 pages
-\Subsection{Gibbs Sampler}
+%\Subsection{Gibbs Sampler}
 
-- we did this thing
-- here's our test case
-- and look, the code is reusable (and in C)
+%- we did this thing
+%- here's our test case
+%- and look, the code is reusable (and in C)
 
 % .5 pages
 \Section{Conclusion}
