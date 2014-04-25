@@ -14,10 +14,10 @@ main <- function() { # avoid polluting the namespace
     # number of samples to trial
     # note that ground uses a different number, because rNIW.naive is slow
     n = 32343
-    n = 33 #DEBUG
+    #n = 33 #DEBUG
 
     m = 15500
-    m = 15 #DEBUG
+    #m = 15 #DEBUG
     
     message()
     message("------------------------------------")
@@ -44,7 +44,7 @@ main <- function() { # avoid polluting the namespace
             message("Runtime for ", alg,"(",n,",...): ", runtime,"s")
 
             ## (marginal) DISTRIBUTIONS
-            # make density plots
+            message("Density plots")
             # 1) computationally
             plot.densities(ground$X, samples$X, "NIW X")
             plot.densities(ground$V, samples$V, "NIW V")
@@ -59,31 +59,31 @@ main <- function() { # avoid polluting the namespace
             
             ## MOMENTS
             # make first moment convergence plots
-            
+            message("Moments")
             # first moments (matrix and non-matrix)
             # 1) computationally
-            message("m1comp") #DEBUG
+            #message("m1comp") #DEBUG
             plot.mean.convergence(ground$X, samples$X, "NIW X")
             plot.mean.convergence(ground$V, samples$V, "NIW V")
             # 2) analytically
-            message("m1analytic") #DEBUG
+            #message("m1analytic") #DEBUG
             #plot.convergence(NIW.X.mean(kMu, kKappa, kPsi, kDF), samples$X, mean, "NIW X", sub="(analytically)")
             #plot.convergence(NIW.V.mean(kMu, kKappa, kPsi, kDF), samples$V, mean, "NIW V", sub="(analytically)")
                         
             # first variances
             # 1) computationally
-            message("v1comp") #DEBUG
+            #message("v1comp") #DEBUG
             plot.var.convergence(ground$X, samples$X, "NIW X")
             plot.var.convergence(ground$V, samples$V, "NIW V")
             # 2) analytically
-            message("v1analytic") #DEBUG
+            #message("v1analytic") #DEBUG
             #plot.var.convergence(NIW.X.var(kMu, kKappa, kPsi, kDF), samples$X, "NIW X", sub="(analytically)")
             #plot.var.convergence(NIW.V.var(kMu, kKappa, kPsi, kDF), samples$V, "NIW V", sub="(analytically)")
             #  ^ this specialcase is going to bite!
             
             # second matrix moments: the means of the outer products
             # 1) computationally
-            message("mm1comp") #DEBUG
+            #message("mm1comp") #DEBUG
             plot.mean.convergence(fancy_matrix_square(ground$X), fancy_matrix_square(samples$X), "XX^T")
             plot.var.convergence(fancy_matrix_square(ground$V), fancy_matrix_square(samples$V), "VV^T")
             # 2) we do not do this analytically

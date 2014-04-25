@@ -254,7 +254,7 @@ plot.convergence <- function(ground, samples, statistic, accumulator, title=NULL
   # Typecheck
   stopifnot(dim(ground)[kept_dimensions] == dim(samples)[kept_dimensions])
 
-  message("Looping") #DEBUG
+  #message("Looping") #DEBUG
   
   marginals_do(samples, function(idx, samples) {
     samples = accumulator(samples)
