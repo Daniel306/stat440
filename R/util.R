@@ -7,6 +7,13 @@
 
 source("util.math.R")
 
+# TODO: multidimensionaltranspose
+# useful for correcting apply() when it gets it wrong
+#  - 1) vectorize the matrix
+#  - 2) make clever use of a recursive rep() call to generate the order of the elements (eg. map (k, i, j) -> (i, j, k))
+#  - 3) call order() on that order to compute the inverse permutation
+#  - 4) shuffle the vectorized matrix by indexing the vectorized matrix by that permutation
+#  - 5) put dimensions back on it
 
 ..getitem.. <- function(S, idx) {
   # wrapper to work around that in R you cannot say 
