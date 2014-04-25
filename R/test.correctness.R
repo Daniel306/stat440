@@ -275,17 +275,18 @@ NIW.var <- function(Mu, Kappa, Psi, df, samples) {
 
 
 
-plot.convergence <- function(ground, samples, statistic, accumulator, title=NULL, ylab=NULL, ...) {
+plot.moments <- function(ground, samples, statistic, accumulator, title=NULL, ylab=NULL, ...) {
 
   # ground and samples may (should?) be matrices
   #  statistic is applied across the marginals of ground
   #  AS A SPECIAL USEFUL EXCEPTION, if ground only has one sample (ie it's a vector or a (d,1) matrix) 
   #   then and only then, ground is treated as the given expected value for statistic
   # AS ANOTHER SPECIAL EXCEPTION: if ground is NULL, no blue line is printed
-  # note: plot.convergence does not actually guarantee you will see convergence; 
+  # note: plot.moments does not actually guarantee you will see moments or convergence to them
   #  you might not have enough samples or your choice of accumulator might not pick a duck out of a hat (an i.i.d. set of ducks, of course) and measure its beak length with some random error.
   #  using accumulator=mean or accumulator=var will definitely
   # IT IS UP TO YOU TO MAKE SURE statistic AND accumulator ARE COMPUTING THE SAME STATISTIC.
+  #  and that that statistic is a moment
   
   #
   # ... : args to plot()
@@ -374,12 +375,12 @@ plot.convergence <- function(ground, samples, statistic, accumulator, title=NULL
 }
 
 
-plot.mean.convergence <- function(ground, samples, title=NULL, ...) {
-  plot.convergence(ground, samples, mean, cummean, title=paste("Sample mean of", title), ...);
+plot.means <- function(ground, samples, title=NULL, ...) {
+  plot.moments(ground, samples, mean, cummean, title=paste("Sample mean of", title), ...);
 }
 
-plot.var.convergence <- function(ground, samples, title=NULL, ...) {
-  plot.convergence(ground, samples, var, cumvar, title=paste("Sample variance of", title), ...);
+plot.vars <- function(ground, samples, title=NULL, ...) {
+  plot.moments(ground, samples, var, cumvar, title=paste("Sample variance of", title), ...);
 }
 
 

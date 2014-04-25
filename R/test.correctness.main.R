@@ -63,31 +63,31 @@ main <- function() { # avoid polluting the namespace
             # first moments (matrix and non-matrix)
             # 1) computationally
             #message("m1comp") #DEBUG
-            #plot.mean.convergence(ground$X, samples$X, "NIW X", sub=paste(alg))
-            #plot.mean.convergence(ground$V, samples$V, "NIW V", sub=paste(alg))
+            #plot.means(ground$X, samples$X, "NIW X", sub=paste(alg))
+            #plot.means(ground$V, samples$V, "NIW V", sub=paste(alg))
             # 2) analytically
             #message("m1analytic") #DEBUG
             analytic = NIW.mean(kMu, kKappa, kPsi, kDF)
-            plot.mean.convergence(analytic$X, samples$X, "NIW X", sub=paste(alg, "(analytically)"))
-            plot.mean.convergence(analytic$V, samples$V, "NIW V", sub=paste(alg, "(analytically)"))
+            plot.means(analytic$X, samples$X, "NIW X", sub=paste(alg, "(analytically)"))
+            plot.means(analytic$V, samples$V, "NIW V", sub=paste(alg, "(analytically)"))
               
             # first variances
             # 1) computationally
             #message("v1comp") #DEBUG
-            #plot.var.convergence(ground$X, samples$X, "NIW X", sub=paste(alg))
-            #plot.var.convergence(ground$V, samples$V, "NIW V", sub=paste(alg))
+            #plot.vars(ground$X, samples$X, "NIW X", sub=paste(alg))
+            #plot.vars(ground$V, samples$V, "NIW V", sub=paste(alg))
             # 2) analytically
             #message("v1analytic") #DEBU
             analytic = NIW.var(kMu, kKappa, kPsi, kDF)
-            plot.var.convergence(analytic$X, samples$X, "NIW X", sub=paste(alg, "(analytically)")) 
-            plot.var.convergence(analytic$V, samples$V, "NIW V", sub=paste(alg, "(analytically)"))
+            plot.vars(analytic$X, samples$X, "NIW X", sub=paste(alg, "(analytically)")) 
+            plot.vars(analytic$V, samples$V, "NIW V", sub=paste(alg, "(analytically)"))
             #  ^ this specialcase is going to bite!
             
             # second matrix moments: the means of the outer products
             # 1) computationally
             #message("mm1comp") #DEBUG
-            plot.mean.convergence(fancy_matrix_square(ground$X), fancy_matrix_square(samples$X), "XX^T", sub=paste(alg))
-            plot.mean.convergence(fancy_matrix_square(ground$V), fancy_matrix_square(samples$V), "VV^T", sub=paste(alg))
+            #plot.means(fancy_matrix_square(ground$X), fancy_matrix_square(samples$X), "XX^T", sub=paste(alg))
+            #plot.means(fancy_matrix_square(ground$V), fancy_matrix_square(samples$V), "VV^T", sub=paste(alg))
             # 2) we do not do this analytically
             # [[that's all she wrote, folks!]]
             
