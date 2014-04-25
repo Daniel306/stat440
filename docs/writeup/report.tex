@@ -33,11 +33,53 @@
   stringstyle=\color{ForestGreen}      % string literal style
 } 
 
-\begin{document}1
+\begin{document}
 
-\title{Stat440 Project Outline}
-\author{Daniel Galperin, Nick Guenther}
+\begin{titlepage}
+\begin{center}
+
+% Upper part of the page. The '~' is needed because \\
+% only works if a paragraph has started.
+%\includegraphics[width=0.15\textwidth]{./logo}~\\[1cm]
+
+\textsc{\LARGE University of Waterloo}\\[1.5cm]
+
+\textsc{\Large Stat440 Project}\\[0.5cm]
+
+% Title
+%\HRule \\[0.4cm]
+{ \huge \bfseries The Normal|Inverse-Wishart Sampler \\[0.4cm] }
+
+%\HRule \\[1.5cm]
+
+% Author and supervisor
+\begin{minipage}{0.4\textwidth}
+\begin{flushleft} \large
+\emph{Authors:}\\
+Daniel \textsc{Galperin} 2000000\\*
+Nick \textsc{Guenther} 20230268
+\end{flushleft}
+\end{minipage}
+\begin{minipage}{0.4\textwidth}
+\begin{flushright} \large
+\emph{Supervisor:} \\
+~Martin \textsc{Lysy}
+\end{flushright}
+\end{minipage}
+
+\vfill
+
+% Bottom of the page
+{\large \today}
+
+\end{center}
+\end{titlepage}
+
+\title{}
+\author{}
 \date{} % disable the autodate. we can put it back if we want it.
+% 1 page
+%\maketitle
 
 
 % this should be 10 pages: 1 page title, 1 page references, 8 pages of content
@@ -45,8 +87,6 @@
 %\layout %debugging print for margins
 
 
-% 1 page
-\maketitle
 \newpage
 
 \tableofcontents %because latex is from before the days of interactive computing, you need to run the build twice for this to show up
@@ -184,10 +224,11 @@ We
   - snappy in R
   - snappy in Rcpp
 
+
 \begin{figure}[hbtp]
-\caption{Implementation runtimes; monochrome are the naive algorithms; blue are the efficient algorithm; red are the C implementations}
 \centering
 \includegraphics[scale=1]{runtimes.pdf}
+\caption{Implementation runtimes. The naive algorithms are monochrome; the efficient algorithm in R are blue; the C implementations are red.}
 \end{figure}
 
 
