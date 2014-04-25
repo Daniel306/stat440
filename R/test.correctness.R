@@ -2,27 +2,10 @@
 source("NIW.R")
 
 #typedef: a multidimensional sample (MultiS) is
-#  a matrix M with dim(M) = c(n, c(a,b, c, ...)) 
+#  a matrix M with dim(M) = c(c(a,b, c, ...), n) 
 #  n is the number of samples
 #    (a, b, c, ...) is the dimensionality of the object
 
-# this is complicated, however, because what is marginalized over does not necessarily come in a sensible matrix shape:
-# for NIW our samples are tuples (X, V) with dim(X)=c(d,1), dim(V) = c(d,d)
-#    we could cram them together so that each sample is a d x (d+1) matrix
-#    but that's awkward and loses pertinent information
-# in general the entries of the tuples may be any size at all
-
-
-#TODO: rewrite plot.NIW.marginals to it can just be 'plot.marginals'
-#TODO: ditto for the ks tests
-#  --> the trick used with moments will help here, where we write a generic function
-#     which takes the fiddly details, main=, sub=, title=, etc, as arguments to be set by the caller
-#    NIW.ks.test, in particular, definitely does not need to know what algorithm generated the data it is looking at
-#    and that is a holdover from that we passed that argument in to plot.NIW.densities so that it could label the plots (because there's no other way in R but to label the plots as you create them)
-#TODO: write a function (to base plot.marginals on) which extracts the marginals of a matrix in some sensible way;
-#             either ruby-style where you pass an op block which receives the marginal as an argument
-#             or more (procedurally?) where the marginals are reshaped into I guess a list with entries named by their marginal
-#  the core of this function now exists as R() inside of plot.converging.moment.multi; factoring it out will be helpful: it will drastically shorten *.marginals() above
 # TODO: figure out a bloody better way of labelling the various output with which algorithm created it.
 
 ##################################################
@@ -100,7 +83,9 @@ plot.NIW.densities <- function(ground, sample, alg=NULL) { #XXX name
   d = dim(ground$X)[1]
   # and we also know that V is symmetric, so we can do only (1:d)x(i:d)
   # --> this tidbit will be difficult to factor out
+
   
+    
   # X marginals
   par(mfrow=c(2,2))
   for(i in 1:d) {
@@ -158,76 +143,6 @@ IW.marginal <- function(i, j, Psi, df) {
 
 # utilties
 
-
-# TODO: the following two functions should be factored
-# but, as with the above, how to do so eludes me
-#  because again, there's special-case behaviour in each; plot.convering.variance would, for example, behave erratically if it ended up calling var(scalar) which is NA
-
-plot.converging.mean <- function(ground, samples, ...) {
-  # 
-  # every moment is an expectation, which can be approximated by a sample mean
-  # to use this function, first compute
-  # plots a horizontal line at the expected value as given in 'ground
-  #
-  # args:
-  #  ground: the 'ground truth': a number or a vector
-  #  samples: a vector of sample points
-  #  ...: extra arguments to plot()
-
-  # TODO: typechecks
-
-  if(length(ground) > 1) { ground = mean(ground) }
-
-  n = length(samples)
-  idx = 1:n
-
-  plot(reasonable_subset(cbind(idx, cummean(samples)), means, xlab="samples taken", ylab="mean", ...) # XXX is ylab what we want?
-  #  note: ^this relies on plots() special-case behaviour of plot on a 2-column matrix/dataframe being interpreted the same as plot(x,y)
-  abline(h=ground, lty="solid", col="blue")
-  legend(paste("True mean", round(ground, 2)), lty="solid", col="blue")
-}
-
-
-plot.converging.variance <- function(ground, samples, ...) {
-  # 
-  # every moment is an expectation, which can be approximated by a sample mean
-  # to use this function, first compute
-  # plots a horizontal line at the expected value as given in 'ground
-  #
-  # args:
-  #  ground: the 'ground truth': a number or a vector
-  #  samples: a vector of sample points
-  #  ...: extra arguments to plot()
-
-  # TODO: typechecks
-  
-  if(length(ground) > 1) { ground = var(ground) }
-
-  n = length(samples)
-  idx = 1:n
-  
-  plot(reasonable_subset(cbind(idx, cumvar(samples)), means, xlab="samples taken", ylab="mean", ...) # XXX is ylab what we want?
-  #  note: ^this relies on plots() special-case behaviour of plot on a 2-column matrix/dataframe being interpreted the same as plot(x,y)
-  abline(h=ground, lty="solid", col="blue")
-  legend(paste("True variance", round(ground, 2)), lty="solid", col="blue")
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 cumulate <- function(M, margin, f) {
   # apply 'f' across 'margin'
   # this generalizes "cumsum", but so much slower.
@@ -241,7 +156,7 @@ cumulate <- function(M, margin, f) {
   
   original.dims = dim(M)
   M = apply(M, margin, function(v) { 
-            sapply(1:length(v), function(i) { f(v[1:i]) }
+            sapply(1:length(v), function(i) { f(v[1:i]) })
             })
   dim(M) = original.dims #XXX if 
   return(M)

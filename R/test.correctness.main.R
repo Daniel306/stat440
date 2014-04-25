@@ -41,37 +41,44 @@ main <- function() { # avoid polluting the namespace
 
             ## (marginal) DISTRIBUTIONS
             # make density plots
-            plot.NIW.densities(ground, samples, alg)
-            # plot.densities(ground, samples, sub=alg) ...
-            # plot.densities(analytic(),samples, sub=alg)
+            # 1) computationally
+            plot.densities(ground$X, samples$X)
+            plot.densities(ground$V, samples$V)
+            # 2) analytically
+            #analytic_densities = NIW.densities(kMu, kKappa, kPsi, kDF)
+            # ^ does this step return like.. a.. tuple of matrices of functions?
+            # does R even support such a beast?
+            # ..I might have to move the marginals_do to this function
+            #plot.densities(analytic_densities$X, samples$X) #TODO: work out just how this is...
+            #plot.densities(analytic_densities$V, samples$V)
+            
+            
             
             ## MOMENTS
             # make first moment convergence plots
-            #plot.NIW.moment.first.computational(ground, samples)
-            plot.NIW.moment.mean.analytic(kMu, kKappa, kPsi, kDF, samples)
-
+            
             # first moments (matrix and non-matrix)
             # 1) computationally
             plot.convergence(ground$X, sample$X, mean, "NIW X")
             plot.convergence(ground$V, sample$V, mean, "NIW V")
             # 2) analytically
-            plot.convergence(NIW.X.mean(kMu, kKappa, kPsi, kDF), sample$X, mean, "NIW X", sub="(analytically)")
-            plot.convergence(NIW.V.mean(kMu, kKappa, kPsi, kDF), sample$V, mean, "NIW V", sub="(analytically)")
-            
-            
+            #plot.convergence(NIW.X.mean(kMu, kKappa, kPsi, kDF), sample$X, mean, "NIW X", sub="(analytically)")
+            #plot.convergence(NIW.V.mean(kMu, kKappa, kPsi, kDF), sample$V, mean, "NIW V", sub="(analytically)")
+                        
             # first variances
             # 1) computationally
             plot.convergence(ground$X, sample$X, var, "NIW X")
             plot.convergence(ground$V, sample$V, var, "NIW V")
             # 2) analytically
-            plot.convergence(NIW.X.var(kMu, kKappa, kPsi, kDF), sample$X, var, "NIW X", sub="(analytically)")
-            plot.convergence(NIW.V.var(kMu, kKappa, kPsi, kDF), sample$V, var, "NIW V", sub="(analytically)")
+            #plot.convergence(NIW.X.var(kMu, kKappa, kPsi, kDF), sample$X, var, "NIW X", sub="(analytically)")
+            #plot.convergence(NIW.V.var(kMu, kKappa, kPsi, kDF), sample$V, var, "NIW V", sub="(analytically)")
             
             # second matrix moments: the means of the outer products
             # 1) computationally
-            plot.convergence(fancy_matrix_square(ground$X), square(sample$X), mean)
-            plot.convergence(fancysquare(ground$V), square(sample$V), mean)
+            plot.convergence(fancy_matrix_square(ground$X), fancy_matrix_square(sample$X), mean)
+            plot.convergence(fancy_matrix_square(ground$V), fancy_matrix_square(sample$V), mean)
             # 2) we do not do this analytically
+            # that's all she wrote, folks!
             
             # variances of the second matrix moments are unknown and uninteresting
             #  --the 2nd moments themselves are already close to a variance.
@@ -83,7 +90,8 @@ main <- function() { # avoid polluting the namespace
 
             ## KS TESTS
             # this tests for equidistribution numerically
-            message("KS test results for ", alg)
+            message("KS test results for ", alg) #this is sort of awkward, that there's message()s in this call
+            # TODO: rewrite using marginals_do
             NIW.ks.test(ground, samples)
                         
         })
