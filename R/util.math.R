@@ -174,18 +174,20 @@ cumvar <- function(v) {
   #  give the sample variance up to that point
   # 
   # args:
-  #  v: a numeric vector
+  #  v: a numeric vector to compute variances over
   #
   # returns:
-  #   a vector the same length as v; the first value is always NA.
+  #   a vector one less than the length of v; we drop the first value which is always NA.
 
   n = length(v)
   r = (cumsum(v^2) - cumsum(v)^2/1:n)/(1:n - 1) #TODO: document this derivation
-  r[1] = NA #    the first entry is always NaN because the variance of a single point is undefined.
-  return(r)
+  r = r[-1] # the first entry is always NA because the variance of a single point is undefined.
+            # drop this point, because it is the worst
+  
+  return(r[-1])
 }
 
-test.cumvar <- function() {
+test.cumvar <- function() { #TODO: broken after API change
   x = rnorm(66);
   v_known = sapply(1:length(x), function(i) { var(x[1:i]) })
   v_test = cumvar(x)
