@@ -288,16 +288,16 @@ plot.convergence <- function(ground, samples, statistic, accumulator, title=NULL
                                     # and then we can make the API nicer and kill plot.*.convergence()
     plot(samples, xlab="samples taken (n)", ylab=ylab, main=marginal.title(title, idx), ...)
     
-    if(!is.null(ground)) { # special case: ground can be NULL!
-      ground = ..getitem..(ground, idx)
-      if(length(ground) > 1) {   #special case: DON'T stat the ground truth if there's only one of it:
+    if(is.null(ground)) { return } # special case: ground can be NULL!
+    ground = ..getitem..(ground, idx)
+    if(length(ground) > 1) {   #special case: DON'T stat the ground truth if there's only one of it:
                                  #instead, assume it is the desired value of that statistic
-        ground = statistic(ground)
-      }
-      stopifnot(length(ground) == 1) # at this point, ground MUST be scalar
-      abline(h=ground, lty="solid", col="blue")
-      legend("topleft", paste("True", statistic.name, "=", round(ground, 2)), lty="solid", col="blue")
+      ground = statistic(ground)
     }
+    stopifnot(length(ground) == 1) # at this point, ground MUST be scalar
+    if(!is.finite(ground)) { return } # bail if the number if bad at this point
+    abline(h=ground, lty="solid", col="blue")
+    legend("topleft", paste("True", statistic.name, "=", round(ground, 2)), lty="solid", col="blue")
   })
 }
 

@@ -222,6 +222,7 @@ D+k
 - [ ] runtimes
     - [ ] measure over d (requires randomization to be in place) 
 - [ ] matrix transpose
+- [ ] test naive and extremelynaive under the correctness harness; now that we have analytic formulas, this can actually be telling: are we doing something drastically wrong?
 
 Open Questions and Future Work
 ================
