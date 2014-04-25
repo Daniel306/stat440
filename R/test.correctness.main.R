@@ -25,6 +25,9 @@ main <- function() { # avoid polluting the namespace
     message("Starting test runs:")
     
     for(alg in krNIWAlgorithms) { 
+        if(alg == "extremelynaive") next; #hack: this one is REALLY SLOW, and only useful as a benchmark, so we drop it explicitly here.
+        if(alg == "naive") next;          #hack: and this one is our reference samples, so its sort of silly to compare it.
+        
         message("Beginning ",alg,"...")
         try({ #wrap so that one algorithm being broken doesn't break the others (but we'll still see error messages from them)
         
