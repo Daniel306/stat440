@@ -25,7 +25,8 @@ source("util.math.R")
   #message("..getitem..")
   #print(dim(S))
   #print(idx)
-  
+  if(is.null(S)) { return(NULL); }
+    
   # R magic!: this line courtesy of mrflick in irc.freenode.net/#R
   #do.call(`[[`, c(S, as.list(idx))) #[[ does everything [ does and more
   # ^ but this is finicky if you skip / don't define some dims
