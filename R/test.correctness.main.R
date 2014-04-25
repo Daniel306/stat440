@@ -46,8 +46,8 @@ main <- function() { # avoid polluting the namespace
             ## DISTRIBUTIONS
             message("Marginal densities")
             # 1) computationally
-            plot.densities(ground$X, samples$X, "NIW X")
-            plot.densities(ground$V, samples$V, "NIW V")
+            plot.densities(ground$X, samples$X, "NIW X", sub=paste(alg))
+            plot.densities(ground$V, samples$V, "NIW V", sub=paste(alg))
             # 2) analytically
             #analytic_densities = NIW.densities(kMu, kKappa, kPsi, kDF)
             # ^ does this step return like.. a.. tuple of matrices of functions?

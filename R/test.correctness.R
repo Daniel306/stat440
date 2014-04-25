@@ -62,7 +62,7 @@ plot.density <- function(ground, sample, ...) { #XXX NAME
   # ...: extra arguments to plot()
   
   # display the histogram
-  hist(sample, probability=TRUE, breaks=40, ...)
+  hist(sample, probability=TRUE, breaks=40, xlab="", ...)
   
   # overlay the pdf
   if(is.function(ground)) {
