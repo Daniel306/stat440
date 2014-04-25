@@ -2,123 +2,63 @@
 source("NIW.R")
 
 #typedef: a multidimensional sample (MultiS) is
-#  a matrix M with dim(M) = c(n, c(a,b, c, ...)) 
+#  a matrix M with dim(M) = c(c(a,b, c, ...), n) 
 #  n is the number of samples
 #    (a, b, c, ...) is the dimensionality of the object
 
-# this is complicated, however, because what is marginalized over does not necessarily come in a sensible matrix shape:
-# for NIW our samples are tuples (X, V) with dim(X)=c(d,1), dim(V) = c(d,d)
-#    we could cram them together so that each sample is a d x (d+1) matrix
-#    but that's awkward and loses pertinent information
-# in general the entries of the tuples may be any size at all
-
-
-#TODO: rewrite plot.NIW.marginals to it can just be 'plot.marginals'
-#TODO: ditto for the ks tests
-#  --> the trick used with moments will help here, where we write a generic function
-#     which takes the fiddly details, main=, sub=, title=, etc, as arguments to be set by the caller
-#    NIW.ks.test, in particular, definitely does not need to know what algorithm generated the data it is looking at
-#    and that is a holdover from that we passed that argument in to plot.NIW.densities so that it could label the plots (because there's no other way in R but to label the plots as you create them)
-#TODO: write a function (to base plot.marginals on) which extracts the marginals of a matrix in some sensible way;
-#             either ruby-style where you pass an op block which receives the marginal as an argument
-#             or more (procedurally?) where the marginals are reshaped into I guess a list with entries named by their marginal
-#  the core of this function now exists as R() inside of plot.converging.moment.multi; factoring it out will be helpful: it will drastically shorten *.marginals() above
 # TODO: figure out a bloody better way of labelling the various output with which algorithm created it.
+
+
+# utilties
+
+cumulate <- function(s) {
+  # wrap a statistic s(x) into a cumulative version
+  #
+  # this generalizes "cumsum", but so much slower.
+  #
+  # this function is slow: it necessarily has at least quadratic runtime,
+  #  maybe more depending on how you write s.
+  #
+  # Do you understand that this function is slow, yet?
+  #
+  # args:
+  #  s: must take a vector and return a scalar
+
+  # use case: taking the cumulative variance in a (p,q,n) matrix (a matrix of n (p,q) design matrices, say)
+  #  : apply(M, -3, cumulate(var))
+  # if you can, use a more efficient specialized method
+  
+  function(v) { 
+    sapply(1:length(v), function(i) { s(v[1:i]) })
+  }
+}
+
+marginal.title <- function(title, idx) {
+  # given one of my sketchy marginal indexing vectors
+  # and a title prefix (which may be null)
+  # construct a label that can be used to communicate what marginal we're displaying
+  # SINCE this function is meant to be used in conjunction with marginals_do,
+  # the last element of idx MUST be NA
+  
+  stopifnot(is.na(idx[length(idx)]))
+  idx = idx[-length(idx)] # but we don't want to print that element
+  
+  paste(title, idx2str(idx), sep="") #sep="" means that a NULL title is a no-op
+}
+
 
 ##################################################
 ## Density Plots
 
-plot.compare <- function(ground, sample, ...) { #XXX NAME
-  # plot histograms of the marginals in sample, overlaid with "ground truth" probability density.
-  # 
-  # ground: the "ground truth"
-  #  this can either be a vector of samples, which will be kernel-density estimated, or a pdf function (which must be vectorized!!)
-  #  the former is quicker to use: just generate samples in a naive and easy to validate way
-  #  But the latter cannot be tainted by mistakes in your naive generator.
-  # sample: the "sample"
-  #  this is is the sample
-  # ...: extra arguments to plot()
-  
-  # display the histogram
-  hist(sample, probability=TRUE, breaks=40, ...)
-  
-  # overlay the pdf
-  if(is.function(ground)) {
-    lines(sample, ground(sample), col="blue", lty="twodash")
-  } else {
-    # if caller has not given us a pdf directly, then
-    # assume ground is a vector for us to kernel-density estimate
-    stopifnot(is.vector(ground) && is.numeric(ground)) #typecheck
-    
-    lines(density(ground), col="blue", lty="twodash")
-  }
-  
-  # omitted code, which could be used instead of the special casing in lines() above
-  ## replace ground with a (callable!) pdf function 
-  ## via kernel density estimation
-  # if(!is.function(ground)) {
-  # p = density(ground)
-  # ground = function(x) {
-  #   approx(p$x, p$y, x, rule=2)$y # rule=2 means 'support extrapolation'
-  # }
-  #}
-}
-
-
-plot.NIW.densities <- function(ground, sample, alg=NULL) { #XXX name
-  # compare (using plot.compare) the marginals of the Normal Inverse Wishart against their expected pdfs
-  #
-  # args:
-  #   ground, sample: lists containing two elements, $X and $V. The first is a c(n, d) matrix, the second is a c(n, d, d) matrix
-  #                the each of the n pairs (X[k,], V[k,]) corresponds to one of the Normal Inverse Wishart samples.
-  #         ground is assumed to be samples from the true distribution, and creates kernel density estimates
-  #         sample has histograms plotted from it
-  
-  #typechecks
-  stopifnot(class(ground) == "list" && class(sample) == "list")
-  stopifnot(names(ground) == names(sample))
-  for(N in names(ground)) {
-    last = length(dim(ground[[N]])) #the length of the last dimension is "n", the number of samples,
-    # which is irrelevant; we only care that the dimensionality of each sample in ground matches the dimensionality of each sample in sample
-    stopifnot(length(dim(ground[[N]])) == length(dim(sample[[N]])))
-    if(any(dim(ground[[N]])[-last] != dim(sample[[N]])[-last])) {
-      stop("ground$", N, " and sample$", N, " have inconsistent dimensions: ", dim(ground[[N]])[-last],"  vs ", dim(sample[[N]])[-last]) #TODO: this won't print correctly
-    }
-  }
-    
-  # TODO: factor this into a generic function that takes a list() of matrixables and figures out the labels (eg "V[3,43]") to use automatically 
-  # method 1: reshape ground and sample into 2d matrices: n x (number of marginals)
-  #   pro: simple
-  #   con: you lose the information about ~which~ marginal you're looking at, unless you reconstruct it manually
-  # method 2: somehow recurisvely loop down the dimensions, loop over all values in that dimension as you go
-  #   con: since [] is a variable arity function call in R (it doesn't just take a tuple like in Python),
-  #          constructing the correct indexing calls will require some R call() magic
-  #          such magic is probably doable though
-  
-  # since we know sample came from rNIW, we have stronger conditions than the above:
-  # 
-  d = dim(ground$X)[1]
-  # and we also know that V is symmetric, so we can do only (1:d)x(i:d)
-  # --> this tidbit will be difficult to factor out
-  
-  # X marginals
-  par(mfrow=c(2,2))
-  for(i in 1:d) {
-    plot.compare(ground$X[i,], sample$X[i,], main=paste("X[",i,"]"), sub=alg)
-  }
-  
-  # V marginals
-  par(mfrow=c(2,2))
-  for(i in 1:d) {
-    for(j in i:d) { #purposely not indented
-      plot.compare(ground$V[i,j,], sample$V[i,j,], main=paste("V[",i,",",j,"]"), sub=alg)
-    }
-  }
-}
 
 
 
-IW.marginal <- function(i, j, Psi, df) {
+############
+## Analytic densities
+# we do not know analytic forms for many of the densities
+# but we do know these two:
+
+IW.marginal.density <- function(i, j, Psi, df) {
   # Inverse Wishart marginals
   #
   # returns:
@@ -141,198 +81,327 @@ IW.marginal <- function(i, j, Psi, df) {
     beta  = (Psi[i , i])/2
     function(x) { dinvgamma(x, shape=alpha, scale=beta) }
   } else {
-    stop("non-diagonal marginals not supported yet")
+    warning("non-diagonal marginals not supported (EVER)")
+    NA
   }
+}
+
+dt.density <- function(df, mu, sd) {
+  # produce particular t-distribution density function
+  # this is a simple partial evaluation wrapper around dt() from base
+  #(I am worried the closure won't work right unless this is a whole separate function
+  function(x) {
+    dt((x - mu)/sd, df)
+  }
+}
+
+NIW.densities <- function(Mu, kappa, Psi, df, n) {
+  # n is the number samples taken
+  # it matters because the distribution of samples changes as more samples are taken
+  # it only matters to the X side of the sampling, though, for the V side is i.i.d.
+  
+  d = dim(Psi)[1]
+  
+  X = as.list(rep(NA, d))
+  V = as.list(rep(NA, d*d))
+  dim(X) = c(d,1)
+  dim(V) = c(d,d)
+
+  # the marginals of the iWish part are iGamma on the diagonal
+  # unknown elsewhere
+  for(i in 1:d) {
+    V[[i,i]] = IW.marginal.density(i,i, Psi, df)
+  }
+
+  for(i in 1:d) {
+    df.t = df+n-d+1
+    X[[i, 1]] = dt.density(df.t, Mu[i], Psi[i,i]/(kappa+n)/(df.t))
+  }
+  
+  list(X = X, V = V)
+}
+
+
+plot.density <- function(ground, sample, breaks=40, ...) { #XXX NAME
+  # plot histograms of the marginals in sample, overlaid with "ground truth" probability density.
+  # 
+  # ground: the "ground truth"
+  #  this can either be a vector of samples, which will be kernel-density estimated, or a pdf function (which must be vectorized!!)
+  #  the former is quicker to use: just generate samples in a naive and easy to validate way
+  #  But the latter cannot be tainted by mistakes in your naive generator.
+  # sample: the "sample"
+  #  this is is the sample
+  # breaks: 'breaks' parameter of hist() (see help(hist) for usage)
+  # ...: extra arguments to plot()
+
+  stopifnot(is.vector(sample))
+  
+  n = length(sample)
+  
+  # display the histogram
+  hist(sample, probability=TRUE, breaks=breaks, xlab="", ...)
+
+  if(is.null(ground) || is.na(ground)) {
+    warning("plot.density got a null ground; not printing the pdf overlay")
+    return(); # bail
+  }
+  
+  # overlay the pdf
+  if(is.function(ground)) {
+    sample = reasonable_subset(sample, 77) #Reduce the number of points plotted
+    sample = sort(sample)                  # this set must be sorted so that lines() dont zigzag everywhere
+    lines(sample, ground(sample), col="blue", lty="twodash")
+  } else {
+    # if caller has not given us a pdf directly, then
+    # assume ground is a vector for us to kernel-density estimate
+    stopifnot(is.vector(ground) && is.numeric(ground)) #typecheck
+    
+    lines(density(ground), col="blue", lty="twodash")
+  }
+  
+  # omitted code, which could be used instead of the special casing in lines() above
+  ## replace ground with a (callable!) pdf function 
+  ## via kernel density estimation
+  # if(!is.function(ground)) {
+  # p = density(ground)
+  # ground = function(x) {
+  #   approx(p$x, p$y, x, rule=2)$y # rule=2 means 'support extrapolation'
+  # }
+  #}
+}
+
+plot.densities <- function(ground, sample, title=NULL, layout=c(2,2), ...) { #XXX name
+  # compare the marginals of the given sample to their expected p.d.f. curves
+  #
+  # this is basically just a loop over plot.density(),
+  #  but it usefully accounts for labelling the plots uniformly
+  #
+  # args:
+  #   ground: either, a MultiS, the same dimensionality as sample, in which case
+  #         ground is assumed to be samples from the true distribution, and creates kernel density estimates
+  #       -or-
+  #       (( some kind of weird matrix-list containing p.d.f.s )) 
+  #   sample: a MultiS or a vector
+  #   layout: how to pack the plots (row by column)
+  #   title: optional title to label thigns with
+  #       
+  
+  # TODO: typechecks
+  par(mfrow=layout)
+  marginals_do(sample, function(idx, sample) {
+    #message("loop @ idx=") #DEBUG
+    #print(idx)            #DEBUG
+    title = marginal.title(title, idx) #Hack: do this first, because we possibly edit idx next
+    
+    if(length(dim(ground)) != length(idx)) { #HACK: assume this can only happen in the one-sample-special-casemagictime
+ 	                              # (this is a sketchy assumption)
+      idx = rev(rev(idx)[-1]) #drop the last dimension because it's 
+    }
+    stopifnot(length(dim(ground)) == length(idx))
+    ground = ..getitem..(ground, idx)
+    if(class(ground) == "list") { #special case: you can pass a 'matrix' of density functions, by passing a list 
+      stopifnot(length(ground) == 1)
+      ground = ground[[1]]
+      if(is.na(ground)) {
+        ground = NULL
+      } else {
+        stopifnot(class(ground) == "function")
+      }
+    }
+    plot.density(ground, sample, main=title, ...)
+  })   
 }
 
 
 ##########################################
 ## Moments
 
-# Wikipedia gives some useful analytic formulas:
-# https://en.wikipedia.org/wiki/Inverse-Wishart_distribution#Moments
-# and it's relatively obvious that the mean of X is just Mu.
 
-plot.converging.moment <- function(ground, samples, ...) {
+###########
+#### Analytic Normal|Inverse-Wishart marginal moments 
+
+ 
+NIW.mean <- function(Mu, Kappa, Psi, df, samples) {
+  # compute the expected true mean of a 
+  #  (X,V) ~ NIW(Mu, Kappa, Psi, df) distribution
   # 
-  # every moment is an expectation, which can be approximated by a sample mean
-  # to use this function, first compute
-  # plots a horizontal line at the expected value as given in 'ground
-  #
-  # args:
-  #  ground: the 'ground truth': a number or a vector
-  #  samples: a vector of sample points
-  #  ...: extra arguments to plot()
-
-  # TODO: typechecks
+  # returns: a list containing
+  #   X -- the mean value for X
+  #   V -- the mean value for V
+  d = dim(Psi)[1]
   
-  if(length(ground) > 1) { ground = mean(ground) }
-
-  # plotting too many points causes lag
-  # so use intseq() to reduce
-  idx = intseq(1, length(samples), length.out=1000)
-  means = cummean(samples)[idx]
-  plot(idx, means, xlab="samples taken", ylab="moment", ...) #XXX is ylab right?
-  abline(h=ground, lty="solid", col="blue")
+  # the means of all Xs is just Mu, because X | V ~ N(Mu, V)
+  # and the means of all Vs is Psi scaled by its degrees of freedom (props to Wikipedia for this one)
+  list(X = Mu, V = Psi/(df-d-1))
 }
 
 
-plot.converging.moment.multi <- function(ground, samples, title=NULL) { # XXX name
-  # befpore using this function, map samples (and ground) with
-  # for example, to take second moments, first run crossprod() across samples
+NIW.var <- function(Mu, Kappa, Psi, df, samples) {
+  # plot
+  # compute the expected true variance
+  #  (X,V) ~ NIW(Mu, Kappa, Psi, df) distribution
   #
-  # TODO: docstring
-  # TODO: merge plot.converging.moment into this, so that it handles multivariates smoothly in line with univariates?
-  #    con: the plotting arguments, main=, sub=, etc, will be finicky to do if it's merged
-  #    pro: it might (might) be faster to do the cummeans all at once
+  # does NOT return covariances; for one thing, some of those covariances have never been derived
+  #  for another: no one cares
+  # 
+  # returns: a list containing
+  #   X -- the variances of X
+  #   V -- the variances of V
+  
+  d = dim(Psi)[1]
 
-  # TODO: typechecks
+  # the Xs are t-distributed
+  # which means their variances are ...
+  # ..TODO
+  X_var = NULL
   
-  # our convention is: the LAST dimension is 'n'  
-  n_dimension = length(dim(samples))
-  interesting_dimensions = 1:(n_dimension-1) #XXX name
+  # the variances of the entries are
+  # Var(V_ij) = (df-d+1)Psi_ij^2 + (v-d-1)*Psi_ii*Psi_jj) / (df-d)(df-d-1)^2(df-d-3)
+  #
+  # TODO: vectorize this formula
+  # part of it vectorizes nicely, but the way to do the rest 
+  # is not jumping out at me.
+  # so a loop it is
+   # cite: https://en.wikipedia.org/wiki/Inverse-Wishart_distribution
+  V_var = (df- d + 1)*Psi^2
+  for(i in 1:d) {
+  for(j in 1:d) {
+    V_var[i,j] = V_var[i,j] + (df - d - 1) * Psi[i,i]*Psi[j,j]
+  }}  
+  V_var = V_var / (df-d) / (df-d-1)^2 / (df-d-3)
   
-  #ground = apply(ground, -n_dimension, mean) # ground is FLATTENED to a single number (per marginal, so there's actually still a bunch)
-  #dim(ground) = dim(samples)[interesting_dimensions] #for some reason, using mean() means the result ground loses all its dimensions and becomes a vector. go figure.
-  #samples = apply(samples, -n_dimension, cummean) # PAY ATTENTION: this line changes samples from (d,d,n) to (n,d,d)
+  list(X = X_var, V = V_var)
+}
+
+
+
+plot.moments <- function(ground, samples, statistic, accumulator, title=NULL, ylab=NULL, ...) {
+
+  # ground and samples may (should?) be matrices
+  #  statistic is applied across the marginals of ground
+  #  AS A SPECIAL USEFUL EXCEPTION, if ground only has one sample (ie it's a vector or a (d,1) matrix) 
+  #   then and only then, ground is treated as the given expected value for statistic
+  # AS ANOTHER SPECIAL EXCEPTION: if ground is NULL, no blue line is printed
+  # note: plot.moments does not actually guarantee you will see moments or convergence to them
+  #  you might not have enough samples or your choice of accumulator might not pick a duck out of a hat (an i.i.d. set of ducks, of course) and measure its beak length with some random error.
+  #  using accumulator=mean or accumulator=var will definitely
+  # IT IS UP TO YOU TO MAKE SURE statistic AND accumulator ARE COMPUTING THE SAME STATISTIC.
+  #  and that that statistic is a moment
+  
+  #
+  # ... : args to plot()
+
+  #message("plot.convergence") #DEBUG
+  if(is.null(ground)) {
+    warning("ground is null; what are you doing with your life? the blue lines will not be plotted for comparison")
+  }
+  
+  if(is.null(samples)) {
+    stop("samples is null")
+  }
+  
+  stopifnot(is.function(statistic))
+  stopifnot(is.function(accumulator))
+  
+  # extract the name of the cumulation function for labelling
+  statistic.name = deparse(substitute(statistic))
     
-  # deal with the special case of ground being a single value
+  if(is.null(ylab)) {
+     ylab = paste("sample", statistic.name) #use  unless the user overrides
+  }
+  
+  # coerce ground to have the same shape as samples
+  # ...
+  # deal with the special case of ground being a single value (use case: an analytic reference value)
   # by giving it an extra dimension of length 1
-  # (and the beginnings of typechecks while we're at it) 
-  # ...TODO: should this part be killed? It's replicating work that happens in functions that call it.
+  # TODO: factor this (how??) -- this step is like an inverse of drop(), except that drop() can't have a proper inverse
+  
+  if(!is.null(ground)) {
+     # TODO: INDENT THIS
   if( length(dim(ground)) == length(dim(samples)) ) {
     # acceptable
+  } else if(is.null(dim(ground))) {
+    # we have a vector; also fixable
+    dim(ground) = c(length(ground), 1)
   } else if(length(dim(ground)) == length(dim(samples)) - 1) { #TODO: also check the dimensions that match actually do match
     # fixable
     dim(ground) = c(dim(ground), 1)
   } else {
     # unacceptable!!
-    stop("Inconsistent dimenesions between ground and sample")
+    stop("Inconsistent dimenesions between ground and sample; ground is c(", paste(dim(ground), collapse=","),
+                                                    "), while sample is c(", paste(dim(samples), collapse=","), ")", sep="")
   }
+  }
+  
+  marginalized_dimension = length(dim(samples))
+  
+  # Plot the means converging properlike
+  kept_dimensions = (1:marginalized_dimension)[-marginalized_dimension] #precompute the list opposite of marginalized_dimension
+                                             #doing it this way ensures this works even if ground is missing the last dimension
+  
+  # Typecheck
+  stopifnot(is.null(ground) || dim(ground)[kept_dimensions] == dim(samples)[kept_dimensions])
 
-  # loop over all interesting_dimensions and plot each marginal
-  # recursive something someting  
-  R<-function(idx, dims) { #TODO: pull out into util.R
-    if(length(dims)==0) {
-      # base case
-      # we've bottomed out and have an actual index in hand
-      # so use it
-      #message("bottomed out at idx=")
-      #print(idx) #DEBUG
-      
-      # FIXME: I don't understand how to handle variable arity functions in R
-      #  (I would really like to say "samples[*idx]" like I can in python)
-      # so I've hardcoded the cases we're actually using
-      # this needs to be repaired!
-      if(length(idx) == 0) {
-        plot.converging.moment(ground[], samples[],  main=paste(title, sep=""));
-      } else if(length(idx) == 1) {
-        i = idx[1];
-        plot.converging.moment(ground[i,], samples[i,],  main=paste(title,"[",i,"]", sep=""));
-      } else if(length(idx) == 2) {
-        i = idx[1]; j = idx[2];
-        plot.converging.moment(ground[i,j,], samples[i,j,],  main=paste(title, "[",i,",",j,"]", sep=""));
-      }
-    } else {
-      # split the top dimensions from the body
-      # note how we extract the *number* of elements in the dimension d from the index of the dimension itself dims[1]
-      d = dim(samples)[dims[1]]; dims = dims[-1];
-      for(i in 1:d) {
-        R(append(idx, i), dims)
-      }
+  #message("Looping") #DEBUG  
+  marginals_do(samples, function(idx, samples) {
+    samples = accumulator(samples)
+    
+    if(any(is.na(samples))) { return } #variances have their first element being NA, which causes problems; this check avoids all such problems with a hammer against a tree trunk
+    
+    # plot the converging samples against a reference horizontal line
+    # and print the location of the horizontal line in the legend
+    samples = reasonable_subset(cbind(1:length(samples), samples), 75) #plotting all the points slows down rendering and isn't enlightening;
+                                    # Note:! just because we don't use all the points doesn't mean we can avoid the whole accumulator() call, becausethe last point is dependent on all the previous points
+                                    # XXX TODO: if we're only going to print 75 points anyway, maybe it isn't unreasonable to use the quadratic algorithm *at each of those specific points*
+                                    # and then we can make the API nicer and kill plot.*.convergence()
+    plot(samples, xlab="samples taken (n)", ylab=ylab, main=marginal.title(title, idx), ...)
+    
+    if(is.null(ground)) { return() } # special case: ground can be NULL!
+    
+    ground = ..getitem..(ground, idx)
+    if(length(ground) > 1) {   #special case: DON'T stat the ground truth if there's only one of it:
+                                 #instead, assume it is the desired value of that statistic
+      ground = statistic(ground)
     }
-  }
-  R(c(), interesting_dimensions)
-}
-# sketchy test:
-#test.plot.converging.moment.multi <- function() {
-#  source("test.constants.R")
-#  S = rWishart(14441, kDF, kPsi);
-#   # the mean of a wishart distribution is V*df..
-#  plot.converging.moment.multi(kPsi*kDF, S, paste("W(Psi,", kDF,")"))
-#}
-#test.plot.converging.moment.multi()
+    stopifnot(length(ground) == 1) # at this point, ground MUST be scalar
+    
+    if(!is.finite(ground)) { return() } # bail if the number if bad at this point
 
-
-moment.first <- identity
-
-
-moment.second <- function(M) {
-  # given a (d,n) or (d,p,n) matrix
-  #  (n being the number of samples)
-  # compute the second moment of each sample
-  # which, in matrixland, is M%*%t(M), a (d,d) matrix (nb: a (d,n) matrix means each sample is (d,) which tcrossprod treats as a (d,1) matrix)
-  # returns: a (d,d,n) matrix containing the second moments
-  # TODO: generalize to matrices of more than 2 dimensions
-
-  # Typechecks
-  n_dim = length(dim(M))
-  d = dim(M)[1]
-  n = dim(M)[n_dim]
-  
-  R = apply(M, n_dim, tcrossprod)
-  # apply() flattens its results just to be a pain;
-  # we need to unflatten them.
-  # M %*% t(M) is (d x p)*(p * d) so the result is (d x d)
-  dim(R) = c(d, d, n)
-  
-  return(R)
+    # finally, if we actually have a scalar number to use, use it!
+    # TODO: un-hardcode the lty= and col=
+    abline(h=ground, lty="solid", col="blue")
+    legend("topleft", paste("True", statistic.name, "=", round(ground, 2)), lty="solid", col="blue")
+  })
 }
 
 
+plot.means <- function(ground, samples, title=NULL, ...) {
+  plot.moments(ground, samples, mean, cummean, title=paste("Sample mean of", title), ...);
+}
 
-plot.moment.first <- function(ground, samples, title=NULL) {
-  if(length(dim(ground)) == length(dim(samples)) - 1) {
-    dim(ground) = c(dim(ground), 1)
-  } # else: maybe unhandled crashytimes
-  
-  plot.converging.moment.multi(moment.first(ground), moment.first(samples), title=title)
+plot.vars <- function(ground, samples, title=NULL, ...) {
+  plot.moments(ground, samples, var, cumvar, title=paste("Sample variance of", title), ...);
 }
 
 
-plot.moment.second <- function(ground, samples, title=NULL) {
-  #follow along with how finicky this is:
-  # the mainline case is that ground and sample are both (d,p,n) matrices
-  # but ground MIGHT be a single sample, without the 'n' dimension
-  # we special- this case by giving it a third dimension of length 1
-  
-  if(length(dim(ground)) == length(dim(samples)) - 1) {
-    dim(ground) = c(dim(ground), 1)
-  } # else: maybe unhandled crashytimes
-  
-  plot.converging.moment.multi(moment.second(ground), moment.second(samples), title=paste(title, "^2", sep=""))
-}
-
-
-plot.NIW.moment.first <- function(ground, sample) { 
-  #TODO: should this take the distribution paramters so it can compute 'ground' directly?
-  plot.moment.first(ground$X, sample$X, "NIW X")
-  plot.moment.first(ground$V, sample$V, "NIW V")
-}
-
-
-plot.NIW.moment.second <- function(ground, sample) {
-  #TODO: should this take the distribution paramters so it can compute 'ground' directly?
-  plot.moment.second(ground$X, sample$X, "NIW X")
-  plot.moment.second(ground$V, sample$V, "NIW V")
-}
-
-# TODO: the formulas on wikipedia include the covariances of each element of V; we aren't computing covariances here, but maybe we should.
-# TODO: some of the plots disagree with their ground truth. curious. the ks tests don't complain, though.
 
 ##########################################
 ## Kolmogorov-Smirnov Tests
 
-NIW.ks.test <- function(ground, sample, alg=NULL) {
-  # compare (using plot.compare) the marginals of the Normal Inverse Wishart against their expected pdfs
-  #
-  # args:
-  #   ground, sample: lists containing two elements, $X and $V. The first is a c(n, d) matrix, the second is a c(n, d, d) matrix
-  #                the each of the n pairs (X[k,], V[k,]) corresponds to one of the Normal Inverse Wishart samples.
-  #         ground is assumed to be samples from the true distribution
-  #         sample has histograms plotted from it
-  #      for each marginal, ks.test is performed and the results printed
-  
+ks.tests <- function(ground, sample, title=NULL, alpha=0.05) {
+  # ground and sample must both be MultiSs of the same dimensionality
+  # title is as in plot.densities and plot.convergence
+  # alpha is the p-value cutoff for "different"
+  marginals_do(sample, function(idx, sample) {
+    ground = ..getitem..(ground, idx)   #only overwrites locally
+    p = ks.test(sample, ground)$p.value #NB: ks.test() takes its args swapped from our convention
+    message("\t", marginal.title(title, idx), ": ", if(p > alpha) { "same" } else { paste("different", " (", p, ")", sep="")  })
+  })
+}
+
+
+NIW.ks.test <- function(ground, sample) {
+
   #typechecks
   stopifnot(class(ground) == "list" && class(sample) == "list")
   stopifnot(names(ground) == names(sample))
@@ -344,26 +413,7 @@ NIW.ks.test <- function(ground, sample, alg=NULL) {
       stop("ground$", N, " and sample$", N, " have inconsistent dimensions: ", dim(ground[[N]])[-last],"  vs ", dim(sample[[N]])[-last]) #TODO: this won't print correctly
     }
   }
-  # since we know sample came from rNIW, we have stronger conditions than the above:
-  # 
-  d = dim(ground$X)[1]
-  # and we also know that V is symmetric, so we can do only (1:d)x(i:d)
-  # --> this tidbit will be difficult to factor out
   
-  message("KS Tests")
-  # X marginals
-  par(mfrow=c(2,2))
-  for(i in 1:d) {
-    p = ks.test(sample$X[i,], ground$X[i,])$p.value #NB: order that ks.test takes its args is swapped from our order
-    message(alg," X[",i,"]", ": ", if(p > 0.05) { "same" } else { paste("different", " (", p, ")", sep="")  })
-  }
-  
-  # V marginals
-  par(mfrow=c(2,2))
-  for(i in 1:d) {
-    for(j in i:d) { #purposely not indented
-      p = ks.test(sample$V[i,j,], ground$V[i,j,])$p.value #NB: order that ks.test takes its args is swapped from our order
-      message(alg, " V[",i,",",j,"]", ": ", if(p > 0.05) { "same" } else { paste("different", " (", p, ")", sep="") })
-    }
-  }
+  ks.tests(sample$X, sample$X, title="X")
+  ks.tests(sample$V, sample$V, title="V")
 }

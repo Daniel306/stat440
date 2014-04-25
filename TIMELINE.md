@@ -118,28 +118,8 @@ D-2 (Wednesday)
 
 [nick]
 
-- [ ] Linear Algebra parlour tricks:
-    - [ ] factor the common matrix terms to before/after the loop (call this `snappy4`)
-    - [ ] diagonalization?? (`snappy5`)
 - [x] 13:00 - 14:00 blocked off
 - [x] 14:00 - 16:00 blocked off
-- [ ] Better timings:
-    - [ ] in the runtime tests, map the runtime matrix to averages + sds instead of having the weird aliasing problems
-    - [ ] plot SDs as error bars
-    - [ ] map the averages to have a ratio column so that we can say "snappy2 is 4.3 times faster than naive"
-    - [ ] use lty=id so that the lines are distinguished by shape as well as colour (nicer on greyscale printouts and on colourblind folks)
-    - [ ] reduce the number of samples taken--we get the idea
-- Rcpp stuff:
-    - [ ] make a stub Rcpp package with a makefile or whatever 
-        - [ ] figure out if using pointers/references in Rcpp is faster; specifically, does passing a NumericVector cause a COPY of that vector even in C?
-- [ ] Dig up analytic formula for the particular marginals of NIW and (note: there's 2^(# parameters) different marginals; pick wisely which to look at)
-    - [x] marginal of the inv.wish is inv.gamma
-    - [ ] implement as functions
-        - [x] diagonals of iwish
-        - [ ] off-diagonals of iwish
-        - [ ] entries of X from the single NIW (this should be 't' ish??)
-        - [ ] entries of Matrix-Normal thingy ((can be derived from the single NIW one))
-    - [ ] partial-apply such functions and use them as 'ground' for the marginal plots
 - [x] i.i.d. Matrix-Normal Sampler
 - [x] Test multivar regression against the Matrix-Normal sampler
 - [x] Request sample real world dataset.
@@ -153,11 +133,22 @@ D-1 (Thursday)
 
 [daniel]
 
-- [X] fix V bug in multivariable regression
+
+- [x] fix V bug in multivariable regression
 - [ ] Apply Multivariable Regression to sample real world dataset.
+- [ ] Better timings:
+    - [ ] in the runtime tests, map the runtime matrix to averages + sds instead of having the weird aliasing problems
+    - [ ] plot SDs as error bars
+    - [ ] map the averages to have a ratio column so that we can say "snappy2 is 4.3 times faster than naive"
+    - [ ] use lty=id so that the lines are distinguished by shape as well as colour (nicer on greyscale printouts and on colourblind folks)
+    - [ ] reduce the number of samples taken--we get the idea
 
 [nick]
-
+- [x] cumvar()  match "cumsum" and "cummean"
+- [x] do elementwise means and variances (<-- THIS TOOK ALL NIGHT BUT NOW THE CODE IS SO MUCH PRETTIER)
+- Rcpp stuff:
+    - [ ] make a stub Rcpp package with a makefile or whatever 
+        - [ ] figure out if using pointers/references in Rcpp is faster; specifically, does passing a NumericVector cause a COPY of that vector even in C?
 - [ ] make R package(s) (i.e. call require() instead of Rcpp::source())
     - [ ] NIW
         - [ ] dNIW()
@@ -170,8 +161,18 @@ D-1 (Thursday)
         - [ ] ???
     - ([ ] HierarchicalMatrixNormalGibbsSampler  _there is no way we're doing this by Friday_)
     - [ ] prototype + testing
-    - [ ] write R help files for each function
+    - [x] write R help files for each function ([daniel] did this?)
 - [ ] extract the prototype code (i.e., apart from the final package), package it up reusably
+
+- [ ] Dig up analytic formula for the particular marginals of NIW and (note: there's 2^(# parameters) different marginals; pick wisely which to look at)
+    - [x] marginal of the inv.wish is inv.gamma
+    - [+] implement as functions
+        - [x] diagonals of iwish
+        - [-] off-diagonals of iwish (Lysy: " I don't think that anyone knows the analytic marginal distribution of the off-diagonal elements.")
+        - [ ] entries of X from the single NIW (this should be 't' ish??)
+        - [ ] entries of Matrix-Normal thingy ((can be derived from the single NIW one))
+    - [x] partial-apply such functions and use them as 'ground' for the marginal plots
+
 
 [daniel] [nick]
 
@@ -181,6 +182,22 @@ D-1 (Thursday)
 
 D (Friday, April the 25th, 2014)
 ---------------------------------
+
+[nick]
+- [ ] make return values class() <- "NIW"
+- [ ] Linear Algebra parlour tricks:
+    - [ ] factor the common matrix terms to before/after the loop (call this `snappy4`)
+    - [ ] diagonalization?? (`snappy5`)
+
+- Demonstrate that the algorithm works
+  - [ ] prove that the Matrix Normal part is correct (hmmm.... tricksy hobbitsses... we should probably do this just by )
+  - [x] show that the marginal moments check out
+      - [x] means
+      - [x] variances
+      - [x] means of the squares
+  - [ ] show that the distributions (that we know about) check out
+      - [ ] Xs are t
+      - [ ] Vii are invgamma
 
 [daniel] [nick]
 
@@ -204,9 +221,18 @@ D+k
 - [ ] test for and quantify numerical instability
 - [ ] runtimes
     - [ ] measure over d (requires randomization to be in place) 
+- [ ] matrix transpose
+- [ ] test naive and extremelynaive under the correctness harness; now that we have analytic formulas, this can actually be telling: are we doing something drastically wrong?
 
 Open Questions and Future Work
 ================
+
+- [ ] since the speedup of the actual algorithm is minimal (<-- not necessarily true since our tests only vary n) (10pts to nick), would it be more effective to, say,
+   have a multivariate algorithm which takes
+    ((it seems like this almost exists here and there; for example, you can use mvrnorm to generate a Matrix-Normal(Mu, I, V)
+        if you could write the output Xs for NIW as a MN somehow ?))
+         --- doing MNIW on top of such a beast would be tricky; would it be giving a 3d matrix of X?
+- [ ] some of the convergence plots look like they disagree with their ground truth. curious. the ks tests don't complain, though.
 - [ ] dmNIW (Matrix Normal inverse Wishart density) 
 - [ ] investigate diagonalization: can we efficiently take U = HDH^T (with HH^T=I) somehow? If crossprod(U) = H D^2 H^T; does this speed things up?
 - how do we test dNIW? `marginalize()` is too slow to be used on more than 3 variates, which outruns the dimensionality of the smallest interesting NIW distribution

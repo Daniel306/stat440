@@ -334,6 +334,7 @@ SEXP rNIW_Rcpp_2(int n, int d, NumericVector Mu, double kappa, NumericVector gam
 NumericVector generate_z(int d, int p){
   NumericVector norms = rnorm(d*p);
   NumericVector ans(Dimension(d,p)); // might be off here
+  // TODO: replace this memcpy loop with simply setting the dim() attribute
   //int count = 0;
   for (int col = 0; col < p; col++){
     for(int row = 0; row < d; row++){
