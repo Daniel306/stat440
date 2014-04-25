@@ -86,39 +86,72 @@ IW.marginal.density <- function(i, j, Psi, df) {
   }
 }
 
-dt.density <- function(df, mu, sd) {
+dt.density <- function(df, mu, sigma.2) {
   # produce particular t-distribution density function
   # this is a simple partial evaluation wrapper around dt() from base
   #(I am worried the closure won't work right unless this is a whole separate function
+  sd = sqrt(sigma.2)
+  #message("dt.density closing over (df,mu,sd) = ", df, ", ", mu, ",", sd) #DEBUG
   function(x) {
-    dt((x - mu)/sd, df)
+    dt((x - mu) / sd, df)
   }
 }
 
-NIW.densities <- function(Mu, kappa, Psi, df, n) {
-  # n is the number samples taken
+NIW.densities <- function(Mu, kappa, Psi, df, samples) {
+  # [BROKEN]
+  #  - $V is alright
+  #  - $X is wrong; the variances come out screwy
+  #  and it is weird that we are passing samples into an analytic density function -- shouldn't it just know from the params?
+  #  (this is a little like saying to design a binary search tree you first need a running binary search tree)
+  #  I do not know what the 3-param notation means; wikipedia only knows about up to a 2-param t dist'n: https://en.wikipedia.org/wiki/Noncentral_t-distribution
+  #  in fact, isn't the point of the t that you *don't have to care* about the scale? that the variance cancels out?
+  #  ----> but that's only true for .. hm.
+  
+  # n is the number of samples taken(?)
+  # t(X) is the samples taken
   # it matters because the distribution of samples changes as more samples are taken
   # it only matters to the X side of the sampling, though, for the V side is i.i.d.
+
+  X = samples$X;
+  V = samples$V;
+  X.bar = rowMeans(X)
+  #message("X.bar");  print(dim(X.bar)); print(X.bar)
+
+  #message("alloc ing the scatter matrix")
+  # the Scatter matrix
+  #print(dim(X))
+  S = tcrossprod(X) #<-- the transpose is necessary because our convention (d,n) is opposite the usual
+  #message("Scatter matrix")
+  #print(dim(S))
+  S.hat = tcrossprod(X.bar - Mu) # probably the wrong name for this quantity
+  #print(S)
+  #message("the othjer scatter matrix")
+  #print(S.hat)
   
   d = dim(Psi)[1]
+  n = dim(X)[1]
   
-  X = as.list(rep(NA, d))
-  V = as.list(rep(NA, d*d))
-  dim(X) = c(d,1)
-  dim(V) = c(d,d)
+  X_pdf = as.list(rep(NA, d))
+  V_pdf = as.list(rep(NA, d*d))
+  dim(X_pdf) = c(d,1)
+  dim(V_pdf) = c(d,d)
 
   # the marginals of the iWish part are iGamma on the diagonal
   # unknown elsewhere
   for(i in 1:d) {
-    V[[i,i]] = IW.marginal.density(i,i, Psi, df)
+    V_pdf[[i,i]] = IW.marginal.density(i,i, Psi, df)
   }
 
   for(i in 1:d) {
     df.t = df+n-d+1
-    X[[i, 1]] = dt.density(df.t, Mu[i], Psi[i,i]/(kappa+n)/(df.t))
+    #y.bar = 0   # this is on the formula sheet by Kevin Murphy but not defined.. he probably meant x.bar.
+                 # but even still, that is frustrating: it requires us to pass the data matrix in
+    mu.t = (kappa*Mu[i] + n*X.bar[i])/(kappa+n)
+    var.t = (Psi[i,i] + S[i,i] + kappa*n*S.hat[i,i]/(kappa+n))  /kappa/(df.t)
+    X_pdf[[i, 1]] = dt.density(df.t, mu.t, var.t)
   }
   
-  list(X = X, V = V)
+  list(X = X_pdf, V = V_pdf)
 }
 
 
