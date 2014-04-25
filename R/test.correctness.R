@@ -121,7 +121,7 @@ plot.densities <- function(ground, sample, title=NULL, layout=c(2,2), ...) { #XX
 # we do not know analytic forms for many of the densities
 # but we do know these two:
 
-IW.marginal <- function(i, j, Psi, df) {
+IW.marginal.density <- function(i, j, Psi, df) {
   # Inverse Wishart marginals
   #
   # returns:
@@ -144,11 +144,45 @@ IW.marginal <- function(i, j, Psi, df) {
     beta  = (Psi[i , i])/2
     function(x) { dinvgamma(x, shape=alpha, scale=beta) }
   } else {
-    stop("non-diagonal marginals not supported yet")
+    warning("non-diagonal marginals not supported (EVER)")
+    NA
   }
 }
 
-# TODO: NIW.X.marginal()
+dt.density <- function(df, mu, sd) {
+  # produce particular t-distribution density function
+  # this is a simple partial evaluation wrapper around dt() from base
+  #(I am worried the closure won't work right unless this is a whole separate function)
+  function(x) {
+    dt((x - mu)/sd, df)
+  }
+}
+
+NIW.densities <- function(Mu, kappa, Psi, df, n) {
+  # n is the number samples taken
+  # it matters because the distribution of samples changes as more samples are taken
+  # it only matters to the X side of the sampling, though, for the V side is i.i.d.
+  
+  d = dim(Psi)[1]
+  
+  X = as.list(rep(NA, d))
+  V = as.list(rep(NA, d*d))
+  dim(X) = c(d,1)
+  dim(V) = c(d,d)
+
+  # the marginals of the iWish part are iGamma on the diagonal
+  # unknown elsewhere
+  for(i in 1:d) {
+    V[[i,i]] = IW.marginal.density(i,i, Psi, df)
+  }
+
+  for(i in 1:d) {
+    df.t = df+n-d+1
+    X[[i, 1]] = dt.density(dt.t, Mu[i], Psi[i,i]/(kappa+n)/(df.t))
+  }
+  
+  list(X = X, V = V)
+}
 
 ##########################################
 ## Moments
