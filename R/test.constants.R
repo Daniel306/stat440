@@ -13,10 +13,10 @@ kDF = 7.32 # must be at least as large as the dimension of kV
 krNIWAlgorithms = c(
             "extremelynaive",
             "naive",
-            "snappy1",
-            "snappy2",
-            "snappy3",
-            "Rcpp2",
+            "version1",
+            "version2",
+            "version3",
+            "Rcpp",
             "extremelynaive.RcppEigen",
             "snappy.RcppEigen"
             )
