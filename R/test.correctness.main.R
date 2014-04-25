@@ -63,8 +63,8 @@ main <- function() { # avoid polluting the namespace
             # first moments (matrix and non-matrix)
             # 1) computationally
             message("m1comp") #DEBUG
-            plot.convergence(ground$X, samples$X, cummean, ylab="sample mean", "NIW X", PRECUMULATED=T)
-            plot.convergence(ground$V, samples$V, cummean, ylab="sample mean", "NIW V", PRECUMULATED=T)
+            plot.mean.convergence(ground$X, samples$X, "NIW X")
+            plot.mean.convergence(ground$V, samples$V, "NIW V")
             # 2) analytically
             message("m1analytic") #DEBUG
             #plot.convergence(NIW.X.mean(kMu, kKappa, kPsi, kDF), samples$X, mean, "NIW X", sub="(analytically)")
@@ -73,8 +73,8 @@ main <- function() { # avoid polluting the namespace
             # first variances
             # 1) computationally
             message("v1comp") #DEBUG
-            plot.convergence(ground$X, samples$X, cumvar, "NIW X", PRECUMULATED=T)
-            plot.convergence(ground$V, samples$V, cumvar, "NIW V", PRECUMULATED=T)
+            plot.var.convergence(ground$X, samples$X, "NIW X")
+            plot.var.convergence(ground$V, samples$V, "NIW V")
             # 2) analytically
             message("v1analytic") #DEBUG
             #plot.convergence(NIW.X.var(kMu, kKappa, kPsi, kDF), samples$X, var, "NIW X", sub="(analytically)")
@@ -83,8 +83,8 @@ main <- function() { # avoid polluting the namespace
             # second matrix moments: the means of the outer products
             # 1) computationally
             message("mm1comp") #DEBUG
-            plot.convergence(fancy_matrix_square(ground$X), fancy_matrix_square(samples$X), cummean, "XX^T", PRECUMULATED=T)
-            plot.convergence(fancy_matrix_square(ground$V), fancy_matrix_square(samples$V), cummean, "VV^T", PRECUMULATED=T)
+            plot.mean.convergence(fancy_matrix_square(ground$X), fancy_matrix_square(samples$X), cummean, "XX^T", PRECUMULATED=T)
+            plot.var.convergence(fancy_matrix_square(ground$V), fancy_matrix_square(samples$V), cummean, "VV^T", PRECUMULATED=T)
             # 2) we do not do this analytically
             # that's all she wrote, folks!
             

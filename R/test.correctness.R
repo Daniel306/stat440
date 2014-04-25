@@ -27,8 +27,7 @@ cumulate <- function(s) {
   # if you can, use a more efficient specialized method
   
   function(v) { 
-      sapply(1:length(v), function(i) { s(v[1:i]) })
-    }
+    sapply(1:length(v), function(i) { s(v[1:i]) })
   }
 }
 
@@ -208,23 +207,24 @@ NIW.var <- function(Mu, Kappa, Psi, df, samples) {
 
 
 
-plot.convergence <- function(ground, samples, accumulator, title=NULL, ylab=NULL, PRECUMULATED=F, ...) {
-  #
+plot.convergence <- function(ground, samples, statistic, accumulator, title=NULL, ylab=NULL, ...) {
+
+  # ground and samples may (should?) be matrices
   # note: plot.convergence does not actually guarantee you will see convergence; 
   #  you might not have enough samples or your choice of accumulator might not pick a duck out of a hat (an i.i.d. set of ducks, of course) and measure its beak length with some random error.
   #  using accumulator=mean or accumulator=var will definitely
-  # ground and samples may be matrices
-  # ... : args to plot
-  # TODO: 
-  # ylab is only passable because hax
-  #   but also only because we need it in the namespace to make its default value work
+  # IT IS UP TO YOU TO MAKE SURE statistic AND accumulator ARE COMPUTING THE SAME STATISTIC.
+  
+  # ... : args to plot()
+  
+  
 
 
   # extract the name of the cumulation function for labelling
-  accumulator.name = deparse(substitute(accumulator))
-
+  statistic.name = deparse(substitute(statistic))
+  
   if(is.null(ylab)) {
-     ylab = paste("sample", accumulator.name) #use  unless the user overrides
+     ylab = paste("sample", statistic.name) #use  unless the user overrides
   }
   
   # coerce ground to have the same shape as samples
@@ -253,29 +253,31 @@ plot.convergence <- function(ground, samples, accumulator, title=NULL, ylab=NULL
 
   # squish the ground truth down to its cumulant (eg the mean/var/whatever taken over the WHOLE set)
   message("Computing statistic on ground truth") #DEBUG
-  ground = apply(ground, kept_dimensions, accumulator) # apply() flattens
+  ground = apply(ground, kept_dimensions, statistic) # apply() flattens
   dim(ground) = c(dim(samples)[kept_dimensions], 1)    # unflatten, and undrop() the last dimension
                                                        # such that ground matches the original size.
-                # BEWARE: ^ because over overwriting accumulator, this MUST happen first
-
-  # cumulate..
-  if(!PRECUMULATED) {
-     accumulator = cumulate(accumulator) 
-  }
+  
   message("Computing cumulated statistic..")      #DEBUG  
   samples = apply(samples, kept_dimensions, accumulator)
-  
 
   message("Looping") #DEBUG
   marginals_do(samples, function(idx, samples) {
     print(idx) #DEBUG
     plot(samples, xlab="samples taken (n)", ylab=ylab, main=marginal.title(title, idx))        
-    abline(h=..getitem..(ground, idx), lty="dashed", col="blue")
-    legend("topleft", paste(paste("True", accumulator.name), round(ground, 2)), lty="solid", col="blue")
+    ground = ..getitem..(ground, idx)
+    abline(h=ground, lty="dashed", col="blue")
+    legend("topleft", paste(paste("True", statistic.name), round(ground, 2)), lty="solid", col="blue")
   })
 }
 
 
+plot.mean.convergence <- function(ground, samples, title=NULL, ...) {
+  plot.convergence(ground, samples, mean, cummean, title=paste("Sample mean of", title), ...);
+}
+
+plot.var.convergence <- function(ground, samples, TITLE=NULL, ...) {
+  plot.convergence(ground, samples, var, cumvar, title=paste("Sample variance of", title), ...);
+}
 
 
 
