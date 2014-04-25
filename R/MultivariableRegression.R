@@ -103,7 +103,7 @@ rmultivariableregression <- function(points, B, V) { #<-- TODO: rename? r.multiv
 #  # generate samples from the model Y ~ N(mu, V) where itself mu ~ N(
 
 
-lm.multivariable <- function(m, X, Y, Lambda=NULL, Omega=NULL, Psi=NULL, df=71) { # TODO: Not sure what to name this.
+lm.multivariable <- function(m, X, Y, Lambda=NULL, Omega=NULL, Psi=NULL, df=71) {
   # Multivariable Regression via Bayesian Reasoning
   # 
   # This fits the model Y = XB + E where (E_i)^T ~iid MultiNormal(0, V)
