@@ -33,6 +33,8 @@ vectorize <- function(f) {
 }
 
 
+
+
 clip <- function(x, range) {
   # hard-clip values to a specified range
   #
@@ -91,9 +93,27 @@ intseq <- function(from=1, to=NULL, by=NULL, length.out=NULL) {
   seq(from, to, by)
 }
 
+reasonable_subset(D, length.out=1000) {
+  # plotting too many points causes lag
+  # reasonable_subset evenly reduces the number of samples in D evenly
+  # (in other places, this operation is called decimation(TODO: FACTCHECK))
+  #
+  # returns:
+  #  the dataframe reduced to length.out or its original length, whichever is smaller.
+
+  n = dim(D)[1]
+  idx = intseq(1, n, length.out=length.out)
+  D[idx,]  
+}
+
+
+
 
 cummean <- function(v) {
-  # compute the "cumulative mean" of a vector: considering each entry as a new sample point, give the sample mean up to that point
+  # compute the "cumulative mean" of a vector
+  #
+  # considering each entry as a new sample point,
+  #  give the sample mean up to that point
   # 
   # args:
   #  v: a numeric vector
@@ -103,7 +123,37 @@ cummean <- function(v) {
   
   cumsum(v) / (1:length(v))
 }
- 
+
+cumvar <- function(v) {
+  # compute the "cumulative variance" of a vector
+  #
+  # considering each entry as a new sample point,
+  #  give the sample variance up to that point
+  # 
+  # args:
+  #  v: a numeric vector
+  #
+  # returns:
+  #   a vector the same length as v; the first value is always NA.
+
+  n = length(v)
+  r = (cumsum(v^2) - cumsum(v)^2/1:n)/(1:n - 1) #TODO: document this derivation
+  r[1] = NA #    the first entry is always NaN because the variance of a single point is undefined.
+  return(r)
+}
+
+test.cumvar <- function() {
+  x = rnorm(66);
+  v_known = sapply(1:length(x), function(i) { var(x[1:i]) })
+  v_test = cumvar(x)
+
+  # the first value is always NA, which fails the numerical test
+  # we special case it
+  stopifnot(is.na(v_test[1]))
+  n = length(x)
+  stopifnot(max(v_known[2:n] - v_test[2:n]) < 1e-13)
+}
+#test.cumvar()
 
 
 marginalize <- function(f, arity, dims, lower=-Inf, upper=+Inf, ...) {
@@ -252,3 +302,54 @@ test.marginalize <- function() {
   }
 }
 #test.marginalize()
+
+
+
+
+
+marginals_do <- function(M, f) { #TODO: pull out into util
+  # precondition: M's dim is (a,b,c,d,...,n); marginals are taken of that last dimension, n    
+  # precondition: f is f(idx, v) where idx will be a vector containing the length(dim)-1 indexes and v is the marginal vector
+  # postcondition: nothing; you need to do every with side-effects in f
+  # loop over all interesting_dimensions and plot each marginal
+  # recursive something someting  
+  R<-function(idx, dims) { #TODO: pull out into util.R
+    if(length(dims)==0) {
+      # base case
+      # we've bottomed out and have an actual index in hand
+      # so use it
+      #message("bottomed out at idx=")
+      #print(idx) #DEBUG
+      
+      v = do.call(`[`, c(M, as.list(idx))) # this line courtesy of mrflick in #R
+      v = as.vector(v) # just in case (i think if idx == c(), which should correspond to M[], we will *not* get a vector out: R will preserve the dimensions (but only in that case (which shouldn't be possible, if the recursion is correct))
+      f(idx,  v)
+    } else {
+      # recursive case
+      # split the top dimensions from the body
+      # note how we extract the *number* of elements in the dimension d from the index of the dimension itself dims[1]
+      d = dim(samples)[dims[1]]; dims = dims[-1];
+      for(i in 1:d) {
+        R(append(idx, i), dims)
+      }
+    }
+  }
+  R(c(), interesting_dimensions) #kick off the recursive loop  
+  return(NULL)
+}
+
+
+idx2str <- function(idx) {
+  # convert an index vector as passed from marginals_do
+  # into a string
+  # c()      -> ""
+  # c(1,2,3) -> "[1,2,3"]
+  # c(1)     -> "[1]"
+  idx = paste(idx, collapse=",") #could also do this with a complicated do.call, but paste() covers this case helpfully for us with 'collapse'
+  if(idx == "") { #special case: no indices means all the indecies #XXX untested
+    return(idx)
+  } else {
+    return paste("[", idx, "]") #but otherwise wrap the indecies in square brackets
+  }
+}
+

@@ -12,7 +12,7 @@ rMN <- function(n, Mu, U, V) {
 require(MASS) #COPYPASTA; TODO: factor
 rmvnorm = MASS::mvrnorm #repair naming convention
 
-rmultivariableregression <- function(points, B, V) {
+rmultivariableregression <- function(points, B, V) { #<-- TODO: rename? r.multivariable.model?
   # simulate from the multivariable normal model.
   #
   # The model this generates from is Y = XB + E where (E_i)^T ~iid MultiNormal(0, V)
@@ -98,6 +98,9 @@ rmultivariableregression <- function(points, B, V) {
 
   list(X = X, Y = Y)
 }
+
+# TODO: r.random.effects(n, V, W) {
+#  # generate samples from the model Y ~ N(mu, V) where itself mu ~ N(
 
 
 lm.multivariable <- function(m, X, Y, Lambda=NULL, Omega=NULL, Psi=NULL, df=71) { # TODO: Not sure what to name this.
@@ -219,6 +222,9 @@ test.EversonMorris <- function(n=27, m=1e7) {
   # correct (artificial and frequentist) coefficients.
   # Parameters based on Everson & Morris [2000]
   #
+  # Note: the proper Everson Morris paper used a *random effects* model which
+  #  turns out(?) to be algebraically equivalent to a multivariable model.
+  #  This function only uses the multivariable model directly.
   #
   # args:
   #  n: number of observed samples to take

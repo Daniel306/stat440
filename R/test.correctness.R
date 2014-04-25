@@ -118,6 +118,11 @@ plot.NIW.densities <- function(ground, sample, alg=NULL) { #XXX name
 
 
 
+############
+## Analytic densities
+# we do not know analytic forms for many of the densities
+# but we do know these two:
+
 IW.marginal <- function(i, j, Psi, df) {
   # Inverse Wishart marginals
   #
@@ -145,15 +150,45 @@ IW.marginal <- function(i, j, Psi, df) {
   }
 }
 
+# TODO: NIW.X.marginal()
 
 ##########################################
 ## Moments
 
-# Wikipedia gives some useful analytic formulas:
-# https://en.wikipedia.org/wiki/Inverse-Wishart_distribution#Moments
-# and it's relatively obvious that the mean of X is just Mu.
 
-plot.converging.moment <- function(ground, samples, ...) {
+# utilties
+
+
+# TODO: the following two functions should be factored
+# but, as with the above, how to do so eludes me
+#  because again, there's special-case behaviour in each; plot.convering.variance would, for example, behave erratically if it ended up calling var(scalar) which is NA
+
+plot.converging.mean <- function(ground, samples, ...) {
+  # 
+  # every moment is an expectation, which can be approximated by a sample mean
+  # to use this function, first compute
+  # plots a horizontal line at the expected value as given in 'ground
+  #
+  # args:
+  #  ground: the 'ground truth': a number or a vector
+  #  samples: a vector of sample points
+  #  ...: extra arguments to plot()
+
+  # TODO: typechecks
+
+  if(length(ground) > 1) { ground = mean(ground) }
+
+  n = length(samples)
+  idx = 1:n
+
+  plot(reasonable_subset(cbind(idx, cummean(samples)), means, xlab="samples taken", ylab="mean", ...) # XXX is ylab what we want?
+  #  note: ^this relies on plots() special-case behaviour of plot on a 2-column matrix/dataframe being interpreted the same as plot(x,y)
+  abline(h=ground, lty="solid", col="blue")
+  legend(paste("True mean", round(ground, 2)), lty="solid", col="blue")
+}
+
+
+plot.converging.variance <- function(ground, samples, ...) {
   # 
   # every moment is an expectation, which can be approximated by a sample mean
   # to use this function, first compute
@@ -166,40 +201,68 @@ plot.converging.moment <- function(ground, samples, ...) {
 
   # TODO: typechecks
   
-  if(length(ground) > 1) { ground = mean(ground) }
+  if(length(ground) > 1) { ground = var(ground) }
 
-  # plotting too many points causes lag
-  # so use intseq() to reduce
-  idx = intseq(1, length(samples), length.out=1000)
-  means = cummean(samples)[idx]
-  plot(idx, means, xlab="samples taken", ylab="moment", ...) #XXX is ylab right?
+  n = length(samples)
+  idx = 1:n
+  
+  plot(reasonable_subset(cbind(idx, cumvar(samples)), means, xlab="samples taken", ylab="mean", ...) # XXX is ylab what we want?
+  #  note: ^this relies on plots() special-case behaviour of plot on a 2-column matrix/dataframe being interpreted the same as plot(x,y)
   abline(h=ground, lty="solid", col="blue")
+  legend(paste("True variance", round(ground, 2)), lty="solid", col="blue")
 }
 
 
-plot.converging.moment.multi <- function(ground, samples, title=NULL) { # XXX name
-  # befpore using this function, map samples (and ground) with
-  # for example, to take second moments, first run crossprod() across samples
-  #
-  # TODO: docstring
-  # TODO: merge plot.converging.moment into this, so that it handles multivariates smoothly in line with univariates?
-  #    con: the plotting arguments, main=, sub=, etc, will be finicky to do if it's merged
-  #    pro: it might (might) be faster to do the cummeans all at once
 
-  # TODO: typechecks
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+cumulate <- function(M, margin, f) {
+  # apply 'f' across 'margin'
+  # this generalizes "cumsum", but so much slower.
+  # f must take a vector and return a scalar
+  # unlike apply(), this function protects the dimensions of M
+  # this function is slow: it necessarily has at least quadratic runtime
+  # use case: taking the cumulative variance in a (p,q,n) matrix (a matrix of n (p,q) design matrices, say)
+  #  : cumulate(M, -3, var)
+  # TODO: provide a feature so that you can flag to cumulate that f is already in cumulator form (eg so you can pass cumsum directly);
+  #   this hope being that this will be faster
   
-  # our convention is: the LAST dimension is 'n'  
-  n_dimension = length(dim(samples))
-  interesting_dimensions = 1:(n_dimension-1) #XXX name
-  
-  #ground = apply(ground, -n_dimension, mean) # ground is FLATTENED to a single number (per marginal, so there's actually still a bunch)
-  #dim(ground) = dim(samples)[interesting_dimensions] #for some reason, using mean() means the result ground loses all its dimensions and becomes a vector. go figure.
-  #samples = apply(samples, -n_dimension, cummean) # PAY ATTENTION: this line changes samples from (d,d,n) to (n,d,d)
-    
-  # deal with the special case of ground being a single value
+  original.dims = dim(M)
+  M = apply(M, margin, function(v) { 
+            sapply(1:length(v), function(i) { f(v[1:i]) }
+            })
+  dim(M) = original.dims #XXX if 
+  return(M)
+}
+
+
+
+plot.convergence <- function(ground, samples, accumulator, title=NULL, ...) {
+  #
+  # note: plot.convergence does not actually guarantee you will see convergence; 
+  #  you might not have enough samples or your choice of accumulator might not pick a duck out of a hat (an i.i.d. set of ducks, of course) and measure its beak length with some random error.
+  #  using accumulator=mean or accumulator=var will definitely
+  # ground and samples may be matrices
+  # ... : args to plot
+  # TODO: 
+
+  # coerce ground to have the same shape as samples
+  # ...
+  # deal with the special case of ground being a single value (use case: an analytic reference value)
   # by giving it an extra dimension of length 1
-  # (and the beginnings of typechecks while we're at it) 
-  # ...TODO: should this part be killed? It's replicating work that happens in functions that call it.
+  # TODO: factor this (how??) -- this step is like an inverse of drop(), except that drop() can't have a proper inverse
   if( length(dim(ground)) == length(dim(samples)) ) {
     # acceptable
   } else if(length(dim(ground)) == length(dim(samples)) - 1) { #TODO: also check the dimensions that match actually do match
@@ -207,123 +270,115 @@ plot.converging.moment.multi <- function(ground, samples, title=NULL) { # XXX na
     dim(ground) = c(dim(ground), 1)
   } else {
     # unacceptable!!
-    stop("Inconsistent dimenesions between ground and sample")
+    stop("Inconsistent dimenesions between ground and sample; ground is c(", paste(dim(ground), sep=","),
+                                                    "), while sample is c(", paste(dim(sample), sep=","), ")", sep="")
   }
+  
+  marginalized_dimension = length(dim(samples))
 
-  # loop over all interesting_dimensions and plot each marginal
-  # recursive something someting  
-  R<-function(idx, dims) { #TODO: pull out into util.R
-    if(length(dims)==0) {
-      # base case
-      # we've bottomed out and have an actual index in hand
-      # so use it
-      #message("bottomed out at idx=")
-      #print(idx) #DEBUG
-      
-      # FIXME: I don't understand how to handle variable arity functions in R
-      #  (I would really like to say "samples[*idx]" like I can in python)
-      # so I've hardcoded the cases we're actually using
-      # this needs to be repaired!
-      if(length(idx) == 0) {
-        plot.converging.moment(ground[], samples[],  main=paste(title, sep=""));
-      } else if(length(idx) == 1) {
-        i = idx[1];
-        plot.converging.moment(ground[i,], samples[i,],  main=paste(title,"[",i,"]", sep=""));
-      } else if(length(idx) == 2) {
-        i = idx[1]; j = idx[2];
-        plot.converging.moment(ground[i,j,], samples[i,j,],  main=paste(title, "[",i,",",j,"]", sep=""));
-      }
-    } else {
-      # split the top dimensions from the body
-      # note how we extract the *number* of elements in the dimension d from the index of the dimension itself dims[1]
-      d = dim(samples)[dims[1]]; dims = dims[-1];
-      for(i in 1:d) {
-        R(append(idx, i), dims)
-      }
-    }
+  # extract the name of the cumulation function for labelling
+  accumulator.name = deparse(substitute(accumulator))
+  
+  if(missing(ylab)) {
+    ylab = paste("sample", accumulator.name) #use  unless the user overrides
   }
-  R(c(), interesting_dimensions)
-}
-# sketchy test:
-#test.plot.converging.moment.multi <- function() {
-#  source("test.constants.R")
-#  S = rWishart(14441, kDF, kPsi);
-#   # the mean of a wishart distribution is V*df..
-#  plot.converging.moment.multi(kPsi*kDF, S, paste("W(Psi,", kDF,")"))
-#}
-#test.plot.converging.moment.multi()
-
-
-moment.first <- identity
-
-
-moment.second <- function(M) {
-  # given a (d,n) or (d,p,n) matrix
-  #  (n being the number of samples)
-  # compute the second moment of each sample
-  # which, in matrixland, is M%*%t(M), a (d,d) matrix (nb: a (d,n) matrix means each sample is (d,) which tcrossprod treats as a (d,1) matrix)
-  # returns: a (d,d,n) matrix containing the second moments
-  # TODO: generalize to matrices of more than 2 dimensions
-
-  # Typechecks
-  n_dim = length(dim(M))
-  d = dim(M)[1]
-  n = dim(M)[n_dim]
   
-  R = apply(M, n_dim, tcrossprod)
-  # apply() flattens its results just to be a pain;
-  # we need to unflatten them.
-  # M %*% t(M) is (d x p)*(p * d) so the result is (d x d)
-  dim(R) = c(d, d, n)
+  # Plot the means converging properlike
+  kept_dimensions = (1:marginalized_dimension)[-marginalized_dimension] #precompute the list opposite of marginalized_dimension
+                                             #doing it this way ensures this works even if ground is missing the last dimension
+  samples = cumulate(samples, kept_dimensions, accumulator)
+  ground = apply(ground, kept_dimensions, accumulator) # flattens
+  dim(ground) = kept_dimensions
+  stopifnot(dim(ground) == dim(samples)[1:2])
   
-  return(R)
+  marginals_do(samples, function(idx, samples) {
+    plot(samples, xlab="samples taken (n)", ylab="sample mean", main=paste(title, idx2str(idx)))
+    abline(h=do.call(`[`, c(ground, as.list(idx))), lty="dashed", col="blue")
+    legend(paste(paste("True", accumulator.name), round(ground, 2)), lty="solid", col="blue")
+  })
 }
 
 
+######################
+## Computational (that is, kernel-density-estimated) Normal|Inverse-Wishart marginal moments 
 
-plot.moment.first <- function(ground, samples, title=NULL) {
-  if(length(dim(ground)) == length(dim(samples)) - 1) {
-    dim(ground) = c(dim(ground), 1)
-  } # else: maybe unhandled crashytimes
-  
-  plot.converging.moment.multi(moment.first(ground), moment.first(samples), title=title)
-}
-
-
-plot.moment.second <- function(ground, samples, title=NULL) {
-  #follow along with how finicky this is:
-  # the mainline case is that ground and sample are both (d,p,n) matrices
-  # but ground MIGHT be a single sample, without the 'n' dimension
-  # we special- this case by giving it a third dimension of length 1
-  
-  if(length(dim(ground)) == length(dim(samples)) - 1) {
-    dim(ground) = c(dim(ground), 1)
-  } # else: maybe unhandled crashytimes
-  
-  plot.converging.moment.multi(moment.second(ground), moment.second(samples), title=paste(title, "^2", sep=""))
-}
-
-
-plot.NIW.moment.first <- function(ground, sample) { 
-  #TODO: should this take the distribution paramters so it can compute 'ground' directly?
+plot.NIW.moment.first.computational <- function(ground, sample) { 
+  # given a 'ground' sample (eg. from the naive implementation), compare
+  # the marginals of the first (matrix-)moments of the rNIW samples visually
   plot.moment.first(ground$X, sample$X, "NIW X")
   plot.moment.first(ground$V, sample$V, "NIW V")
 }
 
 
-plot.NIW.moment.second <- function(ground, sample) {
-  #TODO: should this take the distribution paramters so it can compute 'ground' directly?
+plot.NIW.moment.second.computational <- function(ground, sample) {
+  # given a 'ground' sample (eg. from the naive implementation), compare
+  # the marginals of the second (matrix-)moments of the rNIW samples visually
   plot.moment.second(ground$X, sample$X, "NIW X")
   plot.moment.second(ground$V, sample$V, "NIW V")
 }
 
-# TODO: the formulas on wikipedia include the covariances of each element of V; we aren't computing covariances here, but maybe we should.
-# TODO: some of the plots disagree with their ground truth. curious. the ks tests don't complain, though.
+###########
+#### Analytic Normal|Inverse-Wishart marginal moments 
+
+ 
+NIW.mean <- function(Mu, Kappa, Psi, df, samples) {
+  # compute the expected true mean of a 
+  #  (X,V) ~ NIW(Mu, Kappa, Psi, df) distribution
+  # 
+  # returns: a list containing
+  #   X -- the mean value for X
+  #   V -- the mean value for V
+  d = dim(Psi)[1]
+  
+  # the means of all Xs is just Mu, because X | V ~ N(Mu, V)
+  # and the means of all Vs is Psi scaled by its degrees of freedom (props to Wikipedia for this one)
+  list(X = Mu, V = Psi/(df-p-1))
+}
+
+
+NIW.var <- function(Mu, Kappa, Psi, df, samples) {
+  # plot
+  # compute the expected true variance
+  #  (X,V) ~ NIW(Mu, Kappa, Psi, df) distribution
+  #
+  # does NOT return covariances; for one thing, some of those covariances have never been derived
+  #  for another: no one cares
+  # 
+  # returns: a list containing
+  #   X -- the variances of X
+  #   V -- the variances of V
+  
+  d = dim(Psi)[1]
+
+  # the Xs are t-distributed
+  # which means their variances are ...
+  # ..TODO
+  X_var = NULL
+  
+  # the variances of the entries are
+  # Var(V_ij) = (df-d+1)Psi_ij^2 + (v-p-1)*Psi_ii*Psi_jj) / (df-d)(df-d-1)^2(df-d-3)
+  #
+  # TODO: vectorize this formula
+  # part of it vectorizes nicely, but the way to do the rest 
+  # is not jumping out at me.
+  # so a loop it is
+   # cite: https://en.wikipedia.org/wiki/Inverse-Wishart_distribution
+  V_var = (df- d + 1)*Psi^2
+  for(i in 1:d) {
+  for(j in 1:d) {
+    V_var[i,j] = V_var[i,j] + (df - p - 1) * Psi[i,i]*Psi[j,j]
+  }}  
+  V_var = V_var / (df-d) / (df-d-1)^2 / (df-d-3)
+  
+  list(X = X_var, V = V_var)
+}
+
+
 
 ##########################################
 ## Kolmogorov-Smirnov Tests
 
-NIW.ks.test <- function(ground, sample, alg=NULL) {
+NIW.ks.test <- function(ground, sample) {
   # compare (using plot.compare) the marginals of the Normal Inverse Wishart against their expected pdfs
   #
   # args:
@@ -350,12 +405,11 @@ NIW.ks.test <- function(ground, sample, alg=NULL) {
   # and we also know that V is symmetric, so we can do only (1:d)x(i:d)
   # --> this tidbit will be difficult to factor out
   
-  message("KS Tests")
   # X marginals
   par(mfrow=c(2,2))
   for(i in 1:d) {
     p = ks.test(sample$X[i,], ground$X[i,])$p.value #NB: order that ks.test takes its args is swapped from our order
-    message(alg," X[",i,"]", ": ", if(p > 0.05) { "same" } else { paste("different", " (", p, ")", sep="")  })
+    message("\t X[",i,"]", ": ", if(p > 0.05) { "same" } else { paste("different", " (", p, ")", sep="")  })
   }
   
   # V marginals
@@ -363,7 +417,7 @@ NIW.ks.test <- function(ground, sample, alg=NULL) {
   for(i in 1:d) {
     for(j in i:d) { #purposely not indented
       p = ks.test(sample$V[i,j,], ground$V[i,j,])$p.value #NB: order that ks.test takes its args is swapped from our order
-      message(alg, " V[",i,",",j,"]", ": ", if(p > 0.05) { "same" } else { paste("different", " (", p, ")", sep="") })
+      message("\t V[",i,",",j,"]", ": ", if(p > 0.05) { "same" } else { paste("different", " (", p, ")", sep="") })
     }
   }
 }

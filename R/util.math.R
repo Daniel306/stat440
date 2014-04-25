@@ -124,3 +124,29 @@ dinvgamma <- function(x, shape, rate=1, scale=1/rate, log=FALSE) {
 # already implemented as dIW() in dNIW.R
 # ...?
 # hmmm
+
+
+
+
+fancy_matrix_square <- function(M) { #pull out into util.math.R?
+  # given a (d,n) or (d,p,n) matrix
+  #  (n being the number of samples)
+  # compute the second moment of each sample
+  # which, in matrixland, is M%*%t(M), a (d,d) matrix (nb: a (d,n) matrix means each sample is (d,) which tcrossprod treats as a (d,1) matrix)
+  # returns: a (d,d,n) matrix containing the second moments
+  # TODO: generalize to matrices of more than 2 dimensions
+
+  # Typechecks
+  n_dim = length(dim(M))
+  d = dim(M)[1]
+  n = dim(M)[n_dim]
+  
+  R = apply(M, n_dim, tcrossprod)
+  # apply() flattens its results just to be a pain;
+  # we need to unflatten them.
+  # M %*% t(M) is (d x p)*(p * d) so the result is (d x d)
+  dim(R) = c(d, d, n)
+  
+  return(R)
+}
+
