@@ -159,7 +159,7 @@ void BartlettFactorCpp(int d, double df, NumericVector &A){
 
 // now that I can do that.. what?
 // [[Rcpp::export]]
-List rNIW_snappy_eigen(unsigned int n, NumericVector Mu, double kappa, NumericVector Psi, double df) {
+List rNIW_version_eigen(unsigned int n, NumericVector Mu, double kappa, NumericVector Psi, double df) {
   // precondition: all the preconditions have been properly checked by rNIW.typechecked
   unsigned int d = Mu.length();
 
@@ -280,7 +280,7 @@ NumericVector Mmult(NumericVector M1, NumericVector M2){
 
 
 // [[Rcpp::export]]
-SEXP rNIW_Rcpp_2(int n, int d, NumericVector Mu, double kappa, NumericVector gamma_inv, double df) {
+SEXP rNIW_Rcpp(int n, int d, NumericVector Mu, double kappa, NumericVector gamma_inv, double df) {
   NumericVector V_ans(Dimension(d,d,n));
   NumericVector X_ans(Dimension(d,n));
   
