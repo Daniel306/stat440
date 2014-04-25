@@ -40,10 +40,12 @@ main <- function() { # avoid polluting the namespace
             plot.NIW.densities(ground, samples, alg)
             
             # make first moment convergence plots
-            plot.NIW.moment.first(ground, samples)
+            #plot.NIW.moment.first.computational(ground, samples)
+            plot.NIW.moment.mean.analytic(kMu, kKappa, kPsi, kDF, samples)
                         
             # make second moment convergence plots
-            plot.NIW.moment.second(ground, samples)
+            #plot.NIW.moment.second.computational(ground, samples)
+            #plot.NIW.moment.variance.analytic(kMu, kKappa, kPsi, kDF, samples)
             
             # test for equidistribution numerically 
             NIW.ks.test(ground, samples, alg)

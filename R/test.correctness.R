@@ -177,7 +177,7 @@ plot.converging.moment <- function(ground, samples, ...) {
 }
 
 
-plot.converging.moment.multi <- function(ground, samples, title=NULL) { # XXX name
+plot.converging.moment.multi <- function(ground, samples, title=NULL, sub=NULL) { # XXX name
   # befpore using this function, map samples (and ground) with
   # for example, to take second moments, first run crossprod() across samples
   #
@@ -225,15 +225,16 @@ plot.converging.moment.multi <- function(ground, samples, title=NULL) { # XXX na
       # so I've hardcoded the cases we're actually using
       # this needs to be repaired!
       if(length(idx) == 0) {
-        plot.converging.moment(ground[], samples[],  main=paste(title, sep=""));
+        plot.converging.moment(ground[], samples[],  main=paste(title, sep=""), sub=sub);
       } else if(length(idx) == 1) {
         i = idx[1];
-        plot.converging.moment(ground[i,], samples[i,],  main=paste(title,"[",i,"]", sep=""));
+        plot.converging.moment(ground[i,], samples[i,],  main=paste(title,"[",i,"]", sep=""), sub=sub);
       } else if(length(idx) == 2) {
         i = idx[1]; j = idx[2];
-        plot.converging.moment(ground[i,j,], samples[i,j,],  main=paste(title, "[",i,",",j,"]", sep=""));
+        plot.converging.moment(ground[i,j,], samples[i,j,],  main=paste(title, "[",i,",",j,"]", sep=""), sub=sub);
       }
     } else {
+      # recursive case
       # split the top dimensions from the body
       # note how we extract the *number* of elements in the dimension d from the index of the dimension itself dims[1]
       d = dim(samples)[dims[1]]; dims = dims[-1];
@@ -304,17 +305,35 @@ plot.moment.second <- function(ground, samples, title=NULL) {
 }
 
 
-plot.NIW.moment.first <- function(ground, sample) { 
-  #TODO: should this take the distribution paramters so it can compute 'ground' directly?
+# Note well: the marginals of the first moment are the same as the first moments of the marginals
+# BUT, this is not true in general
+
+plot.NIW.moment.first.computational <- function(ground, sample) { 
+  # given a 'ground' sample (eg. from the naive implementation), compare
+  # the marginals of the first (matrix-)moments of the rNIW samples visually
   plot.moment.first(ground$X, sample$X, "NIW X")
   plot.moment.first(ground$V, sample$V, "NIW V")
 }
 
 
-plot.NIW.moment.second <- function(ground, sample) {
-  #TODO: should this take the distribution paramters so it can compute 'ground' directly?
+plot.NIW.moment.second.computational <- function(ground, sample) {
+  # given a 'ground' sample (eg. from the naive implementation), compare
+  # the marginals of the second (matrix-)moments of the rNIW samples visually
   plot.moment.second(ground$X, sample$X, "NIW X")
   plot.moment.second(ground$V, sample$V, "NIW V")
+}
+
+plot.NIW.moment.mean.analytic <- function(Mu, Kappa, Psi, df, sample) {
+  # plot the second moments
+  # this is not called ".first" because its cousin below plots variances, not second moments
+  
+  d = dim(Psi)[1]
+  
+  # the means of all Xs is just Mu, because X | V ~ N(Mu, V)
+  plot.converging.moment.multi(Mu, moment.first(samples), title="NIW X", sub="(expected value from analytic formulas)")
+  
+  # the means of all Vs is Psi scaled by its degrees of freedom
+  plot.converging.moment.multi(Psi/(df-p-1), moment.first(samples), title="NIW V", sub="(expected value from analytic formulas)")
 }
 
 # TODO: the formulas on wikipedia include the covariances of each element of V; we aren't computing covariances here, but maybe we should.
