@@ -68,9 +68,9 @@ main <- function() { # avoid polluting the namespace
             # 2) analytically
             #message("m1analytic") #DEBUG
             analytic = NIW.mean(kMu, kKappa, kPsi, kDF)
-            plot.mean.convergence(analytic$X, samples$X, mean, "NIW X", sub="(analytically)")
-            plot.mean.convergence(analytic$V, samples$V, mean, "NIW V", sub="(analytically)")
-                        
+            plot.mean.convergence(analytic$X, samples$X, "NIW X", sub="(analytically)")
+            plot.mean.convergence(analytic$V, samples$V, "NIW V", sub="(analytically)")
+              
             # first variances
             # 1) computationally
             #message("v1comp") #DEBUG
@@ -87,7 +87,7 @@ main <- function() { # avoid polluting the namespace
             # 1) computationally
             #message("mm1comp") #DEBUG
             plot.mean.convergence(fancy_matrix_square(ground$X), fancy_matrix_square(samples$X), "XX^T")
-            plot.var.convergence(fancy_matrix_square(ground$V), fancy_matrix_square(samples$V), "VV^T")
+            plot.mean.convergence(fancy_matrix_square(ground$V), fancy_matrix_square(samples$V), "VV^T")
             # 2) we do not do this analytically
             # that's all she wrote, folks!
             

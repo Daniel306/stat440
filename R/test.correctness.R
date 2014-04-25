@@ -190,7 +190,7 @@ NIW.var <- function(Mu, Kappa, Psi, df, samples) {
   X_var = NULL
   
   # the variances of the entries are
-  # Var(V_ij) = (df-d+1)Psi_ij^2 + (v-p-1)*Psi_ii*Psi_jj) / (df-d)(df-d-1)^2(df-d-3)
+  # Var(V_ij) = (df-d+1)Psi_ij^2 + (v-d-1)*Psi_ii*Psi_jj) / (df-d)(df-d-1)^2(df-d-3)
   #
   # TODO: vectorize this formula
   # part of it vectorizes nicely, but the way to do the rest 
@@ -200,7 +200,7 @@ NIW.var <- function(Mu, Kappa, Psi, df, samples) {
   V_var = (df- d + 1)*Psi^2
   for(i in 1:d) {
   for(j in 1:d) {
-    V_var[i,j] = V_var[i,j] + (df - p - 1) * Psi[i,i]*Psi[j,j]
+    V_var[i,j] = V_var[i,j] + (df - d - 1) * Psi[i,i]*Psi[j,j]
   }}  
   V_var = V_var / (df-d) / (df-d-1)^2 / (df-d-3)
   
@@ -212,13 +212,29 @@ NIW.var <- function(Mu, Kappa, Psi, df, samples) {
 plot.convergence <- function(ground, samples, statistic, accumulator, title=NULL, ylab=NULL, ...) {
 
   # ground and samples may (should?) be matrices
+  #  statistic is applied across the marginals of ground
+  #  AS A SPECIAL USEFUL EXCEPTION, if ground only has one sample (ie it's a vector or a (d,1) matrix) 
+  #   then and only then, ground is treated as the given expected value for statistic
+  # AS ANOTHER SPECIAL EXCEPTION: if ground is NULL, no blue line is printed
   # note: plot.convergence does not actually guarantee you will see convergence; 
   #  you might not have enough samples or your choice of accumulator might not pick a duck out of a hat (an i.i.d. set of ducks, of course) and measure its beak length with some random error.
   #  using accumulator=mean or accumulator=var will definitely
   # IT IS UP TO YOU TO MAKE SURE statistic AND accumulator ARE COMPUTING THE SAME STATISTIC.
+  
   #
   # ... : args to plot()
 
+  #message("plot.convergence") #DEBUG
+  if(is.null(ground)) {
+    warning("ground is null; what are you doing with your life? the blue lines will not be plotted for comparison")
+  }
+  
+  if(is.null(samples)) {
+    stop("samples is null")
+  }
+
+  stopifnot(is.function(statistic))
+  stopifnot(is.function(accumulator))
 
   # extract the name of the cumulation function for labelling
   statistic.name = deparse(substitute(statistic))
@@ -232,6 +248,8 @@ plot.convergence <- function(ground, samples, statistic, accumulator, title=NULL
   # deal with the special case of ground being a single value (use case: an analytic reference value)
   # by giving it an extra dimension of length 1
   # TODO: factor this (how??) -- this step is like an inverse of drop(), except that drop() can't have a proper inverse
+  if(!is.null(ground)) {
+     # TODO: INDENT THIS
   if( length(dim(ground)) == length(dim(samples)) ) {
     # acceptable
   } else if(is.null(dim(ground))) {
@@ -245,15 +263,16 @@ plot.convergence <- function(ground, samples, statistic, accumulator, title=NULL
     stop("Inconsistent dimenesions between ground and sample; ground is c(", paste(dim(ground), collapse=","),
                                                     "), while sample is c(", paste(dim(samples), collapse=","), ")", sep="")
   }
+  }
   
   marginalized_dimension = length(dim(samples))
   
   # Plot the means converging properlike
   kept_dimensions = (1:marginalized_dimension)[-marginalized_dimension] #precompute the list opposite of marginalized_dimension
                                              #doing it this way ensures this works even if ground is missing the last dimension
-
+  
   # Typecheck
-  stopifnot(dim(ground)[kept_dimensions] == dim(samples)[kept_dimensions])
+  stopifnot(is.null(ground) || dim(ground)[kept_dimensions] == dim(samples)[kept_dimensions])
 
   #message("Looping") #DEBUG  
   marginals_do(samples, function(idx, samples) {
@@ -268,11 +287,16 @@ plot.convergence <- function(ground, samples, statistic, accumulator, title=NULL
                                     # XXX TODO: if we're only going to print 75 points anyway, maybe it isn't unreasonable to use the quadratic algorithm *at each of those specific points*
                                     # and then we can make the API nicer and kill plot.*.convergence()
     plot(samples, xlab="samples taken (n)", ylab=ylab, main=marginal.title(title, idx))        
-
-    ground = ..getitem..(ground, idx)
-    ground = statistic(ground)
-    abline(h=ground, lty="solid", col="blue")
-    legend("topleft", paste("True", statistic.name, "=", round(ground, 2)), lty="solid", col="blue")
+    #
+    if(!is.null(ground)) { # special case: ground can be NULL!
+      ground = ..getitem..(ground, idx)
+      if(length(statistic) > 1) { #special case: DON'T stat the ground truth if there's only one of it:
+                                   #instead, assume it is the desired value of that statistic
+        ground = statistic(ground)
+      }
+      abline(h=ground, lty="solid", col="blue")
+      legend("topleft", paste("True", statistic.name, "=", round(ground, 2)), lty="solid", col="blue")
+    }
   })
 }
 
