@@ -18,7 +18,7 @@ krNIWAlgorithms = c(
             "version3",
             "Rcpp",
             "extremelynaive.RcppEigen",
-            "snappy.RcppEigen"
+            "version.RcppEigen"
             )
 
 #kS = rWishart(69, kDF, kPsi) #a high dimensional matrix for checking syntax on

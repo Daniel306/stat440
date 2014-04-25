@@ -46,6 +46,8 @@ source("util.R")
 source("NIW.util.R")
 #require("slam") #TODO: investigate this package
 
+require("Rcpp")
+Rcpp::sourceCpp("rNIW.cpp")
 
 ##############################################################################
 #                          Helper functions
@@ -223,14 +225,9 @@ rNIW.naive <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
 })
 
 
-rNIW.extremelynaive.RcppEigen <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
-  # naive algorithm, but done in C, for a more fair comparison
+# naive algorithm, but done in C, for a more fair comparison
+rNIW.extremelynaive.RcppEigen <- rNIW.typechecked(rNIW_extremelynaive_eigen)
 
-  require("Rcpp")  # XXX: putting this call inside of here means R only compiles the code as needed and speeds up our dev cycle
-  Rcpp::sourceCpp("rNIW.cpp") #in the long run, we should, of course, put these calls at the top with the other imports
-
-  return(rNIW_extremelynaive_eigen(n, Mu, kappa, Psi, df))
-})
 
 ##################################
 ###   Sampling by exploiting
@@ -464,10 +461,18 @@ rNIW.version3 <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
 #            multiply gamma across every sample in one step
 #            this will not give an improvement on standard CPU, but if we had a GPU handy it might be a giant boon.
 
-# TODO: eschews A = BartlettFactor() and instead use A.inv = InverseBartlettFactor()
-## (getting to this point will require some very very careful derivations that may be beyond us)
-# XXX I can't prove it because I don't have it written, but I don't think this will give a significant advantage:
-#         anywhere we need an inverse+multiply we can use backsolve instead, which is actually faster 
+
+# hand-rolled C algorithm  
+rMNIW.Rcpp <- rMNIW.typechecked(function(n, Mu, Kappa, Psi, df){
+  
+  # precompute some values that would be a headache to do in C
+  d = dim(Mu)[2];
+  q = dim(Mu)[1];
+  
+  Kappa_Inv <- chol(solve(Kappa)); # to give sqrt of kappa_Inv later
+  gamma.inv = solve(chol(solve(Psi)));
+  return(rMNIW_Rcpp(n,d,q,Mu,Kappa_Inv, gamma.inv, df));
+})
 
 
 rNIW.Rcpp <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
@@ -487,38 +492,17 @@ rNIW.Rcpp <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
 })
 
 
-rNIW.version.RcppEigen <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
-  # naive algorithm, but done in C, for a more fair comparison
-  
-  require("Rcpp")  # XXX: putting this call inside of here means R only compiles the code as needed and speeds up our dev cycle
-  Rcpp::sourceCpp("rNIW.cpp") #in the long run, we should, of course, put these calls at the top with the other imports
-  
-  return(rNIW_version_eigen(n, Mu, kappa, Psi, df))
-})
+# efficient algorithm using the Eigen library
+rNIW.version.RcppEigen <- rNIW.typechecked(rNIW_version_eigen)
 
 
-rMNIW.Rcpp <- rMNIW.typechecked(function(n, Mu, Kappa, Psi, df){
-  
-  require("Rcpp")  # XXX: putting this call inside of here means R only compiles the code as needed and speeds up our dev cycle
-  Rcpp::sourceCpp("rNIW.cpp") #in the long run, we should, of course, put these calls at the top with the other imports
-  
-  d = dim(Mu)[2];
-  q = dim(Mu)[1];
-  
-  Kappa_Inv <- chol(solve(Kappa)); # to give sqrt of kappa_Inv later
-  gamma.inv = solve(chol(solve(Psi)));
-  return(rMNIW_Rcpp(n,d,q,Mu,Kappa_Inv, gamma.inv, df));
-})
 
-# ???
-#rMNIW = rMNIW.Rcpp2
 
 rNIW.based_on_multi <- rNIW.typechecked(function(n, Mu, Kappa, Psi, df) { # TODO: pick a better name
-  # XXX this function will not run; rMNIW does not exist yet.
-  # TODO: ^ remove this comment when finished
   # rNIW implementation backed by rMNIW
+  # TODO: fill this in and kill rNIW_Rcpp
   # you can view this as a convenience wrapper
-  # but also, it is a 
+  # 
   
   # coerce Mu and Kappa to matrices 
   d = length(Mu)
@@ -528,8 +512,6 @@ rNIW.based_on_multi <- rNIW.typechecked(function(n, Mu, Kappa, Psi, df) { # TODO
   rMNIW(n, Mu, Kappa, Psi, df)
 })
 
-# TODO: make a final decision:
-# rNIW = rNIW.therealslimshady
-
-
-
+# Final decision about the exported implementation:
+rNIW = rNIW.Rcpp
+rMNIW = rMNIW.Rcpp

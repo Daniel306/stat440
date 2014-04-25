@@ -308,7 +308,7 @@ NIW.var <- function(Mu, Kappa, Psi, df, samples) {
 
 
 
-plot.moments <- function(ground, samples, statistic, accumulator, title=NULL, ylab=NULL, ...) {
+plot.moments <- function(ground, samples, statistic, accumulator, title=NULL, ylab=NULL, layout=c(2,2), ...) {
 
   # ground and samples may (should?) be matrices
   #  statistic is applied across the marginals of ground
@@ -323,6 +323,8 @@ plot.moments <- function(ground, samples, statistic, accumulator, title=NULL, yl
   
   #
   # ... : args to plot()
+
+  par(mfrow=layout)
 
   #message("plot.convergence") #DEBUG
   if(is.null(ground)) {

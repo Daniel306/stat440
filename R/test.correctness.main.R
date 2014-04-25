@@ -33,6 +33,7 @@ main <- function() { # avoid polluting the namespace
         if(alg == "naive") next;          #hack: and this one is our reference samples, so its sort of silly to compare it.
         
         message("Beginning ",alg,"...")
+
         try({ #wrap so that one algorithm being broken doesn't break the others (but we'll still see error messages from them)
         
             rNIW = get(paste("rNIW", alg, sep="."))
@@ -44,7 +45,10 @@ main <- function() { # avoid polluting the namespace
             message("Runtime for ", alg,"(",n,",...): ", runtime,"s")
 
             ## DISTRIBUTIONS
+            
             message("Marginal densities")
+            pdf(file=paste(alg,".test.densities.pdf",sep=""))
+            
             # 1) computationally
             plot.densities(ground$X, samples$X, "NIW X", sub=paste(alg, "(computationally)"))
             plot.densities(ground$V, samples$V, "NIW V", sub=paste(alg, "(computationally)"))
@@ -67,6 +71,8 @@ main <- function() { # avoid polluting the namespace
             ## MOMENTS
             # make first moment convergence plots
             message("Moments")
+            pdf(file=paste(alg,".test.moments.pdf",sep=""))
+            
             # first moments (matrix and non-matrix)
             # 1) computationally
             #message("m1comp") #DEBUG
@@ -109,9 +115,12 @@ main <- function() { # avoid polluting the namespace
             
             ## KS TESTS
             # this tests for equidistribution numerically
+            logname = paste(alg,".tests.ks.txt",sep="")
+            message("Doing KS-tests; results diverted to ", logname)
+            sink(file(logname, open="wt"), type="message") # THIS SILENCES THE OUTPUT
             message("KS test results for ", alg) #this is sort of awkward, that there's message()s in this call
-            # TODO: rewrite using marginals_do
             NIW.ks.test(ground, samples)
+            sink(file=NULL, type="message")   # pop the sink() stack
                         
         })
         
