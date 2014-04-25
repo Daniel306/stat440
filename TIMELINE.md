@@ -143,8 +143,8 @@ D-1 (Thursday)
     - [ ] reduce the number of samples taken--we get the idea
 
 [nick]
-- [ ] cumvar()  match "cumsum" and "cummean"
-- [ ] do elementwise means and variances
+- [x] cumvar()  match "cumsum" and "cummean"
+- [x] do elementwise means and variances (<-- THIS TOOK ALL NIGHT BUT NOW THE CODE IS SO MUCH PRETTIER)
 - Rcpp stuff:
     - [ ] make a stub Rcpp package with a makefile or whatever 
         - [ ] figure out if using pointers/references in Rcpp is faster; specifically, does passing a NumericVector cause a COPY of that vector even in C?
@@ -160,14 +160,14 @@ D-1 (Thursday)
         - [ ] ???
     - ([ ] HierarchicalMatrixNormalGibbsSampler  _there is no way we're doing this by Friday_)
     - [ ] prototype + testing
-    - [ ] write R help files for each function
+    - [x] write R help files for each function ([daniel] did this?)
 - [ ] extract the prototype code (i.e., apart from the final package), package it up reusably
 
 - [ ] Dig up analytic formula for the particular marginals of NIW and (note: there's 2^(# parameters) different marginals; pick wisely which to look at)
     - [x] marginal of the inv.wish is inv.gamma
     - [ ] implement as functions
         - [x] diagonals of iwish
-        - [ ] off-diagonals of iwish
+        - [-] off-diagonals of iwish (Lysy: " I don't think that anyone knows the analytic marginal distribution of the off-diagonal elements.")
         - [ ] entries of X from the single NIW (this should be 't' ish??)
         - [ ] entries of Matrix-Normal thingy ((can be derived from the single NIW one))
     - [ ] partial-apply such functions and use them as 'ground' for the marginal plots
