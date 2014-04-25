@@ -232,13 +232,13 @@ plot.convergence <- function(ground, samples, statistic, accumulator, title=NULL
   if(is.null(samples)) {
     stop("samples is null")
   }
-
+  
   stopifnot(is.function(statistic))
   stopifnot(is.function(accumulator))
-
+  
   # extract the name of the cumulation function for labelling
   statistic.name = deparse(substitute(statistic))
-  
+    
   if(is.null(ylab)) {
      ylab = paste("sample", statistic.name) #use  unless the user overrides
   }
@@ -248,6 +248,7 @@ plot.convergence <- function(ground, samples, statistic, accumulator, title=NULL
   # deal with the special case of ground being a single value (use case: an analytic reference value)
   # by giving it an extra dimension of length 1
   # TODO: factor this (how??) -- this step is like an inverse of drop(), except that drop() can't have a proper inverse
+  
   if(!is.null(ground)) {
      # TODO: INDENT THIS
   if( length(dim(ground)) == length(dim(samples)) ) {
@@ -288,14 +289,19 @@ plot.convergence <- function(ground, samples, statistic, accumulator, title=NULL
                                     # and then we can make the API nicer and kill plot.*.convergence()
     plot(samples, xlab="samples taken (n)", ylab=ylab, main=marginal.title(title, idx), ...)
     
-    if(is.null(ground)) { return } # special case: ground can be NULL!
+    if(is.null(ground)) { return() } # special case: ground can be NULL!
+    
     ground = ..getitem..(ground, idx)
     if(length(ground) > 1) {   #special case: DON'T stat the ground truth if there's only one of it:
                                  #instead, assume it is the desired value of that statistic
       ground = statistic(ground)
     }
     stopifnot(length(ground) == 1) # at this point, ground MUST be scalar
-    if(!is.finite(ground)) { return } # bail if the number if bad at this point
+    
+    if(!is.finite(ground)) { return() } # bail if the number if bad at this point
+
+    # finally, if we actually have a scalar number to use, use it!
+    # TODO: un-hardcode the lty= and col=
     abline(h=ground, lty="solid", col="blue")
     legend("topleft", paste("True", statistic.name, "=", round(ground, 2)), lty="solid", col="blue")
   })
