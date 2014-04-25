@@ -8,6 +8,36 @@ source("NIW.R")
 
 # TODO: figure out a bloody better way of labelling the various output with which algorithm created it.
 
+
+# utilties
+
+cumulate <- function(M, margin, f) {
+  # apply 'f' across 'margin'
+  # this generalizes "cumsum", but so much slower.
+  # f must take a vector and return a scalar
+  # unlike apply(), this function protects the dimensions of M
+  # this function is slow: it necessarily has at least quadratic runtime
+  # use case: taking the cumulative variance in a (p,q,n) matrix (a matrix of n (p,q) design matrices, say)
+  #  : cumulate(M, -3, var)
+  # TODO: provide a feature so that you can flag to cumulate that f is already in cumulator form (eg so you can pass cumsum directly);
+  #   this hope being that this will be faster
+  
+  original.dims = dim(M)
+  M = apply(M, margin, function(v) { 
+            sapply(1:length(v), function(i) { f(v[1:i]) })
+            })
+  dim(M) = original.dims #XXX if 
+  return(M)
+}
+
+marginal.title <- function(title, idx) {
+  # given one of my sketchy marginal indexing vectors
+  # and a title prefix (which may be null)
+  # construct a label that can be used to communicate what marginal we're displaying
+  paste(title, idx2str(idx), sep="")
+}
+
+
 ##################################################
 ## Density Plots
 
@@ -67,9 +97,7 @@ plot.densities <- function(ground, sample, title=NULL, layout=c(2,2), ...) { #XX
   par(mfrow=layout)
   marginals_do(sample, function(idx, sample) {
     # case 1: ground is a matrix of samples
-    idx.str = idx2str(idx[-length(idx)]) #for the purposes of labelling, we REMOVE the last (NA) index, because that is just what we marginalize over -- we're pretending (to the user) that it's not there.
-    title = paste(title, idx.str, sep="")
-    plot.density(..getitem..(ground, idx), sample, main=title, ...)
+    plot.density(..getitem..(ground, idx), sample, main=marginal.title(title, idx[-length(idx)]), ...)
     # case 2:
     # TODO: ground is a matrix of pdfs
   })   
@@ -113,27 +141,6 @@ IW.marginal <- function(i, j, Psi, df) {
 ##########################################
 ## Moments
 
-
-# utilties
-
-cumulate <- function(M, margin, f) {
-  # apply 'f' across 'margin'
-  # this generalizes "cumsum", but so much slower.
-  # f must take a vector and return a scalar
-  # unlike apply(), this function protects the dimensions of M
-  # this function is slow: it necessarily has at least quadratic runtime
-  # use case: taking the cumulative variance in a (p,q,n) matrix (a matrix of n (p,q) design matrices, say)
-  #  : cumulate(M, -3, var)
-  # TODO: provide a feature so that you can flag to cumulate that f is already in cumulator form (eg so you can pass cumsum directly);
-  #   this hope being that this will be faster
-  
-  original.dims = dim(M)
-  M = apply(M, margin, function(v) { 
-            sapply(1:length(v), function(i) { f(v[1:i]) })
-            })
-  dim(M) = original.dims #XXX if 
-  return(M)
-}
 
 
 
@@ -180,30 +187,13 @@ plot.convergence <- function(ground, samples, accumulator, title=NULL, ...) {
   stopifnot(dim(ground) == dim(samples)[1:2])
   
   marginals_do(samples, function(idx, samples) {
-    plot(samples, xlab="samples taken (n)", ylab="sample mean", main=paste(title, idx2str(idx)))
+    plot(samples, xlab="samples taken (n)", ylab="sample mean", main=marginal.title(title, idx))
     abline(h=..getitem..(ground, idx), lty="dashed", col="blue")
     legend(paste(paste("True", accumulator.name), round(ground, 2)), lty="solid", col="blue")
   })
 }
 
 
-######################
-## Computational (that is, kernel-density-estimated) Normal|Inverse-Wishart marginal moments 
-
-plot.NIW.moment.first.computational <- function(ground, sample) { 
-  # given a 'ground' sample (eg. from the naive implementation), compare
-  # the marginals of the first (matrix-)moments of the rNIW samples visually
-  plot.moment.first(ground$X, sample$X, "NIW X")
-  plot.moment.first(ground$V, sample$V, "NIW V")
-}
-
-
-plot.NIW.moment.second.computational <- function(ground, sample) {
-  # given a 'ground' sample (eg. from the naive implementation), compare
-  # the marginals of the second (matrix-)moments of the rNIW samples visually
-  plot.moment.second(ground$X, sample$X, "NIW X")
-  plot.moment.second(ground$V, sample$V, "NIW V")
-}
 
 ###########
 #### Analytic Normal|Inverse-Wishart marginal moments 
@@ -266,6 +256,14 @@ NIW.var <- function(Mu, Kappa, Psi, df, samples) {
 ##########################################
 ## Kolmogorov-Smirnov Tests
 
+ks.tests <- function(ground, sample, title=) {
+  # ground and sample must both be MultiSs of the same dimensionality
+  marginals_do(sample, function(idx, sample) {
+    ground_sample = ..getitem..(ground, idx)
+    
+  })
+}
+
 NIW.ks.test <- function(ground, sample) {
   # compare (using plot.compare) the marginals of the Normal Inverse Wishart against their expected pdfs
   #
@@ -294,6 +292,7 @@ NIW.ks.test <- function(ground, sample) {
   # --> this tidbit will be difficult to factor out
   
   # X marginals
+  ks.tests(sample$X, sample$X, title="X")
   par(mfrow=c(2,2))
   for(i in 1:d) {
     p = ks.test(sample$X[i,], ground$X[i,])$p.value #NB: order that ks.test takes its args is swapped from our order
