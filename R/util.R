@@ -93,7 +93,10 @@ intseq <- function(from=1, to=NULL, by=NULL, length.out=NULL) {
 
 
 cummean <- function(v) {
-  # compute the "cumulative mean" of a vector: considering each entry as a new sample point, give the sample mean up to that point
+  # compute the "cumulative mean" of a vector
+  #
+  # considering each entry as a new sample point,
+  #  give the sample mean up to that point
   # 
   # args:
   #  v: a numeric vector
@@ -103,7 +106,37 @@ cummean <- function(v) {
   
   cumsum(v) / (1:length(v))
 }
- 
+
+cumvar <- function(v) {
+  # compute the "cumulative variance" of a vector
+  #
+  # considering each entry as a new sample point,
+  #  give the sample variance up to that point
+  # 
+  # args:
+  #  v: a numeric vector
+  #
+  # returns:
+  #   a vector the same length as v; the first value is always NA.
+
+  n = length(v)
+  r = (cumsum(v^2) - cumsum(v)^2/1:n)/(1:n - 1) #TODO: document this derivation
+  r[1] = NA #    the first entry is always NaN because the variance of a single point is undefined.
+  return(r)
+}
+
+test.cumvar <- function() {
+  x = rnorm(66);
+  v_known = sapply(1:length(x), function(i) { var(x[1:i]) })
+  v_test = cumvar(x)
+
+  # the first value is always NA, which fails the numerical test
+  # we special case it
+  stopifnot(is.na(v_test[1]))
+  n = length(x)
+  stopifnot(max(v_known[2:n] - v_test[2:n]) < 1e-13)
+}
+#test.cumvar()
 
 
 marginalize <- function(f, arity, dims, lower=-Inf, upper=+Inf, ...) {
