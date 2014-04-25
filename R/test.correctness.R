@@ -217,7 +217,50 @@ marginals_do <- function(M, f) { #TODO: pull out into util
 }
 
 
-plot.converging.moment <- function(ground, samples, ...) {
+reasonable_subset(D, length.out=1000) {
+  # plotting too many points causes lag
+  # reasonable_subset evenly reduces the number of samples in D evenly
+  # (in other places, this operation is called decimation(TODO: FACTCHECK))
+  #
+  # returns:
+  #  the dataframe reduced to length.out or its original length, whichever is smaller.
+
+  n = dim(D)[1]
+  idx = intseq(1, n, length.out=length.out)
+  D[idx,]  
+}
+
+
+# TODO: the following two functions should be factored
+# but, as with the above, how to do so eludes me
+#  because again, there's special-case behaviour in each; plot.convering.variance would, for example, behave erratically if it ended up calling var(scalar) which is NA
+
+plot.converging.mean <- function(ground, samples, ...) {
+  # 
+  # every moment is an expectation, which can be approximated by a sample mean
+  # to use this function, first compute
+  # plots a horizontal line at the expected value as given in 'ground
+  #
+  # args:
+  #  ground: the 'ground truth': a number or a vector
+  #  samples: a vector of sample points
+  #  ...: extra arguments to plot()
+
+  # TODO: typechecks
+
+  if(length(ground) > 1) { ground = mean(ground) }
+
+  n = length(samples)
+  idx = 1:n
+
+  plot(reasonable_subset(cbind(idx, cummean(samples)), means, xlab="samples taken", ylab="mean", ...) # XXX is ylab what we want?
+  #  note: ^this relies on plots() special-case behaviour of plot on a 2-column matrix/dataframe being interpreted the same as plot(x,y)
+  abline(h=ground, lty="solid", col="blue")
+  legend(paste("True mean", round(ground, 2)), lty="solid", col="blue")
+}
+
+
+plot.converging.variance <- function(ground, samples, ...) {
   # 
   # every moment is an expectation, which can be approximated by a sample mean
   # to use this function, first compute
@@ -230,14 +273,15 @@ plot.converging.moment <- function(ground, samples, ...) {
 
   # TODO: typechecks
   
-  if(length(ground) > 1) { ground = mean(ground) }
+  if(length(ground) > 1) { ground = var(ground) }
 
-  # plotting too many points causes lag
-  # so use intseq() to reduce
-  idx = intseq(1, length(samples), length.out=1000)
-  means = cummean(samples)[idx]
-  plot(idx, means, xlab="samples taken", ylab="moment", ...) #XXX is ylab right?
+  n = length(samples)
+  idx = 1:n
+  
+  plot(reasonable_subset(cbind(idx, cumvar(samples)), means, xlab="samples taken", ylab="mean", ...) # XXX is ylab what we want?
+  #  note: ^this relies on plots() special-case behaviour of plot on a 2-column matrix/dataframe being interpreted the same as plot(x,y)
   abline(h=ground, lty="solid", col="blue")
+  legend(paste("True variance", round(ground, 2)), lty="solid", col="blue")
 }
 
 
