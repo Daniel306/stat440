@@ -33,10 +33,10 @@ This package does better by exploiting a) algebraic shortcuts b) [Rcpp](http://r
 
 We are aware of two other Inverse-Wishart implementations for R,
 `riwish` of [MCMCpack](http://mcmcpack.wustl.edu/) and 
-`[rinvwishart](https://github.com/Statisticat/LaplacesDemon/blob/master/R/distributions.R)`
+[`rinvwishart`](https://github.com/Statisticat/LaplacesDemon/blob/master/R/distributions.R)
  of [LaplacesDemon](http://www.bayesian-inference.com/software),
- and of the standard Wishart implementation `[rWishart](http://svn.r-project.org/R/trunk/src/library/stats/src/rWishart.c())`
- in base R.
+ and we are also aware of the standard Wishart implementation
+ [`rWishart`](http://svn.r-project.org/R/trunk/src/library/stats/src/rWishart.c()) in base R.
  This package is different because it is fast enough to do heavy bayesian
  statistics in the environment statisticians are already using.
 
@@ -50,21 +50,46 @@ This is **alpha** code.
 Code Guide
 ----------------
 
-### API
+### Usage
 
-* **TODO**
+This is alpha code because it is not packaged as an R package yet.
+To use, make sure you have the [dependencies](#dependencies) installed,
+copy the files in `R/` to your working directory, and run
+```{r}
+source("dNIW.R")
+source("rNIW.R")
+source("MultivariableRegression.R")
+```
+
+This will give you access to these APIs:
+
+Densities (pdfs):
+
+* `dNIW(X, V, Mu, Kappa, Psi, df, log=F)`
+* `dMNIW(X, V, Mu, Kappa, Psi, df, log=F)`
+
+Samplers
+
+* `rNIW(n, Mu, Kappa, Psi, df)`
+* `rMNIW(n, Mu, Kappa, Psi, df)`
+* `rmultivariableregression(points, B, V)`
+
+Multivariable Regression
+
+* `lm.multivariable(m, X, Y, Lambda, Omega, Psi, df)`
+
+The MNIW functions are a further generalization of this generalized distribution
+ operating with [Matrix-Normals](https://en.wikipedia.org/wiki/Matrix_normal_distribution).
+ 
+The "regression" operates in a Bayesian way: it returns `m` samples of the estimated parameters `B` and `V`.
+ 
+See the Rdocs (e.g. `help(rNIW)`) for all the details.
 
 ### Files
 
 * `rNIW.R` contains the various sampler implementations we experimented with
-    * `rNIW()`
-    * `rMNIW()`
 * `dNIW.R` contains analytic density functions for the distribution
-    * `dNIW()`
-    * `dMNIW()`
 * `MultivariableRegression.R` contains the "multivariable regression"
-    * `rmultivariableregression()` samples from the multivariable regression model, given the coefficients `B` and variance `V`.
-    * `lm.multivariable()` performs the grunt work of [multivariable regression](https://en.wikipedia.org/wiki/Bayesian_multivariate_linear_regression).
 * `test.*.R` is code to vet the implementations above.
     * `test.speed.R` is a harness to record runtimes of the different implementations, plot them, and summarize the results in a table.
     * `test.correctness.R`  vets that this code is actually sampling the proper distribution by reducing the problem to look at the marginals. It provides

@@ -189,6 +189,8 @@ D (Friday, April the 25th, 2014)
     - [ ] factor the common matrix terms to before/after the loop (call this `snappy4`)
     - [ ] diagonalization?? (`snappy5`)
 
+- [ ] plot to separate subfiles
+
 ### writeup:
 
 - Code guide (maybe this should be an in-repo .md file?)
@@ -207,7 +209,8 @@ D (Friday, April the 25th, 2014)
 [daniel]
 
 - [x] Apply Multivariable Regression to sample real world dataset (the Boston housing data).
-
+- [ ] find citations
+- [ ] rdocs
 
 [daniel] [nick]
 
