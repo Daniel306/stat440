@@ -14,10 +14,10 @@ main <- function() { # avoid polluting the namespace
     # number of samples to trial
     # note that ground uses a different number, because rNIW.naive is slow
     n = 32343
-    n = 3 #DEBUG
+    #n = 3 #DEBUG
 
     m = 15500
-    m = 15 #DEBUG
+    #m = 15 #DEBUG
     
     message()
     message("------------------------------------")
@@ -63,7 +63,7 @@ main <- function() { # avoid polluting the namespace
             # first moments (matrix and non-matrix)
             # 1) computationally
             message("m1comp") #DEBUG
-            plot.convergence(ground$X, samples$X, mean, "NIW X", ylab="nifggs")
+            plot.convergence(ground$X, samples$X, mean, "NIW X")
             plot.convergence(ground$V, samples$V, mean, "NIW V")
             # 2) analytically
             message("m1analytic") #DEBUG
@@ -83,8 +83,8 @@ main <- function() { # avoid polluting the namespace
             # second matrix moments: the means of the outer products
             # 1) computationally
             message("mm1comp") #DEBUG
-            plot.convergence(fancy_matrix_square(ground$X), fancy_matrix_square(sample$X), mean)
-            plot.convergence(fancy_matrix_square(ground$V), fancy_matrix_square(sample$V), mean)
+            plot.convergence(fancy_matrix_square(ground$X), fancy_matrix_square(samples$X), mean)
+            plot.convergence(fancy_matrix_square(ground$V), fancy_matrix_square(samples$V), mean)
             # 2) we do not do this analytically
             # that's all she wrote, folks!
             

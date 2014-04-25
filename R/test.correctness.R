@@ -249,16 +249,20 @@ plot.convergence <- function(ground, samples, accumulator, title=NULL, ylab=NULL
                                              #doing it this way ensures this works even if ground is missing the last dimension
 
   stopifnot(dim(ground)[kept_dimensions] == dim(samples)[kept_dimensions])
-  
+
+  # cumulate..
+  message("Computing cumulated statistic..") #DEBUG  
   samples = cumulate(samples, kept_dimensions, accumulator)
-  message("kept:")
-  print(kept_dimensions)
+  
   # squish the ground truth down to its cumulant (eg the mean/var/whatever taken over the WHOLE set)
+  message("Computing statistic on ground truth") #DEBUG
   ground = apply(ground, kept_dimensions, accumulator) # apply() flattens
   dim(ground) = c(dim(samples)[kept_dimensions], 1)    # unflatten, and undrop() the last dimension
                                                        # such that ground matches the original size.
-  
+
+  message("Looping") #DEBUG
   marginals_do(samples, function(idx, samples) {
+    print(idx) #DEBUG
     plot(samples, xlab="samples taken (n)", ylab=ylab, main=marginal.title(title, idx))        
     abline(h=..getitem..(ground, idx), lty="dashed", col="blue")
     legend("topleft", paste(paste("True", accumulator.name), round(ground, 2)), lty="solid", col="blue")
