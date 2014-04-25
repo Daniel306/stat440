@@ -86,6 +86,8 @@ Its main use is as the conjugate prior for a multivariate normal distribution wi
 
 %Due to its common use in bayesian statistics, Generating samples from this distribution is often the bottleneck in generating the %credible interval. 
 
+The main goal of this package is to provide functions written in Rcpp\cite{Rcpp} to help with Bayesian analysis related to the Normal Inverse-Wishart distribution.
+
 While there are libraries that can generate Inverse-Wishart samples, such as MCMCpack\cite{MCMCpack} and LaplaceDemon\cite{LaplaceDemon}, there is currently no library that directly samples Normal-Inverse-Wisharts. While it is possible to use those to construct NIW samples from those, it requires extra effort on the user and is likely to be less effient than our method as generating Normals would be done in R.
 
 Our package also provides MNIW samples, which no package currently provides, as well as a function to generate samples for B and V in multilinear regression(see examples).
