@@ -115,7 +115,7 @@ main <- function() { # avoid polluting the namespace
             
             ## KS TESTS
             # this tests for equidistribution numerically
-            logname = paste(alg,".ks-tests.txt",sep="")
+            logname = paste(alg,".tests.ks.txt",sep="")
             message("Doing KS-tests; results diverted to ", logname)
             sink(file(logname, open="wt"), type="message") # THIS SILENCES THE OUTPUT
             message("KS test results for ", alg) #this is sort of awkward, that there's message()s in this call
