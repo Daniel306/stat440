@@ -43,8 +43,8 @@ main <- function() { # avoid polluting the namespace
             runtime = (toc - tic)["elapsed"] #XXX this is an indulgence; runtimes should be done systematically with test.speed.main.R
             message("Runtime for ", alg,"(",n,",...): ", runtime,"s")
 
-            ## (marginal) DISTRIBUTIONS
-            message("Density plots")
+            ## DISTRIBUTIONS
+            message("Marginal densities")
             # 1) computationally
             plot.densities(ground$X, samples$X, "NIW X")
             plot.densities(ground$V, samples$V, "NIW V")
@@ -63,36 +63,41 @@ main <- function() { # avoid polluting the namespace
             # first moments (matrix and non-matrix)
             # 1) computationally
             #message("m1comp") #DEBUG
-            #plot.mean.convergence(ground$X, samples$X, "NIW X")
-            #plot.mean.convergence(ground$V, samples$V, "NIW V")
+            #plot.mean.convergence(ground$X, samples$X, "NIW X", sub=paste(alg))
+            #plot.mean.convergence(ground$V, samples$V, "NIW V", sub=paste(alg))
             # 2) analytically
             #message("m1analytic") #DEBUG
             analytic = NIW.mean(kMu, kKappa, kPsi, kDF)
-            plot.mean.convergence(analytic$X, samples$X, "NIW X", sub="(analytically)")
-            plot.mean.convergence(analytic$V, samples$V, "NIW V", sub="(analytically)")
+            plot.mean.convergence(analytic$X, samples$X, "NIW X", sub=paste(alg, "(analytically)"))
+            plot.mean.convergence(analytic$V, samples$V, "NIW V", sub=paste(alg, "(analytically)"))
               
             # first variances
             # 1) computationally
             #message("v1comp") #DEBUG
-            plot.var.convergence(ground$X, samples$X, "NIW X")
-            plot.var.convergence(ground$V, samples$V, "NIW V")
+            #plot.var.convergence(ground$X, samples$X, "NIW X", sub=paste(alg))
+            #plot.var.convergence(ground$V, samples$V, "NIW V", sub=paste(alg))
             # 2) analytically
-            #message("v1analytic") #DEBUG
+            #message("v1analytic") #DEBU
             analytic = NIW.var(kMu, kKappa, kPsi, kDF)
-            plot.var.convergence(analytic$X, samples$X, "NIW X", sub="(analytically)")
-            plot.var.convergence(analytic$V, samples$V, "NIW V", sub="(analytically)")
+            plot.var.convergence(analytic$X, samples$X, "NIW X", sub=paste(alg, "(analytically)")) 
+            plot.var.convergence(analytic$V, samples$V, "NIW V", sub=paste(alg, "(analytically)"))
             #  ^ this specialcase is going to bite!
             
             # second matrix moments: the means of the outer products
             # 1) computationally
             #message("mm1comp") #DEBUG
-            plot.mean.convergence(fancy_matrix_square(ground$X), fancy_matrix_square(samples$X), "XX^T")
-            plot.mean.convergence(fancy_matrix_square(ground$V), fancy_matrix_square(samples$V), "VV^T")
+            plot.mean.convergence(fancy_matrix_square(ground$X), fancy_matrix_square(samples$X), "XX^T", sub=paste(alg))
+            plot.mean.convergence(fancy_matrix_square(ground$V), fancy_matrix_square(samples$V), "VV^T", sub=paste(alg))
             # 2) we do not do this analytically
-            # that's all she wrote, folks!
+            # [[that's all she wrote, folks!]]
             
             # variances of the second matrix moments are unknown and uninteresting
             #  --the 2nd moments themselves are already close to a variance.
+            # 1) computationally
+            # [[ see above ]]
+            # 2) analytically
+            # [[ see above ]]
+            
             # None of this handles element-element covariance, which is a whole other headtrip.
             
             ## KS TESTS
