@@ -193,6 +193,7 @@ test.EversonMorris <- function(n=27, m=1e7) {
   but their version strictly only does one random matrix at a time
   
 - What we did differently
+  tuse this cholesky trick ... 
 
 % (2?? pages)
 \Subsection{Testing}
@@ -256,15 +257,44 @@ If, under a large number of samples, any of these statistics ((is it correct to 
 % 1 page
 \Subsubsection{Benchmarking}
 
-- methodology
+
+We 
+
 - algorithms compared
   - naive
   - snappy in R
   - snappy in Rcpp
-% - snappy in python (on numpy)
-%  - snappy in cython (on numpy)
 
-These results show that our algorithm has approximately a (10?) times speed up over the naive algorithm, with a further (3?) times speed up by the port to C.
+\begin{figure}[hbtp]
+\caption{Implementation runtimes; monochrome are the naive algorithms; blue are the efficient algorithm; red are the C implementations}
+\centering
+\includegraphics[scale=1]{runtimes.pdf}
+\end{figure}
+
+
+Summary table:
+(slope is in samples/second, and ratio is the ratio of that; sd is the standard deviation of ratio)
+\begin{verbatim}
+                 algorithm      slope      ratio           sd
+1           extremelynaive   4918.468  0.3540879 3.434446e-05
+5                 version3   7648.601  0.5506343 1.821581e-06
+3                 version11   9543.389  0.6870429 2.574821e-04
+4                 version2   9980.602  0.7185185 1.547574e-04
+2                    naive  13890.529  1.0000000 7.277090e-04
+7 extremelynaive.RcppEigen  94128.482  6.7764507 3.969357e-03
+8        version.RcppEigen 125032.317  9.0012641 4.385290e-03
+6                     Rcpp 143356.322 10.3204367 3.977275e-02
+\end{verbatim}
+
+Discussion:
+
+1) All algorithms are linear in $n$, which checks out.
+
+2) These results show that our algorithm gets about a 25 times times speed up over the truly naive algorithm, but only 10 times over the naive algorithm that is natural to write in base R. The naive algorithm achieves this because most of its output, the $n \cdot d^d$ entries of $V$, are constructed in C. In fact, the amount of time that this saves makes the naive algorithm faster
+
+Problem: we only measured over n; our distribution parameters were constant for developing these tests. wait
+
+T
 
 % (4 pages?)
 \Section{Applications}

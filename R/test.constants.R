@@ -21,4 +21,19 @@ krNIWAlgorithms = c(
             "version.RcppEigen"
             )
 
+krNIWAlgorithms.colors = c(
+          "grey", "black",
+          "blue", "blue", "blue",
+          "red", "red", "red"
+          )
+
+krNIWAlgorithms.linestyle = c(
+          "dashed", "solid",
+          "solid", "dotted", "dashed",
+          "solid", "dotted", "dashed"
+          )
+          
+# TODO: merge the three vectors above into a data.frame
+
+
 #kS = rWishart(69, kDF, kPsi) #a high dimensional matrix for checking syntax on

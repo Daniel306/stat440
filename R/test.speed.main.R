@@ -28,26 +28,27 @@ main <- function() { #avoid polluting the namespace
     
     message("Plotting")
     # plot runtime plots yay
+    pdf(file="runtimes.pdf")
     plot(c(), xlim=range(results$n), ylim=range(results$time),
         main="rNIW implementation runtimes",
         xlab="n",
         ylab="time (s)")
+
+    # TODO: can this whole loop be replaced with a single lines() call?
     for(a in levels(results$algorithm)) {
-        int.a = which(levels(results$algorithm) == a) #extract an integer id for the algorithm for use as a colour palette index
+        int.a = which(levels(results$algorithm) == a) #extract an integer id for the algorithm for use as a display style index
         a.results = results[results$algorithm == a, ] #don't forget the comma
         
-        lines(a.results$n, a.results$time, col = int.a, lty="solid")
+        lines(a.results$n, a.results$time, col = krNIWAlgorithms.colors[int.a], lty= krNIWAlgorithms.linestyle[int.a])
     }
     message("                     ")
-    
-    qq=1:length(levels(results$algorithm))
-    #print(qq) #DEBUG
-    yy = rep("solid", length(levels(results$algorithm)))
-    #print(yy) #DEBUG
-    legend("topleft", levels(results$algorithm), col=qq, lty=yy)
+   
+    legend("topleft", levels(results$algorithm), col=krNIWAlgorithms.colors, lty=krNIWAlgorithms.linestyle)
     
     message("Summary table:")
-    table <- NIW.runtime.createTable(results,"extremelynaive")
+    message("(slope is in samples/second, and ratio is the ratio of that; sd is the standard deviation of ratio)")
+    table <- NIW.runtime.createTable(results,"naive") #extremelynaive")
+    table = table[order(table$ratio), ] #sort by relative speed
     print(table)
 }
 
