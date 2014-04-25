@@ -166,7 +166,7 @@ NIW.mean <- function(Mu, Kappa, Psi, df, samples) {
   
   # the means of all Xs is just Mu, because X | V ~ N(Mu, V)
   # and the means of all Vs is Psi scaled by its degrees of freedom (props to Wikipedia for this one)
-  list(X = Mu, V = Psi/(df-p-1))
+  list(X = Mu, V = Psi/(df-d-1))
 }
 
 
@@ -241,8 +241,8 @@ plot.convergence <- function(ground, samples, statistic, accumulator, title=NULL
     dim(ground) = c(dim(ground), 1)
   } else {
     # unacceptable!!
-    stop("Inconsistent dimenesions between ground and sample; ground is c(", paste(dim(ground), sep=","),
-                                                    "), while sample is c(", paste(dim(sample), sep=","), ")", sep="")
+    stop("Inconsistent dimenesions between ground and sample; ground is c(", paste(dim(ground), collapse=","),
+                                                    "), while sample is c(", paste(dim(samples), collapse=","), ")", sep="")
   }
   
   marginalized_dimension = length(dim(samples))

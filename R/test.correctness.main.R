@@ -54,8 +54,8 @@ main <- function() { # avoid polluting the namespace
             # does R even support such a beast?
             # ..I might have to move the marginals_do to this function
             #plot.densities(analytic_densities$X, samples$X) #TODO: work out just how this is...
-            #plot.densities(analytic_densities$V, samples$V)
-                       
+            #plot.densities(analytic_densities$V, samples$V) #I only know the diagonal not know what this is, so skip it
+            
             
             ## MOMENTS
             # make first moment convergence plots
@@ -63,12 +63,13 @@ main <- function() { # avoid polluting the namespace
             # first moments (matrix and non-matrix)
             # 1) computationally
             #message("m1comp") #DEBUG
-            plot.mean.convergence(ground$X, samples$X, "NIW X")
-            plot.mean.convergence(ground$V, samples$V, "NIW V")
+            #plot.mean.convergence(ground$X, samples$X, "NIW X")
+            #plot.mean.convergence(ground$V, samples$V, "NIW V")
             # 2) analytically
             #message("m1analytic") #DEBUG
-            #plot.convergence(NIW.X.mean(kMu, kKappa, kPsi, kDF), samples$X, mean, "NIW X", sub="(analytically)")
-            #plot.convergence(NIW.V.mean(kMu, kKappa, kPsi, kDF), samples$V, mean, "NIW V", sub="(analytically)")
+            analytic = NIW.mean(kMu, kKappa, kPsi, kDF)
+            plot.convergence(analytic$X, samples$X, mean, "NIW X", sub="(analytically)")
+            plot.convergence(analytic$V, samples$V, mean, "NIW V", sub="(analytically)")
                         
             # first variances
             # 1) computationally
@@ -77,8 +78,9 @@ main <- function() { # avoid polluting the namespace
             plot.var.convergence(ground$V, samples$V, "NIW V")
             # 2) analytically
             #message("v1analytic") #DEBUG
-            #plot.var.convergence(NIW.X.var(kMu, kKappa, kPsi, kDF), samples$X, "NIW X", sub="(analytically)")
-            #plot.var.convergence(NIW.V.var(kMu, kKappa, kPsi, kDF), samples$V, "NIW V", sub="(analytically)")
+            analytic = NIW.var(kMu, kKappa, kPsi, kDF)
+            plot.var.convergence(analytic$X, samples$X, "NIW X", sub="(analytically)")
+            plot.var.convergence(analytic$V, samples$V, "NIW V", sub="(analytically)")
             #  ^ this specialcase is going to bite!
             
             # second matrix moments: the means of the outer products
