@@ -7,6 +7,36 @@
 
 source("util.math.R")
 
+
+..getitem.. <- function(S, idx) {
+  # wrapper to work around that in R you cannot say 
+  # extracts elements "idx" from structure S
+  # an element in idx being NULL is like the syntax  the syntax S[,,3]
+  # BUG: this will NOT work if idx contains subvectors like S[1:3, 2:5] (ie idx is a matrix..)
+  # TODO: maybe if we can just figure out how to create symbols like R does when you say S[2,,3] then we do can just use that instead of this gunky
+  
+  #message("..getitem..")
+  #print(dim(S))
+  #print(idx)
+  
+  # R magic!: this line courtesy of mrflick in irc.freenode.net/#R
+  #do.call(`[[`, c(S, as.list(idx))) #[[ does everything [ does and more
+  # ^ but this is finicky if you skip / don't define some dims
+
+  # but there's slice.index which can help:
+  # we convert idx into a selection mask
+  stopifnot(length(idx) == length(dim(S)))
+  mask = rep(TRUE, prod(dim(S)))
+  dim(mask) == dim(S)
+  for(i in 1:length(dim(S))) { 
+    if(is.na(idx[i])) next; # irrelevant; skip it
+    mask = mask & slice.index(S, i) == idx[i]
+  } #warning! indexing by NA returns NA! this is probably not what you want!!
+  stopifnot(all(!is.na(mask)))
+  S[mask]
+}
+
+
 is.square <- function(M) {
     # test if a matrix is square
     # TODO: this appears to exist as matrixcalc::is.square.matrix already??
@@ -308,34 +338,50 @@ test.marginalize <- function() {
 
 
 marginals_do <- function(M, f) { #TODO: pull out into util
+  # loop over all the marginals of MultiS M
   # precondition: M's dim is (a,b,c,d,...,n); marginals are taken of that last dimension, n    
   # precondition: f is f(idx, v) where idx will be a vector containing the length(dim)-1 indexes and v is the marginal vector
   # postcondition: nothing; you need to do every with side-effects in f
   # loop over all interesting_dimensions and plot each marginal
   # recursive something someting  
-  R<-function(idx, dims) { #TODO: pull out into util.R
+  # This is something like the sum of map() and enumerate() (which are not R functions)
+  #   but it is dimensionality aware.
+  
+  kept_dimensions = 1:(length(dim(M))-1) #drop the last dimension
+    
+  R<-function(idx, dims) {
+  
     if(length(dims)==0) {
+    
       # base case
       # we've bottomed out and have an actual index in hand
       # so use it
       #message("bottomed out at idx=")
       #print(idx) #DEBUG
-      
-      v = do.call(`[`, c(M, as.list(idx))) # this line courtesy of mrflick in #R
+
+      idx = c(idx,NA) #this has to be extended by one NA in order to extract the vector we care about; see ..getitem..
+      v = ..getitem..(M, idx)
+      message("WE EXTRACTED THIS")
+      print(v)
       v = as.vector(v) # just in case (i think if idx == c(), which should correspond to M[], we will *not* get a vector out: R will preserve the dimensions (but only in that case (which shouldn't be possible, if the recursion is correct))
       f(idx,  v)
+      
     } else {
+    
       # recursive case
       # split the top dimensions from the body
       # note how we extract the *number* of elements in the dimension d from the index of the dimension itself dims[1]
-      d = dim(samples)[dims[1]]; dims = dims[-1];
+      d = dim(M)[dims[1]]; dims = dims[-1];
       for(i in 1:d) {
+        # recurse!
         R(append(idx, i), dims)
       }
+      
     }
+    
   }
-  R(c(), interesting_dimensions) #kick off the recursive loop  
-  return(NULL)
+  R(c(), kept_dimensions) #kick off the recursive loop  
+  return(NULL) #don't return whatever R() happens to construct; that would be terrible
 }
 
 
@@ -345,6 +391,7 @@ idx2str <- function(idx) {
   # c()      -> ""
   # c(1,2,3) -> "[1,2,3"]
   # c(1)     -> "[1]"
+  idx[is.na(idx)] = ""
   idx = paste(idx, collapse=",") #could also do this with a complicated do.call, but paste() covers this case helpfully for us with 'collapse'
   if(idx == "") { #special case: no indices means all the indecies #XXX untested
     return(idx)

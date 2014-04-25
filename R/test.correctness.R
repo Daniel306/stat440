@@ -11,7 +11,7 @@ source("NIW.R")
 ##################################################
 ## Density Plots
 
-plot.compare <- function(ground, sample, ...) { #XXX NAME
+plot.density <- function(ground, sample, ...) { #XXX NAME
   # plot histograms of the marginals in sample, overlaid with "ground truth" probability density.
   # 
   # ground: the "ground truth"
@@ -47,60 +47,29 @@ plot.compare <- function(ground, sample, ...) { #XXX NAME
   #}
 }
 
-
-plot.NIW.densities <- function(ground, sample, alg=NULL) { #XXX name
-  # compare (using plot.compare) the marginals of the Normal Inverse Wishart against their expected pdfs
+plot.densities <- function(ground, sample, title=NULL, ...) { #XXX name
+  # compare the marginals of the given sample to their expected p.d.f. curves
+  #
+  # this is basically just a loop over plot.density(),
+  #  but it usefully accounts for labelling the plots uniformly
   #
   # args:
-  #   ground, sample: lists containing two elements, $X and $V. The first is a c(n, d) matrix, the second is a c(n, d, d) matrix
-  #                the each of the n pairs (X[k,], V[k,]) corresponds to one of the Normal Inverse Wishart samples.
+  #   ground: either, a MultiS, the same dimensionality as sample, in which case
   #         ground is assumed to be samples from the true distribution, and creates kernel density estimates
-  #         sample has histograms plotted from it
+  #       -or-
+  #       (( some kind of weird matrix-list containing p.d.f.s )) 
+  #   sample: a MultiS or a vector
+  #       
   
-  #typechecks
-  stopifnot(class(ground) == "list" && class(sample) == "list")
-  stopifnot(names(ground) == names(sample))
-  for(N in names(ground)) {
-    last = length(dim(ground[[N]])) #the length of the last dimension is "n", the number of samples,
-    # which is irrelevant; we only care that the dimensionality of each sample in ground matches the dimensionality of each sample in sample
-    stopifnot(length(dim(ground[[N]])) == length(dim(sample[[N]])))
-    if(any(dim(ground[[N]])[-last] != dim(sample[[N]])[-last])) {
-      stop("ground$", N, " and sample$", N, " have inconsistent dimensions: ", dim(ground[[N]])[-last],"  vs ", dim(sample[[N]])[-last]) #TODO: this won't print correctly
-    }
-  }
-    
-  # TODO: factor this into a generic function that takes a list() of matrixables and figures out the labels (eg "V[3,43]") to use automatically 
-  # method 1: reshape ground and sample into 2d matrices: n x (number of marginals)
-  #   pro: simple
-  #   con: you lose the information about ~which~ marginal you're looking at, unless you reconstruct it manually
-  # method 2: somehow recurisvely loop down the dimensions, loop over all values in that dimension as you go
-  #   con: since [] is a variable arity function call in R (it doesn't just take a tuple like in Python),
-  #          constructing the correct indexing calls will require some R call() magic
-  #          such magic is probably doable though
+  # TODO: typechecks
   
-  # since we know sample came from rNIW, we have stronger conditions than the above:
-  # 
-  d = dim(ground$X)[1]
-  # and we also know that V is symmetric, so we can do only (1:d)x(i:d)
-  # --> this tidbit will be difficult to factor out
-
-  
-    
-  # X marginals
-  par(mfrow=c(2,2))
-  for(i in 1:d) {
-    plot.compare(ground$X[i,], sample$X[i,], main=paste("X[",i,"]"), sub=alg)
-  }
-  
-  # V marginals
-  par(mfrow=c(2,2))
-  for(i in 1:d) {
-    for(j in i:d) { #purposely not indented
-      plot.compare(ground$V[i,j,], sample$V[i,j,], main=paste("V[",i,",",j,"]"), sub=alg)
-    }
-  }
+  marginals_do(sample, function(idx, sample) {
+    # case 1: ground is a matrix of samples
+    plot.density(..getitem..(ground, idx), sample, main=paste(title, idx2str(idx)), ...)
+    # case 2:
+    # TODO: ground is a matrix of pdfs
+  })   
 }
-
 
 
 ############
@@ -208,7 +177,7 @@ plot.convergence <- function(ground, samples, accumulator, title=NULL, ...) {
   
   marginals_do(samples, function(idx, samples) {
     plot(samples, xlab="samples taken (n)", ylab="sample mean", main=paste(title, idx2str(idx)))
-    abline(h=do.call(`[`, c(ground, as.list(idx))), lty="dashed", col="blue")
+    abline(h=..getitem..(ground, idx), lty="dashed", col="blue")
     legend(paste(paste("True", accumulator.name), round(ground, 2)), lty="solid", col="blue")
   })
 }

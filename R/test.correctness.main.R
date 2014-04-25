@@ -42,8 +42,8 @@ main <- function() { # avoid polluting the namespace
             ## (marginal) DISTRIBUTIONS
             # make density plots
             # 1) computationally
-            plot.densities(ground$X, samples$X)
-            plot.densities(ground$V, samples$V)
+            plot.densities(ground$X, samples$X, "NIW X")
+            plot.densities(ground$V, samples$V, "NIW V")
             # 2) analytically
             #analytic_densities = NIW.densities(kMu, kKappa, kPsi, kDF)
             # ^ does this step return like.. a.. tuple of matrices of functions?
@@ -51,8 +51,7 @@ main <- function() { # avoid polluting the namespace
             # ..I might have to move the marginals_do to this function
             #plot.densities(analytic_densities$X, samples$X) #TODO: work out just how this is...
             #plot.densities(analytic_densities$V, samples$V)
-            
-            
+                       
             
             ## MOMENTS
             # make first moment convergence plots
