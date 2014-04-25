@@ -183,7 +183,7 @@ D (Friday, April the 25th, 2014)
 ---------------------------------
 
 [nick]
-
+- [ ] make return values class() <- "NIW"
 - [ ] Linear Algebra parlour tricks:
     - [ ] factor the common matrix terms to before/after the loop (call this `snappy4`)
     - [ ] diagonalization?? (`snappy5`)

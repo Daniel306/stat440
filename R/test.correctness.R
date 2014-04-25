@@ -34,7 +34,13 @@ marginal.title <- function(title, idx) {
   # given one of my sketchy marginal indexing vectors
   # and a title prefix (which may be null)
   # construct a label that can be used to communicate what marginal we're displaying
-  paste(title, idx2str(idx), sep="")
+  # SINCE this function is meant to be used in conjunction with marginals_do,
+  # the last element of idx MUST be NA
+  
+  stopifnot(is.na(idx[length(idx)]))
+  idx = idx[-length(idx)] # but we don't want to print that element
+  
+  paste(title, idx2str(idx), sep="") #sep="" means that a NULL title is a no-op
 }
 
 
@@ -97,7 +103,7 @@ plot.densities <- function(ground, sample, title=NULL, layout=c(2,2), ...) { #XX
   par(mfrow=layout)
   marginals_do(sample, function(idx, sample) {
     # case 1: ground is a matrix of samples
-    plot.density(..getitem..(ground, idx), sample, main=marginal.title(title, idx[-length(idx)]), ...)
+    plot.density(..getitem..(ground, idx), sample, main=marginal.title(title, idx), ...)
     # case 2:
     # TODO: ground is a matrix of pdfs
   })   
@@ -140,68 +146,6 @@ IW.marginal <- function(i, j, Psi, df) {
 
 ##########################################
 ## Moments
-
-
-
-
-plot.convergence <- function(ground, samples, accumulator, title=NULL, ylab=NULL, ...) {
-  #
-  # note: plot.convergence does not actually guarantee you will see convergence; 
-  #  you might not have enough samples or your choice of accumulator might not pick a duck out of a hat (an i.i.d. set of ducks, of course) and measure its beak length with some random error.
-  #  using accumulator=mean or accumulator=var will definitely
-  # ground and samples may be matrices
-  # ... : args to plot
-  # TODO: 
-
-  # coerce ground to have the same shape as samples
-  # ...
-  # deal with the special case of ground being a single value (use case: an analytic reference value)
-  # by giving it an extra dimension of length 1
-  # TODO: factor this (how??) -- this step is like an inverse of drop(), except that drop() can't have a proper inverse
-  if( length(dim(ground)) == length(dim(samples)) ) {
-    # acceptable
-  } else if(length(dim(ground)) == length(dim(samples)) - 1) { #TODO: also check the dimensions that match actually do match
-    # fixable
-    dim(ground) = c(dim(ground), 1)
-  } else {
-    # unacceptable!!
-    stop("Inconsistent dimenesions between ground and sample; ground is c(", paste(dim(ground), sep=","),
-                                                    "), while sample is c(", paste(dim(sample), sep=","), ")", sep="")
-  }
-  
-  marginalized_dimension = length(dim(samples))
-
-  # extract the name of the cumulation function for labelling
-  accumulator.name = deparse(substitute(accumulator))
-
-  if(is.null(ylab)) {
-     ylab = paste("sample", accumulator.name) #use  unless the user overrides
-  }
-  
-  # Plot the means converging properlike
-  kept_dimensions = (1:marginalized_dimension)[-marginalized_dimension] #precompute the list opposite of marginalized_dimension
-                                             #doing it this way ensures this works even if ground is missing the last dimension
-                             message("fucking indents")
-  samples = cumulate(samples, kept_dimensions, accumulator)
-  ground = apply(ground, kept_dimensions, accumulator) # apply() flattens
-  dim(ground) = dim(ground)[kept_dimensions]           # unflatten
-  message("SAMPLES")
-  print(samples)
-  message("GROUND")
-  print(ground)
-  print(class(ground))
-  print(dim(ground))
-  
-  stopifnot(dim(ground) == dim(samples)[1:2])
-  message("looping motherfuckiners")
-  marginals_do(samples, function(idx, samples) {
-    print(idx)
-    plot(samples, xlab="samples taken (n)", ylab=ylab, main=marginal.title(title, idx))
-    abline(h=..getitem..(ground, idx), lty="dashed", col="blue")
-    legend(paste(paste("True", accumulator.name), round(ground, 2)), lty="solid", col="blue")
-  })
-}
-
 
 
 ###########
@@ -262,6 +206,69 @@ NIW.var <- function(Mu, Kappa, Psi, df, samples) {
 
 
 
+plot.convergence <- function(ground, samples, accumulator, title=NULL, ylab=NULL, ...) {
+  #
+  # note: plot.convergence does not actually guarantee you will see convergence; 
+  #  you might not have enough samples or your choice of accumulator might not pick a duck out of a hat (an i.i.d. set of ducks, of course) and measure its beak length with some random error.
+  #  using accumulator=mean or accumulator=var will definitely
+  # ground and samples may be matrices
+  # ... : args to plot
+  # TODO: 
+  # ylab is only passable because hax
+  #   but also only because we need it in the namespace to make its default value work
+
+
+  # extract the name of the cumulation function for labelling
+  accumulator.name = deparse(substitute(accumulator))
+
+  if(is.null(ylab)) {
+     ylab = paste("sample", accumulator.name) #use  unless the user overrides
+  }
+
+
+  # coerce ground to have the same shape as samples
+  # ...
+  # deal with the special case of ground being a single value (use case: an analytic reference value)
+  # by giving it an extra dimension of length 1
+  # TODO: factor this (how??) -- this step is like an inverse of drop(), except that drop() can't have a proper inverse
+  if( length(dim(ground)) == length(dim(samples)) ) {
+    # acceptable
+  } else if(length(dim(ground)) == length(dim(samples)) - 1) { #TODO: also check the dimensions that match actually do match
+    # fixable
+    dim(ground) = c(dim(ground), 1)
+  } else {
+    # unacceptable!!
+    stop("Inconsistent dimenesions between ground and sample; ground is c(", paste(dim(ground), sep=","),
+                                                    "), while sample is c(", paste(dim(sample), sep=","), ")", sep="")
+  }
+  
+  marginalized_dimension = length(dim(samples))
+  
+  # Plot the means converging properlike
+  kept_dimensions = (1:marginalized_dimension)[-marginalized_dimension] #precompute the list opposite of marginalized_dimension
+                                             #doing it this way ensures this works even if ground is missing the last dimension
+
+  stopifnot(dim(ground)[kept_dimensions] == dim(samples)[kept_dimensions])
+  
+  samples = cumulate(samples, kept_dimensions, accumulator)
+  message("kept:")
+  print(kept_dimensions)
+  # squish the ground truth down to its cumulant (eg the mean/var/whatever taken over the WHOLE set)
+  ground = apply(ground, kept_dimensions, accumulator) # apply() flattens
+  dim(ground) = c(dim(samples)[kept_dimensions], 1)    # unflatten, and undrop() the last dimension
+                                                       # such that ground matches the original size.
+  
+  marginals_do(samples, function(idx, samples) {
+    plot(samples, xlab="samples taken (n)", ylab=ylab, main=marginal.title(title, idx))        
+    abline(h=..getitem..(ground, idx), lty="dashed", col="blue")
+    legend("topleft", paste(paste("True", accumulator.name), round(ground, 2)), lty="solid", col="blue")
+  })
+}
+
+
+
+
+
 ##########################################
 ## Kolmogorov-Smirnov Tests
 
@@ -276,16 +283,9 @@ ks.tests <- function(ground, sample, title=NULL, alpha=0.05) {
   })
 }
 
+
 NIW.ks.test <- function(ground, sample) {
-  # compare (using plot.compare) the marginals of the Normal Inverse Wishart against their expected pdfs
-  #
-  # args:
-  #   ground, sample: lists containing two elements, $X and $V. The first is a c(n, d) matrix, the second is a c(n, d, d) matrix
-  #                the each of the n pairs (X[k,], V[k,]) corresponds to one of the Normal Inverse Wishart samples.
-  #         ground is assumed to be samples from the true distribution
-  #         sample has histograms plotted from it
-  #      for each marginal, ks.test is performed and the results printed
-  
+
   #typechecks
   stopifnot(class(ground) == "list" && class(sample) == "list")
   stopifnot(names(ground) == names(sample))
@@ -297,11 +297,6 @@ NIW.ks.test <- function(ground, sample) {
       stop("ground$", N, " and sample$", N, " have inconsistent dimensions: ", dim(ground[[N]])[-last],"  vs ", dim(sample[[N]])[-last]) #TODO: this won't print correctly
     }
   }
-  # since we know sample came from rNIW, we have stronger conditions than the above:
-  # 
-  
-  # and we also know that V is symmetric, so we can do only (1:d)x(i:d)
-  # --> this tidbit will be difficult to factor out
   
   ks.tests(sample$X, sample$X, title="X")
   ks.tests(sample$V, sample$V, title="V")
