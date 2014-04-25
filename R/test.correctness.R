@@ -184,7 +184,7 @@ cumvar.marginals = function(M) {
   return(M)
 }
 
-marginals_do <- function(M, f) {
+marginals_do <- function(M, f) { #TODO: pull out into util
   
   # precondition: M's dim is (a,b,c,d,...,n); marginals are taken of that last dimension, n    
   # precondition: f is f(idx, v) where idx will be a vector containing the length(dim)-1 indexes and v is the marginal vector
@@ -216,6 +216,7 @@ marginals_do <- function(M, f) {
   return(NULL)
 }
 
+
 plot.converging.moment <- function(ground, samples, ...) {
   # 
   # every moment is an expectation, which can be approximated by a sample mean
@@ -239,6 +240,15 @@ plot.converging.moment <- function(ground, samples, ...) {
   abline(h=ground, lty="solid", col="blue")
 }
 
+
+idx2title <- function(idx) {
+  title = paste(idx, collapse=",") #could also do this with a complicated do.call, but paste() covers this case helpfully for us with 'collapse'
+  if(length(idx) > 0) { #special case: no indices means all the indecies #XXX untested
+    title = paste("[", title, "]") #but otherwise wrap the indecies in square brackets
+  }
+  return(title)
+}
+        
 
 plot.converging.moment.multi <- function(ground, samples, title=NULL, sub=NULL) { # XXX name
   # befpore using this function, map samples (and ground) with
@@ -274,19 +284,13 @@ plot.converging.moment.multi <- function(ground, samples, title=NULL, sub=NULL) 
   }
 
   marginals_do(samples, function(idx, v) {    
-    main_title = paste(idx, collapse=",") #could also do this with a complicated do.call, but paste() covers this case helpfully for us with 'collapse'
-    if(length(idx) > 0) { #special case: no indices means all the indecies #XXX untested
-      main_title = paste("[", main_title, "]") #but otherwise wrap the indecies in square brackets
-    }
-     if(!is.null(title)) {
-      main_title = paste(title, main_title, sep="") #prefix the index with an overarching title, if given
-    }
-    
+
     # awkward: marginals_do is looping down samples, but we really are *simultaneously* looping over ground
     #  maybe some sort of zip()-like construct would help
     # for now, copying the magic line from marginals_do and just reaching up one scope works:
     ground_marginal = do.call(`[`, c(ground, as.list(idx)))
-    plot.converging.moment(ground_marginal, v, main=main_title, sub=sub);
+    
+    plot.converging.moment(ground_marginal, v, main=paste(title, idx2title(idx)), sub=sub);
      # ^ TODO: factor this
     })
       
