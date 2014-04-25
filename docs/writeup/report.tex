@@ -305,14 +305,68 @@ A &= (X'X + \Omega)^{-1}\Omega\\
 C &= \hat{\beta}'(X'X)\hat{\beta} + \Lambda'\Omega\Lambda - (X'X\hat{\beta} + \Omega\Lambda)'(X'X+\Omega)^{-1}(X'X\hat{\beta} + \Omega\Lambda)
 \end{align*}
 
-The following code generate B and V given $X, Y, \Lambda, \Omega, \nu, \Psi$
 
-% Insert R code here? alternatively just say algorithm does it.
+lm.multivariable(...) is the function that generates B and V given X, Y, and the priors. The code for it is in the appendix, and next section shows a usage example.
+
 
 \Subsubsection{Boston housing data example}
 
-Using data from Boston in 
+Using data from Boston in MASS, we tried to find the coefficients if trying to predict 6 of the parameters based on the other 8. as well as determine credible intervals for B and V\\
+The code below demonstrates the process, as well as how you can use the result
 
+\begin{lstlisting}[frame=single, language=R]
+require(MASS)
+D <- Boston
+Y <- D[c("crim", "zn", "indus", "tax", "black", "lstat")]
+X <- D[c("chas", "nox", "rm", "age", "dis", "rad", "ptratio", "medv")]
+
+# One example using flat priors and df of 73
+
+Result <- lm.multivariable(100000,as.matrix(X),as.matrix(Y))
+
+# Now that we have that, we can generate 95% credibility interval
+#by generating lower and upper quantiles
+
+apply(Result$B, c(1,2), quantile, probs = 0.025)
+#        [,1]       [,2]        [,3]        [,4]       [,5]        [,6]
+#[1,] -2.4726166 -5.8679744  0.09608906 -32.9824267 -11.281075 -1.55826198
+#[2,] -6.9573162 -0.8674746 20.12296722 256.4240012  71.771290 12.86687197
+#[3,]  0.6781378  1.6702512 -1.27047227  -2.1000956 -14.681060 -1.33368492
+#[4,] -0.1553847 -0.4728362 -0.09345642  -1.6003269  -1.790386 -0.08581789
+#[5,] -0.5264732  6.4092475 -0.97953076   0.1691556   8.454171  0.20377180
+#[6,]  0.4767344  0.2930137  0.04739809  13.7503723  -5.358764 -0.03775675
+#[7,] -0.1783143 -2.4605295  0.36683531   4.8444292  11.568813  0.34594612
+#[8,] -0.2359186  0.1865307 -0.06683020  -1.3784741   3.828851 -0.31275303
+
+apply(Result$B, c(1,2), quantile, probs = 0.975)
+apply(Result$V, c(1,2), quantile, probs = 0.025)
+apply(Result$V, c(1,2), quantile, probs = 0.975)
+
+# Example with non-flat priors
+
+q <- dim(Y)[2];
+p <- dim(X)[2]
+
+Psi <- diag(q);
+df <- 100;
+Lambda <- matrix(1, p,q);
+Omega <- diag(p);
+
+Result <- lm.multivariable(100000,as.matrix(X),as.matrix(Y), 
+                    Psi = Psi, Lambda = Lambda, Omega = Omega, df  = df)
+                    
+apply(Result$B, c(1,2), quantile, probs = 0.025)
+apply(Result$B, c(1,2), quantile, probs = 0.975)
+apply(Result$V, c(1,2), quantile, probs = 0.025)
+apply(Result$V, c(1,2), quantile, probs = 0.975)
+
+
+# Can also take a histogram to take a look a the distribution
+# one example:
+
+hist(Result$B[1,1,], breaks = 100, probability = TRUE)
+
+\end{lstlisting}
 % 1.25 pages
 %\Subsection{Gibbs Sampler}
 
@@ -325,7 +379,115 @@ Using data from Boston in
 
 blah blah blah yay code we like R
 
+
 ((APPENDIX??!?!?! WITH THE CODE AND STUFF YEAH))
+
+\begin{lstlisting}[frame=single, language=R]
+lm.multivariable <- function(m, X, Y, Lambda=NULL, Omega=NULL, Psi=NULL, df=71) { # TODO: Not sure what to name this.
+  # Multivariable Regression via Bayesian Reasoning
+  # 
+  # This fits the model Y = XB + E where (E_i)^T ~iid MultiNormal(0, V)
+  #  but it doesn't fit it in the frequentist sense of constructing
+  #  true values for B and V -- instead it produces samples from the
+  #  Bayesian Posterior.
+  # The posterior, like a good little bayesian, is conjugate in this case:
+  #  both the prior and the posterior are Matrix-Normal|Inverse-Wisharts.
+  #
+  # args:
+  #  m: the number of samples to take
+  #  X, Y: the observed data; these should be (n,q) and (n,d)
+  #  Psi, df, Lambda, Omega: your prior knowledge, encoded
+  #    as parameters of the Normal|Inverse-Wishart distribution.
+  #   You should provide a df (though this won't make a huge difference)
+  #    but, for convenience, by default the other parameters are set
+  #    to give "flat" (aka uninformative aka improper) priors. 
+  #   The flat prior on Omega causes Lambda to be ignored
+  #    (hence its default value: NULL), and, as a special exception,
+  #    causes the degrees of freedom of the posterior to change
+  #     from (df+n) to (df+n-d).
+  #  The flat prior on Psi is orthogonal to the flat prior on Omega (XXX is this true? surely it has some effect, even if only numerical/speed/something)
+  #  (the argument order is chosen to reflect the distribution,
+  #  which is the result of sampling
+  #      MatrixNormal(Lambda, Omega, InverseWishart(Psi, df)), 
+  #   though it does makes calling this function awkward)
+  # 
+  # returns:
+  #  a list containing the posterior samples:
+  #   $B
+  #   $V
+  
+  n <- dim(X)[1];
+  stopifnot(n == dim(Y)[1])
+  q <- dim(Y)[2];
+  d <- dim(X)[2];
+  
+  # TODO: can add some checks here
+  
+  #X'X is used often, only time X is used by itself is in S
+  X.sq <- crossprod(X)
+  
+  # this posterior is neat:
+  # it actually involves taking the usual frequentist fit (as produced by lm())
+  #  B = (X'X)^{-1}X'y
+  # and trading off between that fit and the information from the prior.
+  # So, compute the OLS fit beta.hat and its squared-error (SSE) S 
+  beta.hat <- solve(X.sq, t(X) %*% Y);
+  residuals <- (Y - X %*% beta.hat);
+  S <- crossprod(residuals)
+  
+  # now incorporate the prior parameters
+  # the flat priors are special-cased to avoid
+  # numerical instability and R's thorny gorgon's type system
+  
+  if(is.null(Psi)) { Psi = 0 } #let scalar splaying sort it out
+  
+  if(is.null(Omega)) {
+    mNIW.Mu <- beta.hat
+    mNIW.Kappa <- X.sq;
+    mNIW.Psi <- Psi + S;
+    mNIW.df <- df + n - d;
+  } else {
+    
+    if(is.null(Lambda)) {
+      stop("You must specify Lambda if you use a non-flat prior on Omega");
+    }
+    
+    # calculate kappa, also used in calculating C.
+    # while C needs inverse, rMNIW already does the inverse, so not doing it here
+    
+    mNIW.Kappa <- X.sq + Omega;
+    mNIW.df <- df + n - d;
+    
+    A <- solve(mNIW.Kappa, Omega);    
+    I = diag(d) #identity matrix
+    mNIW.Mu <- A %*% Lambda  +  (I-A) %*% beta.hat
+    
+    # could swap X'XB with XY, not sure if we should
+    # this formula is long and grueling
+    L = X.sq %*% beta.hat  + Omega %*% Lambda  #this term is used twice
+    
+    # in all lines below, mahalanobis gives this error 
+    # Error in x %*% cov : non-conformable arguments
+    C <- t(beta.hat) %*% X.sq %*% beta.hat
+           # mahalanobis(beta.hat, 0, X.sq, inverted=TRUE)
+             + t(Lambda) %*% Omega %*% Lambda
+             #+ mahalanobis(Lambda, 0, Omega, inverted=TRUE) 
+             - t(L) %*% solve(mNIW.Kappa) %*% (L);
+             #- mahalanobis(L, 0, mNIW.Kappa);  #<-- more compact
+             
+    mNIW.Psi <- Psi + S + C;
+  }
+  
+  # finally, do the heavy lifting given these posterior parameters
+  result = rMNIW.Rcpp(m, mNIW.Mu, mNIW.Kappa, mNIW.Psi, mNIW.df)
+  
+  # rename the posterior samples to match the API
+  names(result)[names(result) == "X"] = "B" 
+  
+  return(result)
+}
+
+\end{lstlisting}
 
 % 1 page
 \newpage

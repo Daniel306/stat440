@@ -114,4 +114,4 @@ apply(Result$V, c(1,2), quantile, probs = 0.975)
 # Can also take a histogram to take a look a the distribution
 # one example:
 
-hist(Result$B[1,1,], breaks = 100)
+hist(Result$B[1,1,], breaks = 100, probability = TRUE)
