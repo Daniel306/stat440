@@ -33,7 +33,7 @@
   stringstyle=\color{ForestGreen}      % string literal style
 } 
 
-\begin{document}
+\begin{document}1
 
 \title{Stat440 Project Outline}
 \author{Daniel Galperin, Nick Guenther}
@@ -495,29 +495,26 @@ lm.multivariable <- function(m, X, Y, Lambda=NULL, Omega=NULL, Psi=NULL, df=71) 
 % 1 page
 \newpage
 \Section{References}
-  
-  R Core Team (2014). R: A language and environment for statistical computing. R Foundation for
+%\bibliographystyle{plain}
+%\bibliography{reference}
+\begin{thebibliography}{9}
+
+\bibitem{R}R Core Team (2014). R: A language and environment for statistical computing. R Foundation for
   Statistical Computing, Vienna, Austria. URL http://www.R-project.org/.
   
-  
-  Dirk Eddelbuettel and Romain Francois (2011). Rcpp: Seamless R and C++ Integration. Journal of
+\bibitem{Rcpp} Dirk Eddelbuettel and Romain Francois (2011). Rcpp: Seamless R and C++ Integration. Journal of
   Statistical Software, 40(8), 1-18. URL http://www.jstatsoft.org/v40/i08/.
 
-
- % Eddelbuettel, Dirk (2013) Seamless R and C++ Integration with Rcpp. Springer, New York. ISBN
- % 978-1-4614-6867-7.
- 
- 	Douglas Bates, Dirk Eddelbuettel (2013). Fast and Elegant Numerical Linear Algebra Using the
+\bibitem{RcppEigen}Douglas Bates, Dirk Eddelbuettel (2013). Fast and Elegant Numerical Linear Algebra Using the
   RcppEigen Package. Journal of Statistical Software, 52(5), 1-24. URL
   http://www.jstatsoft.org/v52/i05/.
-  
-  Andrew D. Martin, Kevin M. Quinn, Jong Hee Park (2011). MCMCpack: Markov Chain Monte Carlo in R.
+\bibitem{MCMCpack}Andrew D. Martin, Kevin M. Quinn, Jong Hee Park (2011). MCMCpack: Markov Chain Monte Carlo in R.
   Journal of Statistical Software. 42(9): 1-21. URL http://www.jstatsoft.org/v42/i09/. 
-
-	Statisticat, LLC. (2014). LaplacesDemon: Complete Environment for
+ 
+\bibitem{LaplaceDemon}Statisticat, LLC. (2014). LaplacesDemon: Complete Environment for
   Bayesian Inference. Bayesian-Inference.com. R package version
-  14.04.05. [http://www.bayesian-inference.com/software]
-
-
+  14.04.05. [http://www.bayesian-inference.com/software] 
+ 
+ \end{thebibliography}
 
 \end{document}
