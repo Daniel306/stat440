@@ -4,7 +4,11 @@ Normal-Inverse-Wishart Generating Project
 Goals
 ----
 
-The [NIW](https://en.wikipedia.org/wiki/Normal-inverse-Wishart_distribution) distribution is a typical, and is currently very, very, very slow. Here's a real working statistician [running up against it, painfully, in R](https://dahtah.wordpress.com/2012/03/07/why-an-inverse-wishart-prior-may-not-be-such-a-good-idea/):
+The [NIW](https://en.wikipedia.org/wiki/Normal-inverse-Wishart_distribution) distribution
+is a typical conjugate prior for the multivariate normal distribution,
+and using in R is currently very, very, very slow.
+
+Here's a real working statistician [running up against it in R](https://dahtah.wordpress.com/2012/03/07/why-an-inverse-wishart-prior-may-not-be-such-a-good-idea/):
 ```{R}
  #Generate n samples from the prior
  rprior <- function(n=1,r=3,M=diag(rep(1,2)))
@@ -32,27 +36,38 @@ and the `[rWishart](http://svn.r-project.org/R/trunk/src/library/stats/src/rWish
 function in base R. This package is different because it is fast enough to
 do heavy bayesian statistics in the environment statisticians are already using.
 
-To be useful, this package also includes an application the sampler to
+To make its use clear, this package also includes an application of the sampler to
 [multivariable regression](https://en.wikipedia.org/wiki/Bayesian_multivariate_linear_regression).
 
 <!--  [the](http://www.ats.ucla.edu/stat/stata/dae/mvreg.htm) [alternatives](http://cameron.econ.ucdavis.edu/excel/ex61multipleregression.html). -->
 
+This is **alpha** code.
 
 Code Guide
 ----------------
 
+### API
+
+* **TODO**
+
 ### Files
 
-* `rNIW.R` contains the various sampler implementations we tried
-* `dNIW.R` contains analytic density functions for this distribution
-* `MultivariableRegression.R` contains the a "multivariable regression"
+* `rNIW.R` contains the various sampler implementations we experimented with
+    * `rNIW()`
+    * `rMNIW()`
+* `dNIW.R` contains analytic density functions for the distribution
+    * `dNIW()`
+    * `dMNIW()`
+* `MultivariableRegression.R` contains the "multivariable regression"
+    * `rmultivariableregression()` samples from the multivariable regression model, given the coefficients `B` and variance `V`.
+    * `lm.multivariable()` performs the grunt work of [multivariable regression](https://en.wikipedia.org/wiki/Bayesian_multivariate_linear_regression).
 * `test.*.R` is code to vet the implementations above.
     * `test.speed.R` is a harness to record runtimes of the different implementations, plot them, and summarize the results in a table.
     * `test.correctness.R`  vets that this code is actually sampling the proper distribution by reducing the problem to look at the marginals. It provides
-        * _analytic_ and _computational_ (kernel density estimate) density functions
-        * _analytic_ and _computational_ (sample mean) moments
-        * _computational_ (KS-test) distribution comparison
-                * `test.MultivariableRegression.R` 
+        * _analytic_ and _computational_ (kernel density estimate) density functions.
+        * _analytic_ and _computational_ (sample mean) moments.
+        * _computational_ (KS-test) distribution comparison.
+    * `test.MultivariableRegression.R` has some basic examples and smoketests of `lm.multivariable()`
     * `test.*.main.R` are scripts which can be run directly to exercise all of the above:
         * `test.speed.main.R` produces a plot and a table of runtimes
         * `test.correctness.main.R` produces a very large number of histogram-density plots and converging moment plots, and text streams of results from the KS-tests (by default at an alpha=0.05)
@@ -97,3 +112,4 @@ Future Work
 1. Allow the optional cholesky parameterization, and use that to reduce the number of algorithms
 1. Investgate if this method is faster than the naive implementation with a good `plyr` call.
 1. Actually create a package.
+1. Make lm.multivariable return a more useful structure.
