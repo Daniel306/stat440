@@ -153,7 +153,7 @@ D-1 (Thursday)
 
 [daniel]
 
-- [ ] fix V bug in multivariable regression
+- [X] fix V bug in multivariable regression
 - [ ] Apply Multivariable Regression to sample real world dataset.
 
 [nick]
