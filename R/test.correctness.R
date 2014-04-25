@@ -337,7 +337,22 @@ plot.NIW.moment.second.computational <- function(ground, sample) {
 ###########
 #### Analytic Normal|Inverse-Wishart marginal moments 
 
+ 
 plot.NIW.moment.mean.analytic <- function(Mu, Kappa, Psi, df, samples) {
+  # plot (???) and then, suddenly, rabbits.
+  # this is not called ".first" because its cousin below plots variances, not second moments
+  
+  d = dim(Psi)[1]
+  
+  # the means of all Xs is just Mu, because X | V ~ N(Mu, V)
+  plot.converging.moment.multi(Mu, samples$X, title="NIW X", sub="(expected value from analytic formulas)")
+  
+  # the means of all Vs is Psi scaled by its degrees of freedom
+  plot.converging.moment.multi(Psi/(df-p-1), samples$V, title="NIW V", sub="(expected value from analytic formulas)")
+}
+
+
+plot.NIW.moment.variance.analytic <- function(Mu, Kappa, Psi, df, samples) {
   # plot the second moments
   # this is not called ".first" because its cousin below plots variances, not second moments
   
