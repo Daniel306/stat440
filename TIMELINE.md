@@ -133,23 +133,13 @@ D-1 (Thursday)
 
 [daniel]
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-- [X] fix V bug in multivariable regression
-=======
-- [x] fix V bug in multivariable regression (_it wasn't a bug, it was small sample size_)
->>>>>>> ccba96ba072fc6fb88cd80b6b47f0d2dc4b9f514
-=======
-
 - [x] fix V bug in multivariable regression
->>>>>>> 58458f39b9940897196939964eba71f7149c50dd
-- [ ] Apply Multivariable Regression to sample real world dataset.
-- [ ] Better timings:
-    - [ ] in the runtime tests, map the runtime matrix to averages + sds instead of having the weird aliasing problems
+- [x] Better timings:
+    - [x] in the runtime tests, map the runtime matrix to averages + sds instead of having the weird aliasing problems
     - [ ] plot SDs as error bars
-    - [ ] map the averages to have a ratio column so that we can say "snappy2 is 4.3 times faster than naive"
+    - [x] map the averages to have a ratio column so that we can say "snappy2 is 4.3 times faster than naive"
     - [ ] use lty=id so that the lines are distinguished by shape as well as colour (nicer on greyscale printouts and on colourblind folks)
-    - [ ] reduce the number of samples taken--we get the idea
+    - [x] reduce the number of samples taken--we get the idea already!
 
 [nick]
 - [x] cumvar()  match "cumsum" and "cummean"
@@ -172,12 +162,12 @@ D-1 (Thursday)
     - [x] write R help files for each function ([daniel] did this?)
 - [ ] extract the prototype code (i.e., apart from the final package), package it up reusably
 
-- [ ] Dig up analytic formula for the particular marginals of NIW and (note: there's 2^(# parameters) different marginals; pick wisely which to look at)
+- [x] Dig up analytic formula for the particular marginals of NIW and (note: there's 2^(# parameters) different marginals; pick wisely which to look at)
     - [x] marginal of the inv.wish is inv.gamma
     - [+] implement as functions
         - [x] diagonals of iwish
         - [-] off-diagonals of iwish (Lysy: " I don't think that anyone knows the analytic marginal distribution of the off-diagonal elements.")
-        - [ ] entries of X from the single NIW (this should be 't' ish??)
+        - [-] entries of X from the single NIW (this should be 't' ish??)
         - [ ] entries of Matrix-Normal thingy ((can be derived from the single NIW one))
     - [x] partial-apply such functions and use them as 'ground' for the marginal plots
 
@@ -187,16 +177,23 @@ D-1 (Thursday)
 - [ ] Mathematics writeup vetted and tightened; relevant parts clipped into `report.tex`
 
 
-
 D (Friday, April the 25th, 2014)
 ---------------------------------
 
 [nick]
+
+
+- [ ] double check the rMNIW and rNIW APIs -- make sure the matrices they return *are the correct dimension*
 - [ ] make return values class() <- "NIW"
 - [ ] Linear Algebra parlour tricks:
     - [ ] factor the common matrix terms to before/after the loop (call this `snappy4`)
     - [ ] diagonalization?? (`snappy5`)
 
+### writeup:
+
+- Code guide (maybe this should be an in-repo .md file?)
+- Discuss that randomness makes multivar regression inaccurate
+- Discuss that naive is almost as good
 - Demonstrate that the algorithm works
   - [ ] prove that the Matrix Normal part is correct (hmmm.... tricksy hobbitsses... we should probably do this just by )
   - [x] show that the marginal moments check out
@@ -204,8 +201,13 @@ D (Friday, April the 25th, 2014)
       - [x] variances
       - [x] means of the squares
   - [ ] show that the distributions (that we know about) check out
-      - [ ] Xs are t
-      - [ ] Vii are invgamma
+      - [ -] Xs are t _giving up on this_
+      - [x] Vii are invgamma
+
+[daniel]
+
+- [ ] Apply Multivariable Regression to sample real world dataset (the Boston housing data).
+
 
 [daniel] [nick]
 

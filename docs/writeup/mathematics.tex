@@ -334,4 +334,17 @@ note that $K \cdot X \cdot V ~ MN(0, K, V)$ if $X$ is a $q \times p$ matrix of i
 You can view the matrix normal as a set of multivariate normals: down the columns you have variance (as in a single multivariate normal)
  and then by doing some transposes (TODO: work out this derivation) you can again cross the columns.
 
+\section*{Identities}
+
+The scatter matrix
+S = (X^TX)
+can be rewritten (and viewed) as the sum of (outerproduct) squares
+S = \sum_{i=1}^n (x_i - \bar(x))(x_i - \bar(x_i))^T
+
+where x_i are the rows of X
+
+tr(V^{-1} S) = \sum_{i=1}^n mahalanobis(x_i, E(x_i), V)
+Proof: 
+. ...
+
 \end{document}

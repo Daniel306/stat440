@@ -46,16 +46,23 @@ main <- function() { # avoid polluting the namespace
             ## DISTRIBUTIONS
             message("Marginal densities")
             # 1) computationally
-            #plot.densities(ground$X, samples$X, "NIW X", sub=paste(alg))
-            #plot.densities(ground$V, samples$V, "NIW V", sub=paste(alg))
+            plot.densities(ground$X, samples$X, "NIW X", sub=paste(alg, "(computationally)"))
+            plot.densities(ground$V, samples$V, "NIW V", sub=paste(alg, "(computationally)"))
             # 2) analytically
             #analytic_densities = NIW.densities(kMu, kKappa, kPsi, kDF)
             # ^ does this step return like.. a.. tuple of matrices of functions?
             # does R even support such a beast?
             # ..I might have to move the marginals_do to this function
-            analytic = NIW.densities(kMu, kKappa, kPsi, kDF, n)
-            plot.densities(analytic$X, samples$X, "NIW X", sub=paste(alg, "(analytically)"))
-            plot.densities(analytic$V, samples$V, "NIW V", sub=paste(alg, "(analytically)"))
+            # the analytic pdfs are disappointing:
+            #   there doesn't exist a formula for V[i,j],
+            #   and formula for X[i] is buggy,
+            #   leaving 1-d/(d^2+d) density plots undensified
+            # So I'm making a decision: we're not using the analytic densities.
+            #  The reference sample method will be documented carefully in the paper
+            #  to convince readers that this decision is sensible.
+            #analytic = NIW.densities(kMu, kKappa, kPsi, kDF, samples)
+            #plot.densities(analytic$X, samples$X, "NIW X", sub=paste(alg, "(analytically)"))
+            #plot.densities(analytic$V, samples$V, "NIW V", sub=paste(alg, "(analytically)"))
             
             ## MOMENTS
             # make first moment convergence plots
@@ -63,8 +70,8 @@ main <- function() { # avoid polluting the namespace
             # first moments (matrix and non-matrix)
             # 1) computationally
             #message("m1comp") #DEBUG
-            #plot.means(ground$X, samples$X, "NIW X", sub=paste(alg))
-            #plot.means(ground$V, samples$V, "NIW V", sub=paste(alg))
+            #plot.means(ground$X, samples$X, "NIW X", sub=paste(alg, "(computationally)"))
+            #plot.means(ground$V, samples$V, "NIW V", sub=paste(alg, "(computationally)"))
             # 2) analytically
             #message("m1analytic") #DEBUG
             analytic = NIW.mean(kMu, kKappa, kPsi, kDF)
@@ -74,8 +81,8 @@ main <- function() { # avoid polluting the namespace
             # first variances
             # 1) computationally
             #message("v1comp") #DEBUG
-            #plot.vars(ground$X, samples$X, "NIW X", sub=paste(alg))
-            #plot.vars(ground$V, samples$V, "NIW V", sub=paste(alg))
+            #plot.vars(ground$X, samples$X, "NIW X", sub=paste(alg, "(computationally)"))
+            #plot.vars(ground$V, samples$V, "NIW V", sub=paste(alg, "(computationally)"))
             # 2) analytically
             #message("v1analytic") #DEBU
             analytic = NIW.var(kMu, kKappa, kPsi, kDF)
@@ -86,8 +93,8 @@ main <- function() { # avoid polluting the namespace
             # second matrix moments: the means of the outer products
             # 1) computationally
             #message("mm1comp") #DEBUG
-            #plot.means(fancy_matrix_square(ground$X), fancy_matrix_square(samples$X), "XX^T", sub=paste(alg))
-            #plot.means(fancy_matrix_square(ground$V), fancy_matrix_square(samples$V), "VV^T", sub=paste(alg))
+            #plot.means(fancy_matrix_square(ground$X), fancy_matrix_square(samples$X), "XX^T", sub=paste(alg, "(computationally)"))
+            #plot.means(fancy_matrix_square(ground$V), fancy_matrix_square(samples$V), "VV^T", sub=paste(alg, "(computationally)"))
             # 2) we do not do this analytically
             # [[that's all she wrote, folks!]]
             

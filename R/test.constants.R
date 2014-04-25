@@ -20,3 +20,5 @@ krNIWAlgorithms = c(
             "extremelynaive.RcppEigen",
             "snappy.RcppEigen"
             )
+
+#kS = rWishart(69, kDF, kPsi) #a high dimensional matrix for checking syntax on
