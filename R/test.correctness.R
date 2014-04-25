@@ -254,19 +254,22 @@ plot.convergence <- function(ground, samples, statistic, accumulator, title=NULL
   # Typecheck
   stopifnot(dim(ground)[kept_dimensions] == dim(samples)[kept_dimensions])
 
-  #message("Looping") #DEBUG
-  
+  #message("Looping") #DEBUG  
   marginals_do(samples, function(idx, samples) {
     samples = accumulator(samples)
     
     if(any(is.na(samples))) { return } #variances have their first element being NA, which causes problems; this check avoids all such problems with a hammer against a tree trunk
     
-    ground = ..getitem..(ground, idx)
-    ground = statistic(ground)
-
     # plot the converging samples against a reference horizontal line
     # and print the location of the horizontal line in the legend
+    samples = reasonable_subset(cbind(1:length(samples), samples), 75) #plotting all the points slows down rendering and isn't enlightening;
+                                    # Note:! just because we don't use all the points doesn't mean we can avoid the whole accumulator() call, becausethe last point is dependent on all the previous points
+                                    # XXX TODO: if we're only going to print 75 points anyway, maybe it isn't unreasonable to use the quadratic algorithm *at each of those specific points*
+                                    # and then we can make the API nicer and kill plot.*.convergence()
     plot(samples, xlab="samples taken (n)", ylab=ylab, main=marginal.title(title, idx))        
+
+    ground = ..getitem..(ground, idx)
+    ground = statistic(ground)
     abline(h=ground, lty="solid", col="blue")
     legend("topleft", paste("True", statistic.name, "=", round(ground, 2)), lty="solid", col="blue")
   })

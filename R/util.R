@@ -130,7 +130,7 @@ intseq <- function(from=1, to=NULL, by=NULL, length.out=NULL) {
   seq(from, to, by)
 }
 
-reasonable_subset <- function(D, length.out=1000) {
+reasonable_subset <- function(D, length.out=250) {
   # plotting too many points causes lag
   # reasonable_subset evenly reduces the number of samples in D evenly
   # (in other places, this operation is called decimation(TODO: FACTCHECK))
