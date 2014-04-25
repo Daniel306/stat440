@@ -1,13 +1,41 @@
 \documentclass[english]{report}
-\usepackage{listings}
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{babel}
+
+% R code colorization
+% based on http://stackoverflow.com/questions/21402157/colour-for-r-code-chunk-in-listings-package/21468454#21468454
+\usepackage{listings}             % Include the listings-package
+\usepackage[usenames,dvipsnames]{color}    
+ \lstset{ 
+  language=R,                     % the language of the code
+  basicstyle=\ttfamily, % the size of the fonts that are used for the code
+  numbers=left,                   % where to put the line-numbers
+  numberstyle=\tiny\color{Blue},  % the style that is used for the line-numbers
+  stepnumber=1,                   % the step between two line-numbers. If it's 1, each line
+                                  % will be numbered
+  numbersep=5pt,                  % how far the line-numbers are from the code
+  backgroundcolor=\color{white},  % choose the background color. You must add \usepackage{color}
+  showspaces=false,               % show spaces adding particular underscores
+  showstringspaces=false,         % underline spaces within strings
+  showtabs=false,                 % show tabs within strings adding particular underscores
+  frame=single,                   % adds a frame around the code
+  rulecolor=\color{black},        % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. commens (green here))
+  tabsize=2,                      % sets default tabsize to 2 spaces
+  captionpos=b,                   % sets the caption-position to bottom
+  breaklines=true,                % sets automatic line breaking
+  breakatwhitespace=false,        % sets if automatic breaks should only happen at whitespace
+  keywordstyle=\color{RoyalBlue},      % keyword style
+  commentstyle=\color{YellowGreen},   % comment style
+  stringstyle=\color{ForestGreen}      % string literal style
+} 
+
 \begin{document}
 
 \title{Stat440 Project Outline}
 \author{Daniel Galperin, Nick Guenther}
 \date{} % disable the autodate. we can put it back if we want it.
+
 
 % this should be 10 pages: 1 page title, 1 page references, 8 pages of content
 
@@ -56,6 +84,90 @@ Unlike for normal or $\chi^2$, there is no built in function in R to generate sa
 	we intended to do it as efficiently as possible.
 % (4 pages)
 \Section{Program Package}
+
+
+\begin{lstlisting}[frame=single, language=R]
+# test.MultivariableRegression.R
+#
+#
+
+# originally n = 27, m = 1e5
+test.EversonMorris <- function(n=27, m=1e7) {
+  # Smoketest for lm.multivariable
+  #
+  # simulate multivariable normal test data
+  # then see if the bayesian fitter can pull out the
+  # correct (artificial and frequentist) coefficients.
+  # Parameters based on Everson & Morris [2000]
+  #
+  # Note: the proper Everson Morris paper used a *random effects* model which
+  #  turns out(?) to be algebraically equivalent to a multivariable model.
+  #  This function only uses the multivariable model directly.
+  #
+  # args:
+  #  n: number of observed samples to take
+  #     the default is purposely small, to reflect
+  #     a realistic data-gathering situation.
+  #  m: number of posterior samples to take
+  #
+  # returns:
+  #  nothing; instead, results are printed as work is done.
+
+  d = 1;
+  q = 2;
+  A = matrix(c(3.38,-.77,-.77,2.55), q, q)
+  B = matrix(c(0,0), d, q)
+	
+  message("True coefficients")
+  print(B)
+  message("True covariance")
+  print(A)
+  
+  data = rmultivariableregression(n, B, A);
+  
+  message("Hiding true values from ourselves")
+  rm(B, A, d, q)
+  
+  message("Data is:")
+  message("Y:")
+  print(data$Y)
+  message("X:")
+  print(data$X)
+
+  X.sq <- crossprod(data$X);
+  beta.hat1 <- solve(X.sq, t(data$X) %*% data$Y);
+  message("beta hat point estimate")
+  print(beta.hat1)
+  
+  message("Sampling posterior distribution")
+  #  m = 2 #DEBUG
+  result <- lm.multivariable(m, data$X, data$Y)
+ 
+  d = dim(result$B)[1]
+  q = dim(result$V)[1]
+  
+  message("Recovered dimensionality: q = ", q, " and d = ", d)
+  message("Estimated B")
+  B.hat = apply(result$B, -3, mean) #take mean()s across the 3rd dimension;
+                            # results in a q x d matrix (after unflattening apply's results)
+  dim(B.hat) = c(q,d)
+  print(B.hat)
+  message() #newline
+
+  message("Estimated V")
+  V.hat = apply(result$V, -3, mean) #take mean()s across the 3rd dimension;
+                            # results in a q x q matrix (or it would, but apply flattens its results)
+  dim(V.hat) = c(q,q)
+  print(V.hat)
+  message() #newline
+  
+  # TODO: compute (with 'quantile') the confidence intervals for each B and V
+  #
+  # additionally, we have a whole sample from which we can do bootstrap-like things, compute functions of the data, etc
+  # but for this simple test, getting the right coefficients is good enough.
+  list(V = result$V, B = result$B, X = data$X, Y = data$Y)
+}
+\end{lstlisting}
 
 % 1 page
 \Subsection{Algorithm}
