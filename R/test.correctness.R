@@ -135,6 +135,11 @@ plot.density <- function(ground, sample, ...) { #XXX NAME
   
   # display the histogram
   hist(sample, probability=TRUE, breaks=40, xlab="", ...)
+
+  if(is.null(ground) || is.na(ground)) {
+    warning("plot.density got a null ground; not printing the pdf overlay")
+    return(); # bail
+  }
   
   # overlay the pdf
   if(is.function(ground)) {
@@ -177,13 +182,26 @@ plot.densities <- function(ground, sample, title=NULL, layout=c(2,2), ...) { #XX
   # TODO: typechecks
   par(mfrow=layout)
   marginals_do(sample, function(idx, sample) {
+    #message("loop @ idx=") #DEBUG
+    #print(idx)            #DEBUG
+    title = marginal.title(title, idx) #Hack: do this first, because we possibly edit idx next
+    
+    if(length(dim(ground)) != length(idx)) { #HACK: assume this can only happen in the one-sample-special-casemagictime
+ 	                              # (this is a sketchy assumption)
+      idx = rev(rev(idx)[-1]) #drop the last dimension because it's 
+    }
+    stopifnot(length(dim(ground)) == length(idx))
     ground = ..getitem..(ground, idx)
-    if(class(ground) == "list") { #special case: you can pass a 'matrix' of density functions, by passing a list
+    if(class(ground) == "list") { #special case: you can pass a 'matrix' of density functions, by passing a list 
       stopifnot(length(ground) == 1)
       ground = ground[[1]]
-      stopifnot(class(ground) == "function")
+      if(is.na(ground)) {
+        ground = NULL
+      } else {
+        stopifnot(class(ground) == "function")
+      }
     }
-    plot.density(ground, sample, main=marginal.title(title, idx), ...)
+    plot.density(ground, sample, main=title, ...)
   })   
 }
 
