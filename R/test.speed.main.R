@@ -39,7 +39,7 @@ main <- function() { #avoid polluting the namespace
 main()
 
 
-
+#age   E   C   N   O   A
 #example from one run
 #algorithm     ratio        sd
 #1     Rcpp2 8.7011074 2.5359325
