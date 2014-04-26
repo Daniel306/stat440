@@ -2,35 +2,39 @@
 \alias{lm.multivariable}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-%%  ~~function to do ... ~~
+Bayesian samples of Multivariate regression
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+generates Bayseian samples for B and V in a multivariate regression using rMNIW.
 }
 \usage{
-lm.multivariable(x)
+lm.multivariable(m, X, Y, Lambda=NULL, 
+                 Omega=NULL, Psi=NULL, df=71)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{x}{
-%%     ~~Describe \code{x} here~~
+  \item{m}{ number of samples to draw}
+  \item{X}{X values of model. Should be c(p,n) }
+  \item{Y}{Y values of model. Should be c(q,n) }
+  \item{Lambda}{prior mean of B, c(p,q)}
+  \item{Omega}{Scale factor of variance, c(p,p)}
+  \item{Psi}{prior mean of V, c(q,q)}
+  \item{df}{degrees of freedom}
 }
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+
+  \item{B}{c(p,q,n) matrix containing samples for B}
+  \item{V}{c(q,q,n) matrix containing samples for V}
 }
 \references{
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Daniel Galperin and Nick Guenther
 }
 \note{
 %%  ~~further notes~~
@@ -39,17 +43,19 @@ lm.multivariable(x)
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+rMNIW which this calls
+rmultivariableregression() which generates X,Y from B,V
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+require(MASS)
+D <- Boston
+Y <- D[c("crim", "zn", "indus", "tax", "black", "lstat")]
+X <- D[c("chas", "nox", "rm", "age", 
+        "dis", "rad", "ptratio", "medv")]
 
-## The function is currently defined as
-function (x) 
-{
-  }
+# One example using flat priors and df of 73
+
+Result <- lm.multivariable(100000,as.matrix(X),as.matrix(Y))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

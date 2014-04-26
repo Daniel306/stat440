@@ -20,12 +20,12 @@ rmultivariableregression <- function(points, B, V) { #<-- TODO: rename? r.multiv
   #  multiple columns of Y (and hence, multiple columns of coefficients B)
   # In detail:
   #  let q be the number of response variates
-  #  let d be the number of predictors
+  #  let p be the number of predictors
   #  let n be the number of (i.i.d.) samples
   #  then
   #       Y a c(n, q)
-  #       X a c(n, d)
-  #       B a c(d, q)
+  #       X a c(n, p)
+  #       B a c(p, q)
   #       E a c(n, q)
   #         E_i each *row* of E a (1, q)
   #       V is c(q,q) and gives the covariance *within* each single multivariate sample.
@@ -35,7 +35,7 @@ rmultivariableregression <- function(points, B, V) { #<-- TODO: rename? r.multiv
   # 
   # args:
   #  points: either
-  #     a c(q, d) matrix X, giving the predictor points to pretend to do measurements at
+  #     a c(n, p) matrix X, giving the predictor points to pretend to do measurements at
   #     or, as a convenience,
   #     a scalar n, then number of samples, which is used to construct X
   #           #XXX what about the degenerate case when q=d=1?
