@@ -9,10 +9,6 @@ Package has functions relating to the Normal-Inverse Wishart distribution.
 }
 \usage{
 rNIW(n, Mu, Kappa, Psi, df)
-%%rMNIW(n, Mu, Kappa, Psi, Df)
-%%dNIW()
-%%dMNIW()
-%%lm.multivariable()
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
