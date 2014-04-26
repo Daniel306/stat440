@@ -250,14 +250,18 @@ There is another unusual result: the algorithm written with more \emph{backsolve
 % (4 pages?)
 \Section{Application}
 
-The NIW distribution is a extremely common conjugate prior. Here, we use our algorithm to rapidly do a simulation study:
+The NIW distribution is a extremely common conjugate prior. Here, we use our algorithm to rapidly do a simulation study.
 
 % 1.25 pages
-\Subsection{Multi-variable Regression}
+\Subsection{Multivariable Regression}
 
-One use of the NIW distribution is to get distributions and credible intervals for parameters and variance in multivariable regression.\\
+Linear regression $Y = X\beta + e$ with $e_i \sim N(0, \sigma^2)$ (i.i.d.) generalizes simple linear regression $y_i = b_1 x_i + b_0 + e_i$ so that $X$ becomes a matrix with one column per predictor variable. The goal of linear regression is to find the vector $\beta$ and the scalar $\sigma^2$.
 
-Let $X_{n\times p} = [x_{ij}]$ and $Y_{n\times q} = [y_{ij}]$ be matrices of p predictors and q respones for each of n observations, and let $E_{n\times q}$ be the matrix of errors. The regression model is
+The multivariable model is a further generalization which adds columns to $Y$ (and hence to $\beta$ as well). As before, each row of $Y$ is a single independent and identically distributed sample, but it is itself multivariate \textendash multivariate normal, in fact \textendash which means it has a whole covariance matrix $V$ associated with it. The goal of multivariable regression is to find the matrix $\beta$ which describes the linear relationships (if any) between the variates represented by the columns of $X$ and the variates represented by the columns of $Y$ which also getting an estimate of $V$.
+
+Under Bayesian inference, the NIW distribution can be used to generate point estimates and credible intervals for $\beta$ and $V$. Here's how.\\
+
+Let $X_{n\times p} = [x_{ij}]$ and $Y_{n\times q} = [y_{ij}]$ be matrices of $p$ predictors and $q$ responses for each of $n$ observations, and let $E_{n\times q}$ be the matrix of random errors. The full multivariable regression model is
 
 \[Y = X\beta + E, (\epsilon_{i1},\hdots,\epsilon_{i q})\sim N_q(0,V)\]
 
@@ -265,17 +269,17 @@ where $\beta_{p\times q} = [\beta_{ij}] $ and $V_{q\times q}$. The conjugate pri
 
 \begin{align*}
 	V &\sim  Inv-W_q(\Psi,\nu)\\
-	\beta|V &\sim N_{pq}\{\Lambda, V  \otimes \Omega^{-1}\}
+	\beta|V &\sim N_{p \times q}\{\Lambda, V  \otimes \Omega^{-1}\}
 \end{align*}
 
 The parameters of the prior are $\Psi_{q\times q}, \nu_{1\times 1}, \Lambda_{p\times q}, \Omega_{p\times p}$\\
 
-The resulting posterior distribution is.
+The resulting posterior distribution is
 
 
 \begin{align*}
 	V|Y,X &\sim  Inv\text{-}W_q(\Psi+S+C,\nu+n)\\
-	\beta|V,Y,X &\sim N_{pq}\{A\Lambda + (I-A)\hat{\beta}, V  \otimes (X'X +\Omega)^{-1}\}
+	\beta|V,Y,X &\sim MN_{p \times q}\{A\Lambda + (I-A)\hat{\beta}, V  \otimes (X'X +\Omega)^{-1}\}
 \end{align*}
 where 
 \begin{align*}
@@ -285,14 +289,13 @@ A &= (X'X + \Omega)^{-1}\Omega\\
 C &= \hat{\beta}'(X'X)\hat{\beta} + \Lambda'\Omega\Lambda - (X'X\hat{\beta} + \Omega\Lambda)'(X'X+\Omega)^{-1}(X'X\hat{\beta} + \Omega\Lambda)
 \end{align*}
 
+% TODO: \cite{Lysy}
 
-lm.multivariable(...) is the function that generates B and V given X, Y, and the priors. The code for it is in the appendix, and next section shows a usage example.
-
+The above means that given data $X$, $Y$, and the prior parameters, we have computable formulas for the parameters of the posterior--which is the estimated distribution of $\beta$ and $V$. We can use our Normal Inverse Wishart sampler to take points from this posterior. \emph{lm.multivariable} covers all of this in a single subroutine, returning samples $B$ and $V$. The code for it is in the appendix, and next section shows a usage example.
 
 \Subsubsection{Boston housing data example}
 
-Using data from Boston in MASS, we tried to find the coefficients if trying to predict 6 of the parameters based on the other 8. as well as determine credible intervals for B and V\\
-The code below demonstrates the process, as well as how you can use the result
+Using the Boston housing data available in R's MASS library, we demonstrate \emph{lm.multivariable} by predicting 6 of the variates on the other 8\\
 
 \begin{lstlisting}[frame=single, language=R]
 require(MASS)
@@ -300,11 +303,11 @@ D <- Boston
 Y <- D[c("crim", "zn", "indus", "tax", "black", "lstat")]
 X <- D[c("chas", "nox", "rm", "age", "dis", "rad", "ptratio", "medv")]
 
-# One example using flat priors and df of 73
-
+# construct 100,000 samples from the posterior
+# using flat priors for Psi and Kappa, and df=73
 Result <- lm.multivariable(100000,as.matrix(X),as.matrix(Y))
 
-# Now that we have that, we can generate 95% credibility interval
+# Now that we have that, we can generate 95% credible interval
 #by generating lower and upper quantiles
 
 apply(Result$B, c(1,2), quantile, probs = 0.025)
@@ -334,7 +337,7 @@ Omega <- diag(p);
 
 Result <- lm.multivariable(100000,as.matrix(X),as.matrix(Y), 
                     Psi = Psi, Lambda = Lambda, Omega = Omega, df  = df)
-                    
+       
 apply(Result$B, c(1,2), quantile, probs = 0.025)
 apply(Result$B, c(1,2), quantile, probs = 0.975)
 apply(Result$V, c(1,2), quantile, probs = 0.025)
@@ -347,17 +350,14 @@ apply(Result$V, c(1,2), quantile, probs = 0.975)
 hist(Result$B[1,1,], breaks = 100, probability = TRUE)
 
 \end{lstlisting}
-% 1.25 pages
-%\Subsection{Gibbs Sampler}
 
-%- we did this thing
-%- here's our test case
-%- and look, the code is reusable (and in C)
+\emph{lm.multivariable} is reusable. Any data table can be partitioned into $X$ and $Y$ columns and run through it to construct estimates of the relationship between the variates.
 
 % .5 pages
 \Section{Conclusion}
 
-We implemented a Matrix-Normal-Inverse-Wishart sampler and proved its use. It is definitely an improvement over what an R user would use before, but it is not as strikingly better as one might hope in 
+We implemented a Matrix-Normal-Inverse-Wishart sampler and proved its use. It is definitely an improvement over what an R user would use before, but it is not as strikingly faster as one might hope.
+
 In this report, we have demonstrated the accuracy and speed of our implementation of the NIW sampler as well as provided examples on how it can be used. 
 
 % Put stuff not yet done that we plan to do or wish we could do
