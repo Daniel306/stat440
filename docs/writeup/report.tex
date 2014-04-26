@@ -355,13 +355,10 @@ hist(Result$B[1,1,], breaks = 100, probability = TRUE)
 % .5 pages
 \Section{Conclusion}
 
-We implemented a Matrix-Normal-Inverse-Wishart sampler and proved its use. It is definitely an improvement over what an R user would use before, but it is not as strikingly faster as one might hope.
-
-In this report, we have demonstrated the accuracy and speed of our implementation of the NIW sampler as well as provided examples on how it can be used. 
+We implemented a Matrix-Normal-Inverse-Wishart sampler and proved its accuracy and speed. It is an improvement over what a lone R user would use before, but it is not as strikingly faster as we hoped. Still, it offers notable gains, and the multivariable regression algorithm is easy to use and totally general.\\
 
 % Put stuff not yet done that we plan to do or wish we could do
-Parallelization and GPUs 
-
+We have ideas for improvement. There are other variants of the efficient algorithm we would like to try, especially ones invoking parallelization and GPUs.  Once the code is solid, wish to get this code to a production-ready state that could be uploaded to CRAN \cite{CRAN} \\
 
 We offer this code \cite{MNIW} up in the hope it will make large linear models with an inverse-wishart prior tractable to the working statistician.
 
