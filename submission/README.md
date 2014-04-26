@@ -53,8 +53,14 @@ Code Guide
 ### Usage
 
 This is alpha code because it is not packaged as an R package yet.
-To use, make sure you have the [dependencies](#dependencies) installed,
-copy the files in `R/` to your working directory, and run
+
+To use, make sure you have the [dependencies](#dependencies) installed and run the tests:
+```
+$ Rscript test.correctness.main.R
+$ Rscript test.speed.main.R
+```
+
+Then copy the source to your working directory, and run
 ```{r}
 source("dNIW.R")
 source("rNIW.R")
