@@ -57,7 +57,7 @@
 \begin{minipage}{0.4\textwidth}
 \begin{flushleft} \large
 \emph{Authors:}\\
-Daniel \textsc{Galperin} 2000000\\*
+Daniel \textsc{Galperin} 20351954\\
 Nick \textsc{Guenther} 20230268
 \end{flushleft}
 \end{minipage}
@@ -133,22 +133,117 @@ Our package also provides Matrix-Normal-Inverse-Wishart (MNIW) samples, which no
 % 1 page
 \Subsection{Algorithm}
 
-- Why we care
-- State of the art
-  - MCMCpack
-  ```
-  > riwish
-  function (v, S) 
-  {
-      return(solve(rwish(v, solve(S))))
-      }
-   ```   
- there's also rinvwishartc and dinvwishartc in LaplacesDemon(http://www.bayesian-inference.com/softwaredownload) 
-   AND there's a version which is cholesky-parameterized
-  but their version strictly only does one random matrix at a time
-  
-- What we did differently
-  tuse this cholesky trick ... 
+
+\Subsubsection{Barlett decomposition}
+
+Under a given variance matrix $V$, the Bartlett Decomposition is
+the equation.
+
+\begin{align*}
+\mathbf{W} & =\Gamma^{T}A^{T}A\Gamma
+\end{align*}
+in the context that $\Gamma$ is the upper triangular part of the
+Cholesky decomposition
+
+\begin{align*}
+V= & \Gamma^{T}\Gamma
+\end{align*}
+
+
+and $A$ is a $d\times d$ matrix with entries defined by the \textbf{independent
+}random variables
+
+\begin{align*}
+\mathbf{A_{\text{row},\text{column}}}\sim & \begin{cases}
+0 & \text{row}>\text{column}\\
+\chi_{\text{df}-(\text{row}-1)}^{2} & \text{row}=\text{column}\\
+N(0,1) & \text{row}<\text{column}
+\end{cases}
+\end{align*}
+
+
+which is upper triangular since everything below the diagonal is 0.
+All this means that  $\mathbf{W}$ is Wishart-distributed with $df$
+``degrees of freedom'':
+
+\begin{align*}
+\mathbf{W} & \sim W(\Gamma^{T}\Gamma,df)
+\end{align*}
+
+
+~
+
+Note that the Bartlett decomposition is also the LU decomposition
+of $\mathbf{W}$, since the form of the terms in $\mathbf{W}=\Gamma^{T}A^{T}A\Gamma$
+is ``LLUU'', the product of two lower (or upper) triangular matrices
+is lower (or upper) triangular and the LU decomposition, if it exists,
+is unique.
+
+\Subsubsection{Generating Wishart Variates}
+
+This decomposition actually gives a useful way to \emph{generate }a
+desired Wishart distribution: if you want to generate not-quite-covariance
+Wishart matrices and you know (or think you know) $V$ and $df$,
+you sample $A$ according to the rule above (using $df$), find $\Gamma\leftarrow chol(V)$,
+scale $A$ by $U\leftarrow A\Gamma$, and square that: $\mathbf{W}\leftarrow U^{T}U$.
+The only stochastic part is the generation of $A$.
+
+\Subsubsection{Generating Inverse Wishart Variates}
+
+The naive algorithm for generating inverse wisharts is:
+
+\begin{lstlisting}
+def rInvWishart(n, df, P):  #P for "precision"
+  V = invert(P)
+  return [invert(W) for W in rWishart(n, df, V)]
+\end{lstlisting}
+
+
+With identical runtime to $rWishart$ plus $n+1$ extra inversion
+operations. According to Wikipedia,  matrix inversion takes between
+$O(d^{2.3})$ and $O(d^{3})$. So the total runtime is in $O(n\cdot d^{3})+(n+1)\cdot O(d^{3})=O((2n+1)\cdot d^{3})$,
+or roughly twice as slow as $rWishart$. This is also dangerous because
+raw $invert()$ is the most numerically unstable operation around.\\
+
+
+But we can do better (and when we get to the Normal-InverseWishart,
+the same trick we use here will give us extra speedups there).
+
+~
+
+Let's take a look at what $invert(W)$ \textbf{\emph{is}}. 
+
+\begin{align*}
+\mathbf{W} & =\Gamma^{T}A^{T}A\Gamma\\
+ & =U^{T}U\\
+\mathbf{W}^{-1} & =\Gamma^{-1}A^{-1}\left(A^{-1}\right)^{T}\left(\Gamma^{-1}\right)^{T} & \text{invert swaps order, and is swappable with transpose}\\
+ & =\Gamma^{-1}A^{-1}\left(\Gamma^{-1}A^{-1}\right)^{T} & \text{transpose swaps order, too}\\
+ & =U^{-1}\left(U^{-1}\right)^{T}\\
+U^{-1} & =\Gamma^{-1}A^{-1}
+\end{align*}
+
+%%%%%%%%%%%%%%%%%%%% commented out because I am pretty sure we fou this to be wrong
+%
+%Now, recall what $\Gamma$ is: $chol(V)=chol(P^{-1})$
+
+%\begin{align*}
+%U^{-1} & =\Gamma^{-1}A^{-1}\\
+% & =chol(P^{-1})^{-1}A^{-1}\\
+%\end{align*}
+
+
+%With $chol(P^{-1})$ and $A^{-1}$ both upper triangular, which is important because a) we can compute $U^{-1}$ with backsolve b) %$U^{-1}$ is upper triangular itself. Unfortunately, there is no clever way around computing $P^{-1}$ directly, but it can be %precomputed at the start so it does not eat into the runtime of the overall algorithm.
+
+We care about this $U$ it lets us get samples $V$ and $X$:
+
+\begin{align*}
+V & =U^{-1}\left(U^{-1}\right)^{T}\\
+\\
+X & =\mu+U^{-1}z & \text{where }z\sim N_{d}(0,I)\\
+ & =\mu+chol(P)A^{-1}z\\
+ & =\mu+\Gamma^{-1}A^{-1}z
+\end{align*}
+
 
 % (2?? pages)
 \Subsection{Testing}
