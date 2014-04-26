@@ -1,0 +1,124 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><title></title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" type="text/css" href="R.css">
+</head><body>
+
+<table width="100%" summary="page for rNIW"><tr><td>rNIW</td><td align="right">R Documentation</td></tr></table>
+
+<h2>rNIW</h2>
+
+<h3>Description</h3>
+
+<p>Package has functions relating to the Normal-Inverse Wishart distribution.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+rNIW(n, Mu, Kappa, Psi, df)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>n</code></td>
+<td>
+
+<p>the desired number of sample &quot;points&quot; (each &quot;point&quot; is a pair of a d-length vector and a dxd matrix)
+</p>
+</td></tr>
+<tr valign="top"><td><code>Mu</code></td>
+<td>
+
+<p>a vector giving the mean of X samples
+</p>
+</td></tr>
+<tr valign="top"><td><code>Kappa</code></td>
+<td>
+
+<p>a scalar which adjusts the variances of X
+</p>
+</td></tr>
+<tr valign="top"><td><code>Psi</code></td>
+<td>
+
+
+<p>a matrix, the mean of V samples
+</p>
+</td></tr>
+<tr valign="top"><td><code>df</code></td>
+<td>
+
+<p>the &quot;degrees of freedom&quot; of the underlying Wishart distribution
+</p>
+</td></tr> 
+</table>
+
+
+
+<h3>Details</h3>
+
+<p>The dimensions match: d := length(Mu) == dim(Psi)[1] == dim(Psi)[2];
+</p>
+<p>Kappa is positive.
+</p>
+<p>Psi is is positive-definite (=&gt; square, symmetric, all positive eigenvalues, and chol(Psi) exists).
+</p>
+<p>df need not be integer, but it must be larger than d-1.
+</p>
+
+
+<h3>Value</h3>
+
+
+
+<table summary="R valueblock">
+<tr valign="top"><td><code>$X</code></td>
+<td>
+<p>c(d, n) matrix of sample X values.</p>
+</td></tr>
+<tr valign="top"><td><code>$V</code></td>
+<td>
+<p>c(d, d, n) matrix of sample V values.</p>
+</td></tr>
+</table>
+
+
+
+<h3>Author(s)</h3>
+
+<p>Daniel Galperin and Nick Guenther
+</p>
+
+
+<h3>References</h3>
+
+<p>http://en.wikipedia.org/wiki/Normal-inverse-Wishart_distribution
+</p>
+
+
+<h3>See Also</h3>
+
+<p>rNIW is a general case of rMNIW 
+
+</p>
+
+
+<h3>Examples</h3>
+
+<pre>
+##---- Should be DIRECTLY executable !! ----
+##-- ==&gt;  Define data, use random,
+##--	or do  help(data=index)  for the standard data sets.
+
+## The function is currently defined as
+
+Psi &lt;- matrix(c(2,1,1,2),2,2)
+rNIW (n=10, Mu=c(1,2), Kappa = 1, Psi, df = 10) 
+</pre>
+
+
+</body></html>
