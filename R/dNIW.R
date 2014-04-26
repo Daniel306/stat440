@@ -8,6 +8,7 @@
 
 source("util.R")
 source("NIW.util.R")
+source("util.math.R") 
 
 dNIW.typecheck <- function(X, V, Mu, Kappa, Psi, df) {
   NIW.typecheck(Mu, Kappa, Psi, df)
@@ -66,11 +67,11 @@ dIW <- function(V, Psi, df, log=FALSE) {
             }
 
 
-  c = v*log(det(Psi))/2 - (df*d)*log(2)/2 - multigamma(d)(df/2) #normalizing constant
+  c = df*log(det(Psi))/2 - (df*d)*log(2)/2 - multigamma(d)(df/2) #normalizing constant
 
   det_V = apply(V, 3, det)
     #Psi %*% solve(V) would be a clever backsolve IF we had the square root of V handed to us
-      trace_Psi_invV = apply(Psi_invV, 3, function(M) { sum(diag( Psi %*%  solve(M)    )) } )
+      trace_Psi_invV = apply(V, 3, function(M) { sum(diag( Psi %*%  solve(M)    )) } )
 
   # Wikipedia is wrong as of <https://en.wikipedia.org/w/index.php?title=Inverse-Wishart_distribution&oldid=604297660>
     # the pdf on https://en.wikipedia.org/wiki/Inverse-Wishart_distribution should be identical to https://en.wikipedia.org/wiki/Wishart_distribution
@@ -80,11 +81,11 @@ dIW <- function(V, Psi, df, log=FALSE) {
             # which is completely the sort of mistake that one might make with LaTeX
               # ...but two software packages (LaplacesDemon and MCMCpack) agree with the wikipedia formula. so... hm.
                 p = -  (   (df+d+1)*log(det_V)  + trace_Psi_invV    )/2    + c
-
+ 
   if(!log) {
       p = exp(p)
         }
-
+  
   return(p)
   }
 
@@ -124,7 +125,6 @@ dNIW <- function(X, V, Mu, Kappa, Psi, df, log=FALSE) {
         pIW = dIW(V, Psi, df, log=T)
 
   p = pN + pIW; # P(X,V) = P(X|V)P(V) = exactly the piece distributions used to generate the NIW in the first place.
-
   if(!log) {
       p = exp(p)
         }
