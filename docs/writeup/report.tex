@@ -193,9 +193,9 @@ The only stochastic part is the generation of $A$.
 The naive algorithm for generating inverse wisharts is:
 
 \begin{lstlisting}
-def rInvWishart(n, df, P):  #P for "precision"
-  V = invert(P)
-  return [invert(W) for W in rWishart(n, df, V)]
+subroutine rInvWishart(n, Psi, df):
+  V = invert(Psi)
+  return {invert(W) : W $\sim$ rWishart(df, V)}
 \end{lstlisting}
 
 
@@ -264,40 +264,38 @@ $$ V_{2,3} | X_1, X_2, X_3, ..., V_{1,1}, V_{1,2}, V_{1,3} , ....  \sim P(V_{2,3
 
 For one of these marginal distributions, we can look at the density function, we can look at the moments (which includes variances), and we can look at the Kolmogorov-Smirnov statistic which tests for deviation between distributions.
 
-One approach is to find \emph{analytic} formula for the densities and moments. The marginal moments are easy to look up \cite{Wikipedia1}
-We can derive the marginals directly. For the elements of $X$, we have:
+One approach is to find \emph{analytic} formula for the densities and moments. 
+And the marginal distributions are \cite{???} some $t$ for the elements of $X$ and $InvGamma$ for the diagonals of $V$.
+But the effort of proving the formulas correct is at least as hard as writing the code in the first place, and no where could we find anyone who had a clue what the distribution of the off-diagonals of $V$ were like.
+More easily and reliably than analytic forms, we can sample $X,V \sim NIW$ from a sampler that we know should work and use that for comparison.
+The naive algorithm we used is listed in the appendix, and is as pretty well straight out of the definition of the Inverse Wishart distribution.
+From those samples, we use kernel density estimation to compute distributions, and use those for comparison.
 
+%\includegraphics[scale=.7]{density.correct.pdf}\\*
+\emph{A histogram that appears to have the correct distribution}
 
-so  $X_i \sim t_{???}$ .
+%\includegraphics[scale=.7]{density.incorrect.pdf}\\*
+\emph{An histogram from a buggy implementation}
+\\  
 
-For the elements of $V$, we have:
-
-....
-
-
-More easily and reliably than that, we can sample $X,V \sim NIW$ from a sampler that we know should work: the naive algorithm. %TODO: <-- grammar%
-  , and then use kernel density estimation.
-  
-
-\includegraphics[scale=.7]{density.correct.pdf}\\*
-\emph{A correct histogram}
-
-\includegraphics[scale=.7]{density.incorrect.pdf}\\*
-\emph{An incorrect histogram}
+The marginal moments are easy to look up \cite{Wikipedia1}, however, and we used these analytic forms to test them:
 
 
 Every \emph{moment} is an expected value. This makes moments an easy to compute statistic,
- because (for $ S_i \sim S $)
-$$ lim_{n \rightarrow \infty} \frac{\sum_{i=1}^n g(S_i)}{n} = E[g(S)] $$
+ because (for identically distributed $ S_i $ )
+$$ lim_{n \rightarrow \infty} \frac{\sum_{i=1}^n g(S_i)}{n} = E[g(S)] $$ \\
+where $S$ is a random variable with the same distribution as the rest.
 %  ((TODO: prove. why is this? the CLT??))
-so we can just take samples, map them with a function, and average. As more samples come in we expect these numbers to converge to specific values. As before, we can examine the marginals one by one. We can check for convergence by.
+In short, this means that to compute a moment or anything moment-like we can just take samples, map them with a function, and average.
+As more samples come in we expect these numbers to converge to specific values, and we can check for convergence by plotting the cumulative statistic.
 
-\includegraphics[scale=.7]{moment.pdf}\\*
+%\includegraphics[scale=.7]{moment.pdf}\\*
 \emph{A sample moment converging to the expected value}
+\\
 
 
 
-Finally, we used a k-s test [CITE?] to numerically detect marginals which deviate from the correct value ($\alpha$ cut-off of $5%$. For example 
+Finally, we used a k-s test [CITE?] to numerically detect marginals which deviate from the correct value ($\alpha$ cut-off of $0.05$). For example 
 \begin{verbatim}
 ...
 version2 X[3]: different
