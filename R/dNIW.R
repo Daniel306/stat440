@@ -129,4 +129,5 @@ dMNIW <- function(X, V, Mu, Kappa, Psi, df, log=FALSE) {
 
   #q = dim(Mu)[1]
   #if(
+  # TODO TODO TODO
 }
