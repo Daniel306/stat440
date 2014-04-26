@@ -246,12 +246,12 @@ As expected, the runtime is linear in $n$, since every sample of the $n$ is gene
 
 These results show that our algorithm gets about a 25 times times speed up over the extremely naive algorithm. But this is misleading: the naive algorithm that an R user would reach for would is not the deeply naive algorithm, but rather what we wrote as \emph{naive}, where we call out to R's built in \emph{rWishart} function. Compared to this version, our blazing fast best implementation is only 10 times better. The explanation is that almost all of the naive algorithm's output, the $n \cdot d^d$ entries of $V$, are constructed at the C level, because \emph{rWishart} is a native function. The sheer amount of time that this saves makes the naive algorithm faster than all of our R implementations of the efficient algorithm.
 
+There is another unusual result: the algorithm written with more \emph{backsolve}s (\emph{version3}) is slower than the one without, even though \emph{backsolve} is a $O(d^2)$ algorithm and matrix multiply is $O(d^3)$ \cite{?????}. This might be an artifact of our only testing on small matrices, where a direct multiply is better, though.
 
 % (4 pages?)
 \Section{Applications}
 
 The NIW distribution is a extremely common conjugate prior. Here, we use our algorithm to rapidly do two simulation studies:
-
 
 % 1.25 pages
 \Subsection{Multi-variable Regression}
@@ -369,6 +369,293 @@ We offer this code \cite{MNIW} up in the hope it will make large linear models w
 
 
 \Section{Appendix}
+
+\Subsection{rNIW Implementations}
+
+For brevity, only the unique portions of each implementation are shown.
+
+\Subsubsection{"Naive" implementations}
+
+\begin{figure}
+\begin{lstlisting}[frame=single, language=R]
+  d = length(Mu)
+  ans = rNIW.alloc(n,d)
+  
+  for(i in 1:n) {
+     ans$V[,,i] = rInvWishart(1, df, Psi)[,,1];
+     ans$X[,i] = rmvnorm(1, Mu, ans$V[,,i]/kappa);
+  }
+\end{lstlisting}
+\caption{\emph{extremelynaive}}
+\end{figure}
+
+
+\begin{figure}
+\begin{lstlisting}[frame=single, language=R]
+  ans$X = matrix(NA, d, n)
+  ans$V = rInvWishart(n, df, Psi);   
+  
+  # unfortunately, generating X must still be in a loop because each sample has a different distribution
+  # and there's no way with rmvnorm to ask "give me n samples and here's the parameters for each"
+  # ..is there?
+  #
+  for(i in 1:n) {
+     ans$X[,i] = rmvnorm(1, Mu, ans$V[,,i]/kappa);
+  }
+\end{lstlisting}
+\caption{\emph{naive}}
+\end{figure}
+
+\begin{figure}
+\begin{lstlisting}[frame=single, language=C]
+// [[Rcpp::export]]
+List rNIW_extremelynaive_eigen(unsigned int n, NumericVector Mu, double kappa, NumericMatrix Psi, double df) {
+  // precondition: all the preconditions have been properly checked by rNIW.typechecked
+  unsigned int d = Mu.length();
+  
+  NumericVector V(Dimension(d,d,n));
+  NumericVector X(Dimension(d,n));
+  
+  for(unsigned int i=0; i<n; i++) {
+    NumericMatrix Vi = riwishart(Psi, df);
+
+    for(int j=0; j<d; j++) {
+    for(int k=0; k<d; k++) {
+      V[d*d*i + j*d + k] = Vi(j, k); //XXX this might be the wrong order (but V is symmetric so we can't tell)
+    }
+    }
+
+    // hack: Rcpp "helpfully" has a whole slew of pseudo-symbolic classes ("Times_Vector_Vector") that it spits out when you try to do operands
+    //  I can't tell if you can actually make it collapse things down
+    //  So i'm going to use Eigen as a workaround
+    // changing the definition of Vi in the process
+    Vi = Rcpp::wrap(as<Map<MatrixXd> >(Vi) / kappa);
+    //Rcout << "Vi[1,2] = " << Vi[1,2] << std::endl; //DEBUG
+    NumericVector Xi = rmvnorm(1, Mu, Vi);
+    for(int j=0; j<d; j++) {
+      X[d*i + j] = Xi(j);
+    }
+    
+  }
+
+  return List::create(Named("X") = X, Named("V") = V);
+}
+\end{lstlisting}
+\caption{\emph{extremelynaive.RcppEigen}}
+\end{figure}
+
+
+\Subsubsection{"Efficient" implementations}
+
+\begin{figure}
+\begin{lstlisting}[frame=single, language=R]
+BartlettFactor <- function(d, df) {
+  A = matrix(nrow=d, ncol=d)
+  A[,] = 0
+  df = df-(1:d)+1
+  diag(A) = sqrt(rchisq(d, df))
+    
+  # set the below-diagonals to N(0,1)s
+  i_lower = col(A) > row(A)
+  A[i_lower] = rnorm(sum(i_lower))
+  
+  A
+}
+\end{lstlisting}
+\caption{\emph{BartlettFactor}, upon which the efficient algorithm is founded.}
+\end{figure}
+
+
+\begin{figure}
+\begin{lstlisting}[frame=single, language=R]
+  gamma.inv = solve(chol(solve(Psi)))
+  for(i in 1:n) {    
+    # construct the cholesky decomposition of a W(I, df) 
+    A = BartlettFactor(d, df)
+    
+    A.inv = backsolve(A, I)
+    U.inv = gamma.inv %*% A.inv
+    
+    ans$V[,,i] = tcrossprod(U.inv) #note well that this is not a LU decomposition -- it's UL
+    
+    # now we want X ~ N(Mu, V/kappa)
+    z = rnorm(d); vector
+    ans$X[,i] = Mu + U.inv %*% z/sqrt(kappa)
+  }
+\end{lstlisting}
+\caption{\emph{version1}, the basic (should-be) efficient algorithm.}
+\end{figure}
+
+
+\begin{figure}
+\begin{lstlisting}[frame=single, language=R]
+  gamma.inv = solve(chol(solve(Psi)))
+  for(i in 1:n) {
+     
+     A = BartlettFactor(d, df)
+     A.inv = backsolve(A, I)
+     
+     z = rnorm(d);
+     
+     U.inv = gamma.inv %*% A.inv
+     ans$V[,,i] = tcrossprod(U.inv)
+     ans$X[,i] = U.inv %*% z
+  }
+  ans$X =  Mu + ans$X/sqrt(kappa) 
+\end{lstlisting}
+\caption{\emph{version2}, which uses R's vectorization syntax.}
+\end{figure}
+
+\begin{figure}
+\begin{lstlisting}[frame=single, language=R]
+  gamma = chol(solve(Psi))
+  
+  for(i in 1:n) {  #apply scaling after the fact
+     
+     A = BartlettFactor(d, df)
+     
+     U = A %*% gamma
+     
+     # sample V
+     U.inv = backsolve(U, I) 
+     ans$V[,,i] = tcrossprod(U.inv)
+     
+     # sample X
+     z = rnorm(d);
+     ans$X[,i] = backsolve(U, z)
+  }
+  ans$X =  Mu + ans$X/sqrt(kappa) 
+\end{lstlisting}
+\caption{\emph{version3}, which uses \emph{backsolve} instead of a normal matrix multiply.}
+\end{figure}
+
+
+\begin{figure}
+\begin{lstlisting}[frame=single, language=R]
+  # precompute some useful values
+  d = length(Mu)
+  gamma.inv = solve(chol(solve(Psi)))
+    
+  return(rNIW_Rcpp(n, d, Mu, kappa, gamma.inv, df))
+\end{lstlisting}
+\caption{\emph{Rcpp}, R side of the code}
+\end{figure}
+
+\begin{figure}
+\begin{lstlisting}[frame=single, language=C]
+ // [[Rcpp::export]]
+SEXP rNIW_Rcpp(int n, int d, NumericVector Mu, double kappa, NumericVector gamma_inv, double df) {
+  NumericVector V_ans(Dimension(d,d,n));
+  NumericVector X_ans(Dimension(d,n));
+  
+  
+  NumericVector A(Dimension(d,d));
+  for (int k = 0; k < n; k++){
+   // First, create A.
+  BartlettFactorCpp(d,df, A);
+    // Apply backsolve
+  NumericVector A_inv = backSolveInverse(A,d);
+  
+  NumericVector z = rnorm(d);
+  
+  
+  NumericVector U_inv(Dimension(d,d));
+  // might want to move this to helper function for upper triangular dot product
+  for (int col = 0; col < d; col++){ // col of result 
+    for(int row = 0; row < d; row++){ // row of result
+      for(int i = 0; i < d; i++){
+        U_inv[col*d+row] +=  gamma_inv[i*d + row] * A_inv[col*d + i]; // Will optimize after
+      }
+               // Rcout << U_inv[col*d+row] << " ";
+    }  
+ //   Rcout << std::endl;
+  }
+  
+  for (int col = 0; col < d; col++){
+    for (int row = 0; row < d; row++){
+      for(int i = 0; i < d; i++){
+        V_ans[k*d*d + col*d + row] += U_inv[i*d + row] * U_inv[i*d + col];  
+      }
+    }
+  }
+  
+  for(int i = 0; i < d; i++){
+    for(int j = 0; j < d; j++){
+      X_ans[k*d+i] += U_inv[j*d + i]*z[j];
+    }
+      X_ans[k*d + i] = X_ans[k*d + i]/sqrt(kappa) + Mu[i];
+  }
+  
+  }
+   List ret;
+   ret["X"] = X_ans;
+   ret["V"] = V_ans;
+   return ret;
+}
+ 
+\end{lstlisting}
+\caption{\emph{Rcpp}, C side of the code}
+\end{figure}
+
+
+\begin{figure}
+\begin{lstlisting}[frame=single, language=C]
+// [[Rcpp::export]]
+List rNIW_version_eigen(unsigned int n, NumericVector Mu, double kappa, NumericVector Psi, double df) {
+  // precondition: all the preconditions have been properly checked by rNIW.typechecked
+  unsigned int d = Mu.length();
+
+  NumericVector V(Dimension(d,d,n));
+  NumericVector X(Dimension(d,n));
+
+  // invert Psi  
+  MatrixXd Psi_inv = as<Map<MatrixXd> >(Psi).inverse();
+  // TODO: exploit that we know Psi is symmetric (but SelfAdjointView does not contain inverse()!! maybe knowing the matrix is symmetric doesn't help, in that case??)
+  // factor Psi
+  MatrixXd Gamma = Psi_inv.llt().matrixU();
+
+  NumericVector A = NumericVector(Dimension(d,d));
+  for(unsigned int i=0; i<n; i++) {
+    // step 1: generate the bartlett factor..
+    BartlettFactorCpp(d, df, A);
+    MatrixXd A_ = as<Map<MatrixXd> >(A);  //map into Eigen so we can use linear algebras
+    //TriangularView<MatrixXd, Upper> trA_ = A_.triangularView<Upper>();
+    MatrixXd U = A_*Gamma;
+    MatrixXd U_inv = U.inverse();
+    MatrixXd Vi = tcrossprod(U_inv);
+    // memcpy the result out of Eigen and into Rcpp
+    // XXX does this need to be done manually? can't we call some "copy this block of memory" operation?
+    for(int j=0; j<d; j++) {
+    for(int k=0; k<d; k++) {
+      V[d*d*i + j*d + k] = Vi(j, k); //XXX this might be the wrong order (but V is symmetric so we can't tell)
+    }
+    }
+    
+    // step 2: generate X
+    VectorXd Xi = U.triangularView<Upper>().solve(as<Map<VectorXd> >(rnorm(d))); // backsolve(U, z)
+    Xi /= sqrt(kappa);
+    Xi += as<Map<VectorXd> >(Mu);
+    for(int j=0; j<d; j++) {
+      X[d*i + j] = Xi(j);
+    }
+    
+  }  
+
+  return List::create(Named("X") = X, Named("V") = V
+       //extra debugging stuff
+       //, Named("Psi.inv") = Psi_inv
+       //, Named("Gamma") = Gamma
+       );
+}
+\end{lstlisting}
+\caption{\emph{version.RcppEigen}}
+\end{figure}
+
+
+
+
+\Subsection{Multivariable Regression}
+
 \begin{lstlisting}[frame=single, language=R]
 lm.multivariable <- function(m, X, Y, Lambda=NULL, Omega=NULL, Psi=NULL, df=71) { # TODO: Not sure what to name this.
   # Multivariable Regression via Bayesian Reasoning

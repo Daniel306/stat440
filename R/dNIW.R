@@ -123,4 +123,10 @@ dNIW <- function(X, V, Mu, Kappa, Psi, df, log=FALSE) {
 
 
 dMNIW <- function(X, V, Mu, Kappa, Psi, df, log=FALSE) {
+  # same API as dNIW except that X and Mu are now (q,d) or (q,d,n)
+  # TODO: docstring
+  # same
+
+  #q = dim(Mu)[1]
+  #if(
 }
