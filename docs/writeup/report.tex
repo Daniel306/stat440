@@ -291,9 +291,17 @@ where $S$ is a random variable with the same distribution as the rest.
 In short, this means that to compute a moment or anything moment-like we can just take samples, map them with a function, and average.
 As more samples come in we expect these numbers to converge to specific values, and we can check for convergence by plotting the cumulative statistic.
 
-%\includegraphics[scale=.7]{moment.pdf}\\*
+
+\begin{center}
+\includegraphics[scale=.8]{momentcorrect.png}\\*
 \emph{A sample moment converging to the expected value}
-\\
+\end{center}
+
+\begin{center}
+\includegraphics[scale=.8]{momentincorrect.png}\\*
+\emph{A moment from a buggy implementation}
+\\  
+\end{center}
 
 
 
