@@ -53,41 +53,30 @@ dNIW.typechecked <- function(dNIW) {
 
 
 dIW <- function(V, Psi, df, log=FALSE) {
-  # TODO: vectorize this
-
+  # Inverse Wishart density function
+  
   # Typechecks
-    stopifnot(is.symmetric(Psi))  
-      d = dim(Psi)[1]
-        stopifnot(dim(V)[1:2] == c(d,d))
+  stopifnot(is.symmetric(Psi))  
+  d = dim(Psi)[1]
+  stopifnot(dim(V)[1:2] == c(d,d))
 
   # coerce V to a vectorized case, even when it isn't
-    # this lets us handle everything uniformly
-      if(length(dim(V)) == 2) {
-          dim(V) = c(d,d,1)  
-            }
-
+  # this lets us handle both cases uniformly
+  if(length(dim(V)) == 2) {
+    dim(V) = c(d,d,1)  
+  }
 
   c = df*log(det(Psi))/2 - (df*d)*log(2)/2 - multigamma(d)(df/2) #normalizing constant
-
   det_V = apply(V, 3, det)
-    #Psi %*% solve(V) would be a clever backsolve IF we had the square root of V handed to us
-      trace_Psi_invV = apply(V, 3, function(M) { sum(diag( Psi %*%  solve(M)    )) } )
-
-  # Wikipedia is wrong as of <https://en.wikipedia.org/w/index.php?title=Inverse-Wishart_distribution&oldid=604297660>
-    # the pdf on https://en.wikipedia.org/wiki/Inverse-Wishart_distribution should be identical to https://en.wikipedia.org/wiki/Wishart_distribution
-      #  but with the X and V terms inverted
-        # and indeed those are
-          # but the Inverse Wishart page additionally switches the 2/3 signs in the power
-            # which is completely the sort of mistake that one might make with LaTeX
-              # ...but two software packages (LaplacesDemon and MCMCpack) agree with the wikipedia formula. so... hm.
-                p = -  (   (df+d+1)*log(det_V)  + trace_Psi_invV    )/2    + c
+  trace_Psi_invV = apply(V, 3, function(M) { sum(diag( Psi %*%  solve(M)    )) } )
+  p = -  (   (df+d+1)*log(det_V)  + trace_Psi_invV    )/2    + c
  
   if(!log) {
-      p = exp(p)
-        }
+    p = exp(p)
+  }
   
   return(p)
-  }
+}
 
 dNIW <- function(X, V, Mu, Kappa, Psi, df, log=FALSE) {
   # dNIW(X, V, Mu, Kappa, Psi, df, log=FALSE):
@@ -111,24 +100,27 @@ dNIW <- function(X, V, Mu, Kappa, Psi, df, log=FALSE) {
   #   a vector of probabilities p, or log(p) if log==TRUE of length n (possibly n=1)
 
   #
-    # Typechecks
-      #TODO: test that X and V can be vectorized..
+  # Typechecks
+  #TODO: test that X and V can be vectorized..
 
   # coerce the arguments to vectors
 
   # always compute in logspace, because it's less prone to roundoff
-    # map to normal space at the end if requested
+  # map to normal space at the end if requested
 
   # XXX both these ops could be much sped up if we
-    # were given the square root of V instead
-      pN = dmvnorm(X, Mu, V/Kappa, log=T)
-        pIW = dIW(V, Psi, df, log=T)
+  # were given the square root of V instead
+  pN = dmvnorm(X, Mu, V/Kappa, log=T)
+  pIW = dIW(V, Psi, df, log=T)
 
   p = pN + pIW; # P(X,V) = P(X|V)P(V) = exactly the piece distributions used to generate the NIW in the first place.
   if(!log) {
-      p = exp(p)
-        }
+    p = exp(p)
+  }
 
   return(p)
-  }
-  
+}
+
+
+dMNIW <- function(X, V, Mu, Kappa, Psi, df, log=FALSE) {
+}
