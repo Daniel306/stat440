@@ -67,17 +67,11 @@ Nick \textsc{Guenther} 20230268
 \end{flushright}
 \end{minipage}
 
-\vfill
-
-% Bottom of the page
-{\large \today}
+%\vfill
 
 \end{center}
 \end{titlepage}
 
-\title{}
-\author{}
-\date{} % disable the autodate. we can put it back if we want it.
 % 1 page
 %\maketitle
 
@@ -217,34 +211,38 @@ If, under a large number of samples, any of these statistics ((is it correct to 
 \Subsubsection{Benchmarking}
 
 
-We 
-
-- algorithms compared
-  - naive
-  - snappy in R
-  - snappy in Rcpp
-
+We implemented several versions of the NIW sampler. We tested its runtime by varying $n$, the number of samples. We did not test varying $d$, the dimensionality of the output.
 
 \begin{figure}[hbtp]
 \centering
-\includegraphics[scale=1]{runtimes.pdf}
-\caption{Implementation runtimes. The naive algorithms are monochrome; the efficient algorithm in R are blue; the C implementations are red.}
+\includegraphics[scale=.5]{runtimes.pdf}
+\caption{Implementation runtimes. The naive algorithms are monochrome; the efficient algorithm prototyped in R is red; the C implementations (naive and efficient) are blue.}
 \end{figure}
 
+As expected, the runtime is linear in $n$, since every sample of the $n$ is generated identically. We fit lines to each algorithm's runtime to estimate their scaling coefficient. We picked \emph{naive} as a baseline and put all algorithm frequencies on a relative scale.
 
-Summary table:
-(slope is in samples/second, and ratio is the ratio of that; sd is the standard deviation of ratio)
-\begin{verbatim}
-                 algorithm      slope      ratio           sd
-1           extremelynaive   4918.468  0.3540879 3.434446e-05
-5                 version3   7648.601  0.5506343 1.821581e-06
-3                 version11   9543.389  0.6870429 2.574821e-04
-4                 version2   9980.602  0.7185185 1.547574e-04
-2                    naive  13890.529  1.0000000 7.277090e-04
-7 extremelynaive.RcppEigen  94128.482  6.7764507 3.969357e-03
-8        version.RcppEigen 125032.317  9.0012641 4.385290e-03
-6                     Rcpp 143356.322 10.3204367 3.977275e-02
-\end{verbatim}
+\begin{table}[ht]
+\caption{\emph{rNIW} Runtimes}
+\begin{center}
+\begin{tabular}{rrrr}
+    algorithm       & slope  &      ratio   &        sd\\
+    \hline
+              \emph{extremelynaive}   &4918.468  & 0.35 & 3.43e-05 \\
+                \emph{version3}   &7648.601 & 0.55 & 1.82e-06 \\
+               \emph{version1}   &9543.389 & 0.69 &2.57e-04 \\
+                \emph{version2}   & 9980.602 & 0.72 & 1.54e-04 \\
+                   \emph{naive}  &13890.529  & 1.00 & 7.27e-04 \\
+  \emph{extremelynaive.RcppEigen} & 94128.482 & 6.78 & 3.96e-03 \\
+        \emph{version.RcppEigen} & 125032.317  & 9.00 & 4.38e-03 \\
+                     \emph{Rcpp} & 143356.322  & 10.32 & 3.97e-02 \\
+    \hline
+\end{tabular}
+\caption{Runtime summary:     
+    \emph{slope} is each algorithm's performance samples/second, \emph{ratio} is the ratio of each against "naive"; \emph{sd} is the standard deviation of \emph{ratio}. Sorted in order or performance, worst to best.}
+\end{center}
+\label{tab:multicol}
+\end{table}
+
 
 Discussion:
 
