@@ -211,7 +211,7 @@ If, under a large number of samples, any of these statistics ((is it correct to 
 \Subsubsection{Benchmarking}
 
 
-We implemented several versions of the NIW sampler. We tested its runtime by varying $n$, the number of samples. We did not test varying $d$, the dimensionality of the output.
+We implemented several versions of the NIW sampler. We tested its runtime by varying $n$, the number of samples. We did not test varying $d$, the dimensionality of the output. Sketches of each implementation are in the appendix. Figure 1 shows the runtimes of each implementation.
 
 \begin{figure}[hbtp]
 \centering
@@ -244,15 +244,8 @@ As expected, the runtime is linear in $n$, since every sample of the $n$ is gene
 \end{table}
 
 
-Discussion:
+These results show that our algorithm gets about a 25 times times speed up over the extremely naive algorithm. But this is misleading: the naive algorithm that an R user would reach for would is not the deeply naive algorithm, but rather what we wrote as \emph{naive}, where we call out to R's built in \emph{rWishart} function. Compared to this version, our blazing fast best implementation is only 10 times better. The explanation is that almost all of the naive algorithm's output, the $n \cdot d^d$ entries of $V$, are constructed at the C level, because \emph{rWishart} is a native function. The sheer amount of time that this saves makes the naive algorithm faster than all of our R implementations of the efficient algorithm.
 
-1) All algorithms are linear in $n$, which checks out.
-
-2) These results show that our algorithm gets about a 25 times times speed up over the truly naive algorithm, but only 10 times over the naive algorithm that is natural to write in base R. The naive algorithm achieves this because most of its output, the $n \cdot d^d$ entries of $V$, are constructed in C. In fact, the amount of time that this saves makes the naive algorithm faster
-
-Problem: we only measured over n; our distribution parameters were constant for developing these tests. wait
-
-T
 
 % (4 pages?)
 \Section{Applications}
@@ -365,13 +358,16 @@ hist(Result$B[1,1,], breaks = 100, probability = TRUE)
 % .5 pages
 \Section{Conclusion}
 
+We implemented a Matrix-Normal-Inverse-Wishart sampler and proved its use. It is definitely an improvement over what an R user would use before, but it is not as strikingly better as one might hope in 
 In this report, we have demonstrated the accuracy and speed of our implementation of the NIW sampler as well as provided examples on how it can be used. 
 
-We hope it will help those who wish to use a normal inverse-wishart prior for their Bayesian statistics complete their work both more quickly and more easily.
-
 % Put stuff not yet done that we plan to do or wish we could do
+Parallelization and GPUs 
 
-((APPENDIX??!?!?! WITH THE CODE AND STUFF YEAH))
+
+We offer this code \cite{MNIW} up in the hope it will make large linear models with an inverse-wishart prior tractable to the working statistician.
+
+
 \Section{Appendix}
 \begin{lstlisting}[frame=single, language=R]
 lm.multivariable <- function(m, X, Y, Lambda=NULL, Omega=NULL, Psi=NULL, df=71) { # TODO: Not sure what to name this.
@@ -501,6 +497,8 @@ lm.multivariable <- function(m, X, Y, Lambda=NULL, Omega=NULL, Psi=NULL, df=71) 
 \bibitem{LaplaceDemon}Statisticat, LLC. (2014). LaplacesDemon: Complete Environment for
   Bayesian Inference. Bayesian-Inference.com. R package version
   14.04.05. [http://www.bayesian-inference.com/software] 
+ 
+\bibitem{MNIW}Daniel Galperin and Nick Guenther. (2014). MNIW. Version pre-alpha. [http://www.github.com/kousu/MNIW]
  
  \end{thebibliography}
 
