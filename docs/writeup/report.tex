@@ -262,14 +262,13 @@ $$ V_{2,3} | X_1, X_2, X_3, ..., V_{1,1}, V_{1,2}, V_{1,3} , ....  \sim P(V_{2,3
 % BUG: continuous distributions don't have "equals"
 %  I wish there was a consistent notation which covered the discrete and continuous cases together without having to jump a layer of indirection into pdfs
 
-For one of these marginal distributions, we can look at the density function, we can look at the moments (which includes variances), and we can look at the Kolmogorov-Smirnov statistic which tests for deviation between distributions.
+For one of these marginal distributions, we can look at the density function, we can look at the moments (which includes variances), and we can look at the Kolmogorov-Smirnov (KS) statistic which tests for deviation between distributions.\\
 
-One approach is to find \emph{analytic} formula for the densities and moments. 
-And the marginal distributions are \cite{???} some $t$ for the elements of $X$ and $InvGamma$ for the diagonals of $V$.
-But the effort of proving the formulas correct is at least as hard as writing the code in the first place, and no where could we find anyone who had a clue what the distribution of the off-diagonals of $V$ were like.
-More easily and reliably than analytic forms, we can sample $X,V \sim NIW$ from a sampler that we know should work and use that for comparison.
-The naive algorithm we used is listed in the appendix, and is as pretty well straight out of the definition of the Inverse Wishart distribution.
-From those samples, we use kernel density estimation to compute distributions, and use those for comparison.
+One approach is to find \emph{analytic} formula for the densities and moments.\\
+
+The distribution of each marginal $X_i$ is \cite{???} some $t$, and is $InvGamma$ \cite{Wikipedia2} for the diagonals of $V$. But the effort of proving the formulas correct is at least as hard as writing the code in the first place, and no where could a clue what the distribution of the off-diagonals of $V$ are. More easily and reliably than fighting for analytic forms, we can sample $X,V \sim NIW$ from a sampler that we know should work and use that for comparison.
+The naive algorithm we used is listed in the appendix, and is a straightforward translation of the definition of the Inverse Wishart distribution.
+From those samples, we use kernel density estimation to compute distributions, and use those for comparison. This comparison set is also available to us for moments and KS-tests, if we want to use it.
 
 %\includegraphics[scale=.7]{density.correct.pdf}\\*
 \emph{A histogram that appears to have the correct distribution}
@@ -279,7 +278,6 @@ From those samples, we use kernel density estimation to compute distributions, a
 \\  
 
 The marginal moments are easy to look up \cite{Wikipedia1}, however, and we used these analytic forms to test them:
-
 
 Every \emph{moment} is an expected value. This makes moments an easy to compute statistic,
  because (for identically distributed $ S_i $ )
@@ -295,7 +293,7 @@ As more samples come in we expect these numbers to converge to specific values, 
 
 
 
-Finally, we used a k-s test [CITE?] to numerically detect marginals which deviate from the correct value ($\alpha$ cut-off of $0.05$). For example 
+Finally, we used a KS test to numerically detect marginals which deviate from the correct value ($\alpha$ cut-off of $0.05$). For example 
 \begin{verbatim}
 ...
 version2 X[3]: different
@@ -308,6 +306,8 @@ version2 V[1,3]: different
 
 
 If, under a large number of samples, any of these statistics do not match the expected value, it means there is an error in our implementation. Conversely, while matching doesn't logically prove correctness, it gives strong support to that likelihood.
+
+The results of our tests are inconclusive. The $X$ marginals and $V$ diagonals match their densities and moments well and the KS tests almost always report that each marginal is the same except for small deviations when the p-value dips to 0.02 or so, but the off-diagonals do not always converge to the right value. We feel that our logic and the support of most of the marginals is evidence that our code is sound, and that the disagreements are an artifact of small sample size and the curse of dimensionality. We do not have a proof that this is correct, however.
 
 Our testing code is very general and could, given either the right analytic formula or enough computing time and enough true samples, test almost marginal statistic of interest.
 
