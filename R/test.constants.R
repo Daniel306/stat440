@@ -23,8 +23,8 @@ krNIWAlgorithms = c(
 
 krNIWAlgorithms.colors = c(
           "grey", "black",
-          "blue", "blue", "blue",
-          "red", "red", "red"
+          "red", "red", "red",
+          "blue", "blue", "blue"
           )
 
 krNIWAlgorithms.linestyle = c(
@@ -32,8 +32,12 @@ krNIWAlgorithms.linestyle = c(
           "solid", "dotted", "dashed",
           "solid", "dotted", "dashed"
           )
-          
-# TODO: merge the three vectors above into a data.frame
+
+# sketchily merge the three vectors above into a data.frame to make it easier to deal with
+# there's a bug
+krNIWAlgorithms = data.frame(algorithm=krNIWAlgorithms, color=krNIWAlgorithms.colors, linestyle=krNIWAlgorithms.linestyle)
+rm(krNIWAlgorithms.colors, krNIWAlgorithms.linestyle)
+
 
 
 #kS = rWishart(69, kDF, kPsi) #a high dimensional matrix for checking syntax on
