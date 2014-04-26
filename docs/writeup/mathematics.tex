@@ -295,7 +295,8 @@ $2d^{3}/6$. So this algorithm is about six times faster than naive,
 full, dense matrix multiplication. This doesn't crack this algorithmic
 nut, \textbf{but it could make the difficult possible}.
 
-\includegraphics[scale=0.7]{full_vs_triangular}
+
+%\includegraphics[scale=0.7]{full_vs_triangular}
 
 
 \section*{Lemmas}
@@ -325,10 +326,10 @@ so ... ?
 \section*{The Matrix Normal Dist}
 
 
-the matrix normal can also be thought as a single multivariate normal $N(vec(\mu), V \kron K)$
+the matrix normal can also be thought as a single multivariate normal $N(vec(\mu), V \otimes K)$
 but this loses some of the structure intrinsic to it
 
-this identity is relevant to this: $sqrt(V \kron K) vec(X) = vec(K X V)$
+this identity is relevant to this: $sqrt(V \otimes K) vec(X) = vec(K X V)$
 note that $K \cdot X \cdot V ~ MN(0, K, V)$ if $X$ is a $q \times p$ matrix of i.i.d. standard normals.
 
 You can view the matrix normal as a set of multivariate normals: down the columns you have variance (as in a single multivariate normal)
@@ -337,13 +338,13 @@ You can view the matrix normal as a set of multivariate normals: down the column
 \section*{Identities}
 
 The scatter matrix
-S = (X^TX)
+$S = (X^TX)$
 can be rewritten (and viewed) as the sum of (outerproduct) squares
-S = \sum_{i=1}^n (x_i - \bar(x))(x_i - \bar(x_i))^T
+$S = \sum_{i=1}^n (x_i - \bar(x))(x_i - \bar(x_i))^T$
 
-where x_i are the rows of X
+where $x_i$ are the rows of X
 
-tr(V^{-1} S) = \sum_{i=1}^n mahalanobis(x_i, E(x_i), V)
+$tr(V^{-1} S) = \sum_{i=1}^n mahalanobis(x_i, E(x_i), V)$
 Proof: 
 . ...
 
