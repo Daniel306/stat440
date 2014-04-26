@@ -1,0 +1,80 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><title>R: DENSITY OF NORMAL-INV-WISHART</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" type="text/css" href="R.css">
+</head><body>
+
+<table width="100%" summary="page for dNIW"><tr><td>dNIW</td><td align="right">R Documentation</td></tr></table>
+
+<h2>
+DENSITY OF NORMAL-INV-WISHART
+</h2>
+
+<h3>Description</h3>
+
+<p>calculates density of NIW based on X, V, and the parameters associated with its distribution.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+dNIW(X, V, Mu, Kappa, Psi, df, log=f)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>X,V</code></td>
+<td>
+<p> points of vectors to test</p>
+</td></tr>
+<tr valign="top"><td><code>Mu,Kappa,Psi,df</code></td>
+<td>
+<p>paramaters of NIW</p>
+</td></tr>
+<tr valign="top"><td><code>log</code></td>
+<td>
+<p>whether to produce log-probabilities or not</p>
+</td></tr>
+</table>
+
+
+<h3>Details</h3>
+
+<p>X is d-length vector or a (d,1) matrix and V is a (d,d) matrix
+or X is a (d,n) matrix and V is a (d,d,n) matrix
+</p>
+
+
+<h3>Value</h3>
+
+<p>Returns a vector of probabilities p or log(p) if log==TRUE of length n
+</p>
+
+
+<h3>Note</h3>
+
+<p>Related to rNIW and dMNIW
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>Daniel Galperin and Nick Guenther
+</p>
+
+
+<h3>Examples</h3>
+
+<pre>
+X &lt;- c(1,2)
+V &lt;- matrix(c(3,1,1,3), 2,2)
+Psi &lt;- diag(2)
+df &lt;- 10
+dNIW(X,V, Mu = c(1,2), Kappa = 1, Psi = Psi, df = df)
+</pre>
+
+
+</body></html>

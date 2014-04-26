@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><title>R: generates X and Y</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" type="text/css" href="R.css">
+</head><body>
+
+<table width="100%" summary="page for rmultivariableregression"><tr><td>rmultivariableregression</td><td align="right">R Documentation</td></tr></table>
+
+<h2>
+generates X and Y
+</h2>
+
+<h3>Description</h3>
+
+<p>generates from is Y = XB + E where (E_i)^T ~iid MultiNormal(0, V)
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+rmultivariableregression(points, B,V)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>points</code></td>
+<td>
+<p>Either an (n,p) matrix X, or or a scalar n</p>
+</td></tr>
+<tr valign="top"><td><code>B</code></td>
+<td>
+<p>B values of model. Should be c(p,q) </p>
+</td></tr>
+<tr valign="top"><td><code>B</code></td>
+<td>
+<p>Y values of model. Should be c(q,n) </p>
+</td></tr>
+</table>
+
+
+<h3>Details</h3>
+
+<p>n is either the inter input for points or the
+</p>
+
+
+<h3>Value</h3>
+
+<table summary="R valueblock">
+<tr valign="top"><td><code>X</code></td>
+<td>
+<p>c(p,n) matrix </p>
+</td></tr>
+<tr valign="top"><td><code>Y</code></td>
+<td>
+<p>c(q,n) matrix </p>
+</td></tr>
+</table>
+
+
+<h3>Author(s)</h3>
+
+<p>Daniel Galperin and Nick Guenther
+</p>
+
+
+<h3>See Also</h3>
+
+<p>lmMultivariate() which generates B,V from X,Y and priors
+</p>
+
+
+<h3>Examples</h3>
+
+<pre>
+rmultivariableregression(5, diag(1), diag(1))
+</pre>
+
+
+</body></html>

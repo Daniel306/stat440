@@ -1,0 +1,103 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><title>R: Bayesian samples of Multivariate regression</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" type="text/css" href="R.css">
+</head><body>
+
+<table width="100%" summary="page for lm.multivariable"><tr><td>lm.multivariable</td><td align="right">R Documentation</td></tr></table>
+
+<h2>
+Bayesian samples of Multivariate regression
+</h2>
+
+<h3>Description</h3>
+
+<p>generates Bayseian samples for B and V in a multivariate regression using rMNIW.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+lm.multivariable(m, X, Y, Lambda=NULL, 
+                 Omega=NULL, Psi=NULL, df=71)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>m</code></td>
+<td>
+<p> number of samples to draw</p>
+</td></tr>
+<tr valign="top"><td><code>X</code></td>
+<td>
+<p>X values of model. Should be c(p,n) </p>
+</td></tr>
+<tr valign="top"><td><code>Y</code></td>
+<td>
+<p>Y values of model. Should be c(q,n) </p>
+</td></tr>
+<tr valign="top"><td><code>Lambda</code></td>
+<td>
+<p>prior mean of B, c(p,q)</p>
+</td></tr>
+<tr valign="top"><td><code>Omega</code></td>
+<td>
+<p>Scale factor of variance, c(p,p)</p>
+</td></tr>
+<tr valign="top"><td><code>Psi</code></td>
+<td>
+<p>prior mean of V, c(q,q)</p>
+</td></tr>
+<tr valign="top"><td><code>df</code></td>
+<td>
+<p>degrees of freedom</p>
+</td></tr>
+</table>
+
+
+<h3>Value</h3>
+
+<table summary="R valueblock">
+<tr valign="top"><td><code>B</code></td>
+<td>
+<p>c(p,q,n) matrix containing samples for B</p>
+</td></tr>
+<tr valign="top"><td><code>V</code></td>
+<td>
+<p>c(q,q,n) matrix containing samples for V</p>
+</td></tr>
+</table>
+
+
+<h3>Author(s)</h3>
+
+<p>Daniel Galperin and Nick Guenther
+</p>
+
+
+<h3>See Also</h3>
+
+<p>rMNIW which this calls
+rmultivariableregression() which generates X,Y from B,V
+</p>
+
+
+<h3>Examples</h3>
+
+<pre>
+require(MASS)
+D &lt;- Boston
+Y &lt;- D[c("crim", "zn", "indus", "tax", "black", "lstat")]
+X &lt;- D[c("chas", "nox", "rm", "age", 
+        "dis", "rad", "ptratio", "medv")]
+
+# One example using flat priors and df of 73
+
+Result &lt;- lm.multivariable(100000,as.matrix(X),as.matrix(Y))
+</pre>
+
+
+</body></html>
