@@ -263,19 +263,20 @@ Under Bayesian inference, the NIW distribution can be used to generate point est
 
 Let $X_{n\times p} = [x_{ij}]$ and $Y_{n\times q} = [y_{ij}]$ be matrices of $p$ predictors and $q$ responses for each of $n$ observations, and let $E_{n\times q}$ be the matrix of random errors. The full multivariable regression model is
 
-\[Y = X\beta + E, (\epsilon_{i1},\hdots,\epsilon_{i q})\sim N_q(0,V)\]
+\[Y = X\beta + E, E \sim MN_{q \times p}(0, I_d, V)\]
 
-where $\beta_{p\times q} = [\beta_{ij}] $ and $V_{q\times q}$. The conjugate prior for the model is:
+where $\beta_{p\times q} = [\beta_{ij}] $ and $V_{q\times q}$, and $MN$ is the \emph{Matrix Normal} distribution \cite{MatrixNormal}, which is a generalization of the gaussian distribution that produces whole matrices at once.
+
+The conjugate prior for the model is:
 
 \begin{align*}
 	V &\sim  Inv-W_q(\Psi,\nu)\\
-	\beta|V &\sim N_{p \times q}\{\Lambda, V  \otimes \Omega^{-1}\}
+	\beta|V &\sim MN_{p \times q}(\Lambda, Omega^{-1}, V)
 \end{align*}
 
 The parameters of the prior are $\Psi_{q\times q}, \nu_{1\times 1}, \Lambda_{p\times q}, \Omega_{p\times p}$\\
 
-The resulting posterior distribution is
-
+The resulting posterior distribution is \cite{Lysy}
 
 \begin{align*}
 	V|Y,X &\sim  Inv\text{-}W_q(\Psi+S+C,\nu+n)\\
@@ -289,9 +290,7 @@ A &= (X'X + \Omega)^{-1}\Omega\\
 C &= \hat{\beta}'(X'X)\hat{\beta} + \Lambda'\Omega\Lambda - (X'X\hat{\beta} + \Omega\Lambda)'(X'X+\Omega)^{-1}(X'X\hat{\beta} + \Omega\Lambda)
 \end{align*}
 
-% TODO: \cite{Lysy}
-
-The above means that given data $X$, $Y$, and the prior parameters, we have computable formulas for the parameters of the posterior--which is the estimated distribution of $\beta$ and $V$. We can use our Normal Inverse Wishart sampler to take points from this posterior. \emph{lm.multivariable} covers all of this in a single subroutine, returning samples $B$ and $V$. The code for it is in the appendix, and next section shows a usage example.
+The above means that given data $X$, $Y$, and the prior parameters, we have computable formulas for the parameters of the posterior--which is the estimated distribution of $\beta$ and $V$. We generalized our Normal Inverse Wishart sampler to a Matrix Normal Inverse Wishart sampler, and \emph{lm.multivariable} is a subroutine which uses it return samples of $B$ and $V$. Its code is in the appendix, and next section shows a usage example.
 
 \Subsubsection{Boston housing data example}
 
