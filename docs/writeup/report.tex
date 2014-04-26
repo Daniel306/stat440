@@ -224,18 +224,16 @@ This results in our main algorithm which we used to code our Rcpp version.
 
 There is no test we can do which will demonstrate the correctness of this code.
 Like Knuth, we have only proven this code correct, not tested it thoroughly.
-But there are some relatively basic tests we have applied to 
-(- brief mention that doing a full multivariate K-S test is so hard as to be ridiculous (+ citation?))
 
-Each element we are generating has a distribution by itself. These are the \emph{marginal distributions} such as:
+Because multivariate distributions are difficult, our testing plan revolves around the \emph{marginal distributions} such as:
 
 $$ V_{2,3} | X_1, X_2, X_3, ..., V_{1,1}, V_{1,2}, V_{1,3} , ....  \sim P(V_{2,3} = v) $$
 % BUG: continuous distributions don't have "equals"
 %  I wish there was a consistent notation which covered the discrete and continuous cases together without having to jump a layer of indirection into pdfs
 
-For one of these marginal distributions, we can look at the density function, we can look at the moments (which includes variances), and we can look at the Kolmogorov-Smirnov (KS) statistic which tests for deviation between distributions.\\
+For each of these marginal distributions, we can look at the density function, we can look at the moments (which includes variances), and we can look at the Kolmogorov-Smirnov (KS) statistic which tests for deviation between distributions.\\
 
-One approach is to find \emph{analytic} formula for the densities and moments.The distribution of each marginal $X_i$ is \cite{???} some $t$, and is $InvGamma$ \cite{Wikipedia2} for the diagonals of $V$. But the effort of proving the formulas correct is at least as hard as writing the code in the first place, and no where could a clue what the distribution of the off-diagonals of $V$ are.\\
+One approach is to find \emph{analytic} formula for the densities and moments.The distribution of each marginal $X_i$ is \cite{Bayes} some $t$, and is $InvGamma$ \cite{Wikipedia2} for the diagonals of $V$. But the effort of proving the formulas correct is at least as hard as writing the code in the first place, and no where could a clue what the distribution of the off-diagonals of $V$ are.\\
 
 More easily and reliably than fighting for analytic forms, we can sample $X,V \sim NIW$ from a sampler that we know should work and use that for comparison.
 The naive algorithm we used is listed in the appendix, and is a straightforward translation of the definition of the Inverse Wishart distribution.
@@ -253,6 +251,11 @@ From those samples, we use kernel density estimation to compute distributions, a
 \end{center}
 
 The marginal moments are easy to look up \cite{Wikipedia1}, however, and we used these analytic forms to test them:
+
+\[ E[V_ij] =  \frac{\Psi_ij}{df - d - 1} \]
+
+\[ Var[V_ij] =  \frac{(df - d  +1)\Psi_{ij}^2 + (df-d-1)\Psi_{ii}\Psi_{jj}}{df - d - 1} \]
+
 
 Every \emph{moment} is an expected value. This makes moments an easy to compute statistic,
  because (for identically distributed $ S_i $ )
@@ -275,8 +278,7 @@ As more samples come in we expect these numbers to converge to specific values, 
 \end{center}
 
 
-
-Finally, we used a KS test to numerically detect marginals which deviate from the correct value ($\alpha$ cut-off of $0.05$). For example 
+Finally, we use the KS test to numerically detect marginals which deviate from the correct value ($\alpha$ cut-off of $0.05$). Here is an example from an early edition that we believe was correct, but numerically unstable:
 \begin{verbatim}
 ...
 version2 X[3]: different
@@ -475,6 +477,12 @@ We offer this code \cite{MNIW} up in the hope it will make large linear models w
   14.04.05. [http://www.bayesian-inference.com/software] 
  
 \bibitem{MNIW}Daniel Galperin and Nick Guenther. (2014). MNIW. Version pre-alpha. [http://www.github.com/kousu/MNIW]
+
+\bibitem{Bayes}Kevin Murphy. (2007). Conjugate Bayesian analysis of the Gaussian distribution. [http://www.cs.ubc.ca/~murphyk/Papers/bayesGauss.pdf] 
+
+\bibitem{Wikipedia1} Inverse Wishart Distribution. 2014. [https://en.wikipedia.org/wiki/Inverse-Wishart_distribution]
+
+ 
  
  \end{thebibliography}
 
