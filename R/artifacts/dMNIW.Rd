@@ -13,7 +13,7 @@ dNIW(X, V, Mu, Kappa, Psi, df, log=f)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{X,V}{ points of vectors to test}
-  \item{Mu,Kappa,Psi,df}{paramaters of NIW}
+  \item{Mu,Kappa,Psi,df}{parameters of NIW}
   \item{log}{whether to produce log-probabilities or not}
 }
 
@@ -41,11 +41,13 @@ Daniel Galperin and Nick Guenther
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-X <- c(1,2)
+X <- Matrix(c(1,2,3,4), 2,2)
 V <- matrix(c(3,1,1,3), 2,2)
 Psi <- diag(2)
+Mu <- matrix(0,2,2)
+Kappa <- diag(2)
 df <- 10
-dMNIW(X,V, Mu = c(1,2), Kappa = 1, Psi = Psi, df = df)
+dMNIW(X,V, Mu = Mu, Kappa = Kappa, Psi = Psi, df = df)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
