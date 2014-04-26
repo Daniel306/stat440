@@ -123,9 +123,10 @@ Its main use is as the conjugate prior for a multivariate normal distribution wi
 
 The main goal of this package is to provide functions written in Rcpp\cite{Rcpp} to help with Bayesian analysis related to the Normal Inverse-Wishart distribution.
 
-While there are libraries that can generate Inverse-Wishart samples, such as MCMCpack\cite{MCMCpack} and LaplaceDemon\cite{LaplaceDemon}, there is currently no library that directly samples Normal-Inverse-Wisharts. While it is possible to use those to construct NIW samples from those, it requires extra effort on the user and is likely to be less effient than our method as generating Normals would be done in R.
+While there are libraries that can generate Inverse-Wishart samples, such as MCMCpack\cite{MCMCpack} and LaplacesDemon\cite{LaplaceDemon}, there is currently no library that directly samples Normal-Inverse-Wisharts. While it is possible to use those to construct NIW samples from those, it requires extra effort on the user and is likely to be less effient than our method as generating Normals would be done in R.
 
-Our package also provides MNIW samples, which no package currently provides, as well as a function to generate samples for B and V in multilinear regression(see examples).
+Our package also provides Matrix-Normal-Inverse-Wishart (MNIW) samples, which no package currently provides, as well as a function which uses this code to perform multivariable regression.
+
 % (4 pages)
 \Section{Program Package}
 
@@ -153,7 +154,7 @@ Our package also provides MNIW samples, which no package currently provides, as 
 \Subsection{Testing}
 
 % 1 pages
-\Subsubsection{Correctness <-- this title is dumb}
+\Subsubsection{Correctness}
 
 There is no test we can do which will demonstrate the correctness of this code.
 Like Knuth, we have only proven this code correct, not tested it thoroughly.
@@ -166,6 +167,9 @@ $$ V_{2,3} | X_1, X_2, X_3, ..., V_{1,1}, V_{1,2}, V_{1,3} , ....  \sim P(V_{2,3
 % BUG: continuous distributions don't have "equals"
 %  I wish there was a consistent notation which covered the discrete and continuous cases together without having to jump a layer of indirection into pdfs
 
+For one of these marginal distributions, we can look at the density function, we can look at the moments (which includes variances), and we can look at the Kolmogorov-Smirnov statistic which tests for deviation between distributions.
+
+One approach is to find \emph{analytic} formula for the densities and moments. The marginal moments are easy to look up \cite{Wikipedia1}
 We can derive the marginals directly. For the elements of $X$, we have:
 
 
@@ -176,37 +180,43 @@ For the elements of $V$, we have:
 ....
 
 
-More quickly, we can sample $X,V \sim NIW$ from a sampler that we know should work: the naive algorithm %TODO: <-- grammar%
+More easily and reliably than that, we can sample $X,V \sim NIW$ from a sampler that we know should work: the naive algorithm. %TODO: <-- grammar%
   , and then use kernel density estimation.
   
-With either method, we get a PDF, and we can plot histograms and the PDF together. Here are some examples of this from our final code:
 
-(IMAGE: A correct sample)
-(IMAGE: An incorrect sample)
+\includegraphics[scale=.7]{density.correct.pdf}\\*
+\emph{A correct histogram}
+
+\includegraphics[scale=.7]{density.incorrect.pdf}\\*
+\emph{An incorrect histogram}
 
 
 Every \emph{moment} is an expected value. This makes moments an easy to compute statistic,
  because (for $ S_i \sim S $)
 $$ lim_{n \rightarrow \infty} \frac{\sum_{i=1}^n g(S_i)}{n} = E[g(S)] $$
-  ((TODO: prove. why is this? the CLT??))
+%  ((TODO: prove. why is this? the CLT??))
 so we can just take samples, map them with a function, and average. As more samples come in we expect these numbers to converge to specific values. As before, we can examine the marginals one by one. We can check for convergence by.
 
-Our moments are multivariate, so as before we need to look at marginals 
-(IMAGE: an element moment converging to the expected value)
-
-Finally, we used a k-s test [CITE?] to numerically detect marginals which deviate from the correct value. Example 
-```
-snappy2 X[3]: different
-snappy2 X[4]: same
-snappy2 V[1,1]: same
-snappy2 V[1,2]: same
-snappy2 V[1,3]: different
-```
+\includegraphics[scale=.7]{moment.pdf}\\*
+\emph{A sample moment converging to the expected value}
 
 
-If, under a large number of samples, any of these statistics ((is it correct to call a full pdf a 'statistic'? you could view a function as an infinite set related statistics...)) do not match its expected value--pdf or moment--it means there is an error. Conversely, while all of the statistics matching doesn't logically prove correctness, they give strong support to likelihood of correctness.
+
+Finally, we used a k-s test [CITE?] to numerically detect marginals which deviate from the correct value ($\alpha$ cut-off of $5%$. For example 
+\begin{verbatim}
+...
+version2 X[3]: different
+version2 X[4]: same
+version2 V[1,1]: same
+version2 V[1,2]: same
+version2 V[1,3]: different
+...
+\end{verbatim}
 
 
+If, under a large number of samples, any of these statistics do not match the expected value, it means there is an error in our implementation. Conversely, while matching doesn't logically prove correctness, it gives strong support to that likelihood.
+
+Our testing code is very general and could, given either the right analytic formula or enough computing time and enough true samples, test almost marginal statistic of interest.
 
 % 1 page
 \Subsubsection{Benchmarking}
