@@ -21,4 +21,23 @@ krNIWAlgorithms = c(
             "version.RcppEigen"
             )
 
+krNIWAlgorithms.colors = c(
+          "grey", "black",
+          "red", "red", "red",
+          "blue", "blue", "blue"
+          )
+
+krNIWAlgorithms.linestyle = c(
+          "dashed", "solid",
+          "solid", "dotted", "dashed",
+          "solid", "dotted", "dashed"
+          )
+
+# sketchily merge the three vectors above into a data.frame to make it easier to deal with
+# there's a bug
+krNIWAlgorithms = data.frame(algorithm=krNIWAlgorithms, color=krNIWAlgorithms.colors, linestyle=krNIWAlgorithms.linestyle)
+rm(krNIWAlgorithms.colors, krNIWAlgorithms.linestyle)
+
+
+
 #kS = rWishart(69, kDF, kPsi) #a high dimensional matrix for checking syntax on

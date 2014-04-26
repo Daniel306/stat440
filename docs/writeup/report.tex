@@ -33,11 +33,47 @@
   stringstyle=\color{ForestGreen}      % string literal style
 } 
 
-\begin{document}1
+\begin{document}
 
-\title{Stat440 Project Outline}
-\author{Daniel Galperin, Nick Guenther}
-\date{} % disable the autodate. we can put it back if we want it.
+\begin{titlepage}
+\begin{center}
+
+% Upper part of the page. The '~' is needed because \\
+% only works if a paragraph has started.
+%\includegraphics[width=0.15\textwidth]{./logo}~\\[1cm]
+
+\textsc{\LARGE University of Waterloo}\\[1.5cm]
+
+\textsc{\Large Stat440 Project}\\[0.5cm]
+
+% Title
+%\HRule \\[0.4cm]
+{ \huge \bfseries The Normal|Inverse-Wishart Sampler \\[0.4cm] }
+
+%\HRule \\[1.5cm]
+
+% Author and supervisor
+\begin{minipage}{0.4\textwidth}
+\begin{flushleft} \large
+\emph{Authors:}\\
+Daniel \textsc{Galperin} 2000000\\*
+Nick \textsc{Guenther} 20230268
+\end{flushleft}
+\end{minipage}
+\begin{minipage}{0.4\textwidth}
+\begin{flushright} \large
+\emph{Supervisor:} \\
+~Martin \textsc{Lysy}
+\end{flushright}
+\end{minipage}
+
+%\vfill
+
+\end{center}
+\end{titlepage}
+
+% 1 page
+%\maketitle
 
 
 % this should be 10 pages: 1 page title, 1 page references, 8 pages of content
@@ -45,8 +81,6 @@
 %\layout %debugging print for margins
 
 
-% 1 page
-\maketitle
 \newpage
 
 \tableofcontents %because latex is from before the days of interactive computing, you need to run the build twice for this to show up
@@ -112,6 +146,7 @@ Our package also provides MNIW samples, which no package currently provides, as 
   but their version strictly only does one random matrix at a time
   
 - What we did differently
+  tuse this cholesky trick ... 
 
 % (2?? pages)
 \Subsection{Testing}
@@ -175,15 +210,42 @@ If, under a large number of samples, any of these statistics ((is it correct to 
 % 1 page
 \Subsubsection{Benchmarking}
 
-- methodology
-- algorithms compared
-  - naive
-  - snappy in R
-  - snappy in Rcpp
-% - snappy in python (on numpy)
-%  - snappy in cython (on numpy)
 
-These results show that our algorithm has approximately a (10?) times speed up over the naive algorithm, with a further (3?) times speed up by the port to C.
+We implemented several versions of the NIW sampler. We tested its runtime by varying $n$, the number of samples. We did not test varying $d$, the dimensionality of the output. Sketches of each implementation are in the appendix. Figure 1 shows the runtimes of each implementation.
+
+\begin{figure}[hbtp]
+\centering
+\includegraphics[scale=.5]{runtimes.pdf}
+\caption{Implementation runtimes. The naive algorithms are monochrome; the efficient algorithm prototyped in R is red; the C implementations (naive and efficient) are blue.}
+\end{figure}
+
+As expected, the runtime is linear in $n$, since every sample of the $n$ is generated identically. We fit lines to each algorithm's runtime to estimate their scaling coefficient. We picked \emph{naive} as a baseline and put all algorithm frequencies on a relative scale.
+
+\begin{table}[ht]
+\caption{\emph{rNIW} Runtimes}
+\begin{center}
+\begin{tabular}{rrrr}
+    algorithm       & slope  &      ratio   &        sd\\
+    \hline
+              \emph{extremelynaive}   &4918.468  & 0.35 & 3.43e-05 \\
+                \emph{version3}   &7648.601 & 0.55 & 1.82e-06 \\
+               \emph{version1}   &9543.389 & 0.69 &2.57e-04 \\
+                \emph{version2}   & 9980.602 & 0.72 & 1.54e-04 \\
+                   \emph{naive}  &13890.529  & 1.00 & 7.27e-04 \\
+  \emph{extremelynaive.RcppEigen} & 94128.482 & 6.78 & 3.96e-03 \\
+        \emph{version.RcppEigen} & 125032.317  & 9.00 & 4.38e-03 \\
+                     \emph{Rcpp} & 143356.322  & 10.32 & 3.97e-02 \\
+    \hline
+\end{tabular}
+\caption{Runtime summary:     
+    \emph{slope} is each algorithm's performance samples/second, \emph{ratio} is the ratio of each against "naive"; \emph{sd} is the standard deviation of \emph{ratio}. Sorted in order or performance, worst to best.}
+\end{center}
+\label{tab:multicol}
+\end{table}
+
+
+These results show that our algorithm gets about a 25 times times speed up over the extremely naive algorithm. But this is misleading: the naive algorithm that an R user would reach for would is not the deeply naive algorithm, but rather what we wrote as \emph{naive}, where we call out to R's built in \emph{rWishart} function. Compared to this version, our blazing fast best implementation is only 10 times better. The explanation is that almost all of the naive algorithm's output, the $n \cdot d^d$ entries of $V$, are constructed at the C level, because \emph{rWishart} is a native function. The sheer amount of time that this saves makes the naive algorithm faster than all of our R implementations of the efficient algorithm.
+
 
 % (4 pages?)
 \Section{Applications}
@@ -296,13 +358,16 @@ hist(Result$B[1,1,], breaks = 100, probability = TRUE)
 % .5 pages
 \Section{Conclusion}
 
+We implemented a Matrix-Normal-Inverse-Wishart sampler and proved its use. It is definitely an improvement over what an R user would use before, but it is not as strikingly better as one might hope in 
 In this report, we have demonstrated the accuracy and speed of our implementation of the NIW sampler as well as provided examples on how it can be used. 
 
-We hope it will help those who wish to use a normal inverse-wishart prior for their Bayesian statistics complete their work both more quickly and more easily.
-
 % Put stuff not yet done that we plan to do or wish we could do
+Parallelization and GPUs 
 
-((APPENDIX??!?!?! WITH THE CODE AND STUFF YEAH))
+
+We offer this code \cite{MNIW} up in the hope it will make large linear models with an inverse-wishart prior tractable to the working statistician.
+
+
 \Section{Appendix}
 \begin{lstlisting}[frame=single, language=R]
 lm.multivariable <- function(m, X, Y, Lambda=NULL, Omega=NULL, Psi=NULL, df=71) { # TODO: Not sure what to name this.
@@ -432,6 +497,8 @@ lm.multivariable <- function(m, X, Y, Lambda=NULL, Omega=NULL, Psi=NULL, df=71) 
 \bibitem{LaplaceDemon}Statisticat, LLC. (2014). LaplacesDemon: Complete Environment for
   Bayesian Inference. Bayesian-Inference.com. R package version
   14.04.05. [http://www.bayesian-inference.com/software] 
+ 
+\bibitem{MNIW}Daniel Galperin and Nick Guenther. (2014). MNIW. Version pre-alpha. [http://www.github.com/kousu/MNIW]
  
  \end{thebibliography}
 

@@ -188,10 +188,12 @@ D (Friday, April the 25th, 2014)
 - [ ] Linear Algebra parlour tricks:
     - [ ] factor the common matrix terms to before/after the loop (call this `snappy4`)
     - [ ] diagonalization?? (`snappy5`)
-    - [ ] eschews A = BartlettFactor() and instead use A.inv = InverseBartlettFactor()
+    - [ ] eschews A = BartlettFactor() and instead use A.inv = InverseBartlettFactor() (`snappy6`)
         - ## (getting to this point will require some very very careful derivations that may be beyond us)
         - # XXX I can't prove it because I don't have it written, but I don't think this will give a significant advantage:
            #         anywhere we need an inverse+multiply we can use backsolve instead, which is actually faster 
+    - [ ] snappy in python (on numpy)
+    - [ ] snappy in cython (on numpy)
 
 
 - [ ] plot to separate subfiles
