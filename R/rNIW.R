@@ -481,10 +481,7 @@ rNIW.Rcpp <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
   # that much (only O(1), not O(n)), and is outweighed by the headache in C
   # TODO: do these in C as well, for completeness.
   
-  require("Rcpp")  # XXX: putting this call inside of here means R only compiles the code as needed and speeds up our dev cycle
-  Rcpp::sourceCpp("rNIW.cpp") #in the long run, we should, of course, put these calls at the top with the other imports
-  
-  # precompute some useful labels
+  # precompute some useful values
   d = length(Mu)
   gamma.inv = solve(chol(solve(Psi)))
     
@@ -494,8 +491,6 @@ rNIW.Rcpp <- rNIW.typechecked(function(n, Mu, kappa, Psi, df) {
 
 # efficient algorithm using the Eigen library
 rNIW.version.RcppEigen <- rNIW.typechecked(rNIW_version_eigen)
-
-
 
 
 rNIW.based_on_multi <- rNIW.typechecked(function(n, Mu, Kappa, Psi, df) { # TODO: pick a better name
