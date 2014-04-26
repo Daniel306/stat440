@@ -244,6 +244,21 @@ X & =\mu+U^{-1}z & \text{where }z\sim N_{d}(0,I)\\
  & =\mu+\Gamma^{-1}A^{-1}z
 \end{align*}
 
+This results in our main algorithm which we used to code our Rcpp version.
+
+\begin{enumerate}
+\item Calculate $\Gamma^{-1}$ once.
+\item repeat n times, where n is number of samples:
+\begin{enumerate}
+		\item Sample A
+		\item invert A using backsolve
+		\item Solve for $U^{-1} = \Gamma^{-1}A^{-1}$\\
+		\item get the sample V by $V = U^{-1}\left(U^{-1}\right)^{T}$\\
+		\item get sample X by $X = \mu+\Gamma^{-1}A^{-1}z$
+\end{enumerate}
+
+\end{enumerate}
+
 
 % (2?? pages)
 \Subsection{Testing}
@@ -473,7 +488,7 @@ hist(Result$B[1,1,], breaks = 100, probability = TRUE)
 We implemented a Matrix-Normal-Inverse-Wishart sampler and proved its accuracy and speed. It is an improvement over what a lone R user would use before, but it is not as strikingly faster as we hoped. Still, it offers notable gains, and the multivariable regression algorithm is easy to use and totally general.\\
 
 % Put stuff not yet done that we plan to do or wish we could do
-We have ideas for improvement. There are other variants of the efficient algorithm we would like to try, especially ones invoking parallelization and GPUs.  Once the code is solid, wish to get this code to a production-ready state that could be uploaded to CRAN \cite{CRAN} \\
+We have ideas for improvement. There are other variants of the efficient algorithm we would like to try, especially ones invoking parallelization and GPUs.  Once the code is solid, wish to get this code to a production-ready state that could be uploaded to CRAN \cite{R} \\
 
 We offer this code \cite{MNIW} up in the hope it will make large linear models with an inverse-wishart prior tractable to the working statistician.
 
