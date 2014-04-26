@@ -1,6 +1,8 @@
 # test.MultivariableRegression.R
 #
 #
+source("MultivariableRegression.R")
+
 
 # originally n = 27, m = 1e5
 test.EversonMorris <- function(n=27, m=1e7) {
