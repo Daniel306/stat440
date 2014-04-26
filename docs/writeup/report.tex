@@ -270,12 +270,16 @@ The distribution of each marginal $X_i$ is \cite{???} some $t$, and is $InvGamma
 The naive algorithm we used is listed in the appendix, and is a straightforward translation of the definition of the Inverse Wishart distribution.
 From those samples, we use kernel density estimation to compute distributions, and use those for comparison. This comparison set is also available to us for moments and KS-tests, if we want to use it.
 
-%\includegraphics[scale=.7]{density.correct.pdf}\\*
+\begin{center}
+\includegraphics[scale=.8]{densitycorrect.png}\\*
 \emph{A histogram that appears to have the correct distribution}
+\end{center}
 
-%\includegraphics[scale=.7]{density.incorrect.pdf}\\*
+\begin{center}
+\includegraphics[scale=.8]{densityincorrect.png}\\*
 \emph{An histogram from a buggy implementation}
 \\  
+\end{center}
 
 The marginal moments are easy to look up \cite{Wikipedia1}, however, and we used these analytic forms to test them:
 
