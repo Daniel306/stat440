@@ -29,14 +29,14 @@ def multigibbs(n, Mu, Sigma, j, thin=10, burnin=5000):
 	
 	def g():
 	
+		j = 0
+		
 		d = len(Mu) #dimensionality...
 		assert Mu.shape == (d,), "Mu must be a vector"
 		assert Sigma.shape == (d,d), "Sigma must be a square matrix"
 		assert (Sigma.T == Sigma).all(), "and symmetric"
 		assert 0<=j<d
 		
-		Mu_1, Mu_2 = Mu[:j], Mu[j:]
-		Sigma_11, Sigma_12, Sigma_22 = Sigma[:j, :j], Sigma[:j, j:], Sigma[j:, j:]
 	
 		Y = array([0.0]*d) #it doesn't matter what we init Y to except that it is the right size, so init it to 0
 	
@@ -44,6 +44,11 @@ def multigibbs(n, Mu, Sigma, j, thin=10, burnin=5000):
 			for _ in range(thin): #skipe
 				#TODO: precompute factors
 				# also, you can probably get by faster by forcing Mu=0 during the gibbs sampling since then you avoid having to immediately subtract it off in the next tep, and then doing a single vectorized Y+=Mu at the end (or yield Y+Mu is close enough)
+				j = (j + 1)%d
+				if j == 0: j = 1
+				
+				Mu_1, Mu_2 = Mu[:j], Mu[j:]
+				Sigma_11, Sigma_12, Sigma_22 = Sigma[:j, :j], Sigma[:j, j:], Sigma[j:, j:]
 				if j > 0:
 					Y[:j] = Mu_1 + \
 							     dot(dot(Sigma_12, inv(Sigma_22)), Y[j:]-Mu_2) +\
@@ -81,8 +86,8 @@ def multinormal(n, Mu, Sigma):
 
 def test_multigibbs():
 	d = 18
-	Mu = 9*random.uniform(size=d)
-	A = 33*random.uniform(size=(d,d)); A = dot(A,A.T) #crap way of making a positive semidef matrix
+	Mu = random.uniform(-9, 9, size=d)
+	A = random.uniform(-33, 33, size=(d,d)); A = dot(A,A.T) #crap way of making a positive semidef matrix
 	
 	n = 99999
 	Sd = multinormal(n, Mu, A)
