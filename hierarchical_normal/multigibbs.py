@@ -3,11 +3,13 @@ from scipy import random
 from numpy import *
 from numpy.linalg import cholesky as chol, inv
 
+import matplotlib.pyplot as plt
+
 Mu = array([1,3])
 V = array([[148.84, 142.74], [142.74, 490.63]])
 A = array([[3.38, -.77], [-.77, 2.55]])
 
-def multigibbs(n, Mu, Sigma, j, thin=1, burnin=1):
+def multigibbs(n, Mu, Sigma, j, thin=20, burnin=1000):
 	"""
 	take n samples of
 	  Y ~ N(Mu, Sigma)
@@ -75,3 +77,31 @@ def multigibbs(n, Mu, Sigma, j, thin=1, burnin=1):
 
 def multinormal(n, Mu, Sigma):
 	return random.multivariate_normal(Mu, Sigma, n)
+
+
+def test_multigibbs():
+	n = 999
+	Sd = multinormal(n, Mu, A)
+	Sg = multigibbs(n, Mu, A, j=1)
+	
+	# these should be approximately the same
+	print("means:")
+	print(Mu)
+	print(Sd.mean(axis=0))
+	print(Sg.mean(axis=0))
+	
+	# these should all be approximately the same
+	print("variances:")
+	print(A)
+	print(cov(Sd.T))
+	print(cov(Sg.T))
+	plt.scatter(Sd[:,0], Sd[:,1])
+	plt.title("Ground truth sample")
+	plt.figure()
+	plt.scatter(Sg[:,0], Sg[:,1])
+	plt.title("Gibbs sample")
+	plt.show()
+	#import IPython; IPython.embed() #DEBUG
+	
+if __name__ == '__main__':
+	test_multigibbs()
