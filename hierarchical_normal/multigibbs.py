@@ -9,7 +9,7 @@ Mu = array([1,3])
 V = array([[148.84, 142.74], [142.74, 490.63]])
 A = array([[3.38, -.77], [-.77, 2.55]])
 
-def multigibbs(n, Mu, Sigma, j, thin=20, burnin=1000):
+def multigibbs(n, Mu, Sigma, j, thin=10, burnin=5000):
 	"""
 	take n samples of
 	  Y ~ N(Mu, Sigma)
@@ -80,21 +80,34 @@ def multinormal(n, Mu, Sigma):
 
 
 def test_multigibbs():
-	n = 999
+	d = 18
+	Mu = 9*random.uniform(size=d)
+	A = 33*random.uniform(size=(d,d)); A = dot(A,A.T) #crap way of making a positive semidef matrix
+	
+	n = 99999
 	Sd = multinormal(n, Mu, A)
-	Sg = multigibbs(n, Mu, A, j=1)
+	j = d//3 + 1
+	Sg = multigibbs(n, Mu, A, j=j)
 	
 	# these should be approximately the same
-	print("means:")
+	print("Expected mean:")
 	print(Mu)
-	print(Sd.mean(axis=0))
-	print(Sg.mean(axis=0))
-	
-	# these should all be approximately the same
-	print("variances:")
+	print("Expected variance:")
 	print(A)
-	print(cov(Sd.T))
-	print(cov(Sg.T))
+	
+	
+	print("built-in multinormal sampler")
+	print("mean (largest absolute deviation):")
+	print(abs(Mu - Sd.mean(axis=0)).max())
+	print("variance (largest absolute deviation):")
+	print(abs(A - cov(Sd.T)).max())
+	
+	print("gibbs sampler at j=", j)
+	print("mean (largest absolute deviation):")
+	print(abs(Mu - Sg.mean(axis=0)).max())
+	print("variance (largest absolute deviation):")
+	print(abs(A - cov(Sg.T)).max())
+	
 	plt.scatter(Sd[:,0], Sd[:,1])
 	plt.title("Ground truth sample")
 	plt.figure()
@@ -103,5 +116,7 @@ def test_multigibbs():
 	plt.show()
 	#import IPython; IPython.embed() #DEBUG
 	
+	return Sd, Sg #so that python -i can do fun things
+	
 if __name__ == '__main__':
-	test_multigibbs()
+	Sd, Sg = test_multigibbs()
