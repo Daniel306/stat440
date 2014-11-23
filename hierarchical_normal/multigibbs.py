@@ -12,12 +12,18 @@ def multigibbs(n, Mu, Sigma, j, thin=1, burnin=1):
 	take n samples of
 	  Y ~ N(Mu, Sigma)
 	by gibbs-sampling the partitioned conditionals
-	Y[:j] | Y[j:] and Y[j:] | Y[:j]
-	Error checking is not done on arguments! in particular, make sure:
-	- sigma is positive definite (and therefore symmetric)
-	- mu and sigma have corresponding dimensions
-	- 0 <= j < len(Mu)
+	  Y[:j] | Y[j:] and
+	  Y[j:] | Y[:j]
+	
+	This is just a prototype! 'j' should not be exposed as part of the API.
 	"""
+	
+	# To gibbs-sample you need to know a chain of conditional distributions
+	# In this case, we need two: Y1 | Y2 and Y2 | Y1
+	# for which we have the conditional multinormal formula
+	# e.g. https://onlinecourses.science.psu.edu/stat505/node/43
+	# Y1 | Y2 ~ N(mu1 + cov(Y1,Y2).inv(var(Y2)).(Y2-mu2),  var(Y1) - cov(Y1,Y2).inv(var(Y2)).cov(Y2,Y1))
+	# and vice versa for Y2 | Y1
 	
 	def g():
 	
@@ -25,7 +31,8 @@ def multigibbs(n, Mu, Sigma, j, thin=1, burnin=1):
 		assert Mu.shape == (d,), "Mu must be a vector"
 		assert Sigma.shape == (d,d), "Sigma must be a square matrix"
 		assert (Sigma.T == Sigma).all(), "and symmetric"
-	
+		assert 0<=j<d
+		
 		Mu_1, Mu_2 = Mu[:j], Mu[j:]
 		Sigma_11, Sigma_12, Sigma_22 = Sigma[:j, :j], Sigma[:j, j:], Sigma[j:, j:]
 	
@@ -47,6 +54,21 @@ def multigibbs(n, Mu, Sigma, j, thin=1, burnin=1):
 			if i>=burnin:
 				yield Y
 				
+				# reasons this is wrong:
+				# - the sigmas should be chol()'d first.
+				#   in the univariate normal, a*z makes a variable with a**2 variance
+				#   the same applies when matrices happen
+				# - the sigmas
+				
+				# edge cases to check:
+				# j = 0 or j = d
+				# that zero covariance is the same
+				# that this gives the same results as m
+				
+				# TODO:
+				# - to use this to sample the hierarchical normal,
+				#   i need to work out the covariance of u and y
+				#   ((lysy gave us the variances of each: V and A, so we know Sigma_11 and Sigma_22, but not Sigma_12))
 				
 	return array(list(g()))
 
