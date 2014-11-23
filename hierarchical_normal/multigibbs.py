@@ -43,7 +43,6 @@ def multigibbs(n, Mu, Sigma, j, thin=1, burnin=1):
 				#TODO: precompute factors
 				# also, you can probably get by faster by forcing Mu=0 during the gibbs sampling since then you avoid having to immediately subtract it off in the next tep, and then doing a single vectorized Y+=Mu at the end (or yield Y+Mu is close enough)
 				if j > 0:
-					assert j == 0
 					Y[:j] = Mu_1 + \
 							     dot(dot(Sigma_12, inv(Sigma_22)), Y[j:]-Mu_2) +\
 							     dot(chol(Sigma_11 - dot(dot(Sigma_12, inv(Sigma_22)), Sigma_12.T)),
