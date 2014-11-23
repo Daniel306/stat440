@@ -84,6 +84,15 @@ def multinormal(n, Mu, Sigma):
 	return random.multivariate_normal(Mu, Sigma, n)
 
 
+def test_compare2d(D1, D2, i, j):
+
+	plt.scatter(D1[:,i], D1[:,j])
+	plt.title("Ground truth sample")
+	plt.figure()
+	plt.scatter(D2[:,i], D2[:,j])
+	plt.title("Gibbs sample")
+	plt.show()
+
 def test_multigibbs():
 	d = 18
 	Mu = random.uniform(-9, 9, size=d)
@@ -94,34 +103,30 @@ def test_multigibbs():
 	j = d//3 + 1
 	Sg = multigibbs(n, Mu, A, j=j)
 	
-	# these should be approximately the same
-	print("Expected mean:")
-	print(Mu)
-	print("Expected variance:")
-	print(A)
+	try:
+		# these should be approximately the same
+		print("Expected mean:")
+		print(Mu)
+		print("Expected variance:")
+		print(A)
+		
+		
+		print("built-in multinormal sampler")
+		print("mean (largest absolute deviation):")
+		print(abs(Mu - Sd.mean(axis=0)).max())
+		print("variance (largest absolute deviation):")
+		print(abs(A - cov(Sd.T)).max())
 	
+		print("gibbs sampler at j=", j)
+		print("mean (largest absolute deviation):")
+		print(abs(Mu - Sg.mean(axis=0)).max())
+		print("variance (largest absolute deviation):")
+		print(abs(A - cov(Sg.T)).max())
 	
-	print("built-in multinormal sampler")
-	print("mean (largest absolute deviation):")
-	print(abs(Mu - Sd.mean(axis=0)).max())
-	print("variance (largest absolute deviation):")
-	print(abs(A - cov(Sd.T)).max())
-	
-	print("gibbs sampler at j=", j)
-	print("mean (largest absolute deviation):")
-	print(abs(Mu - Sg.mean(axis=0)).max())
-	print("variance (largest absolute deviation):")
-	print(abs(A - cov(Sg.T)).max())
-	
-	plt.scatter(Sd[:,0], Sd[:,1])
-	plt.title("Ground truth sample")
-	plt.figure()
-	plt.scatter(Sg[:,0], Sg[:,1])
-	plt.title("Gibbs sample")
-	plt.show()
-	#import IPython; IPython.embed() #DEBUG
-	
-	return Sd, Sg #so that python -i can do fun things
+		test_compare2d(Sd, Sg, 0, 1)
+		#import IPython; IPython.embed() #DEBUG
+	finally:
+		return Sd, Sg #so that python -i can do fun things
 	
 if __name__ == '__main__':
 	Sd, Sg = test_multigibbs()
