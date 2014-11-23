@@ -52,7 +52,7 @@ def multigibbs(n, Mu, Sigma, j, thin=1, burnin=1):
 					         dot(Sigma_22 - dot(dot(Sigma_12.T, inv(Sigma_11)), Sigma_12),
 					             random.normal(size=(d-j)))
 			if i>=burnin:
-				yield Y
+				yield array(Y)
 				
 				# reasons this is wrong:
 				# - the sigmas should be chol()'d first.
