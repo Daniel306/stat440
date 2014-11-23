@@ -36,7 +36,7 @@ def multigibbs(n, Mu, Sigma, j, thin=1, burnin=1):
 		Mu_1, Mu_2 = Mu[:j], Mu[j:]
 		Sigma_11, Sigma_12, Sigma_22 = Sigma[:j, :j], Sigma[:j, j:], Sigma[j:, j:]
 	
-		Y = array([0]*d) #it doesn't matter what we init Y to except that it is the right size, so init it to 0
+		Y = array([0.0]*d) #it doesn't matter what we init Y to except that it is the right size, so init it to 0
 	
 		for i in range(n+burnin):
 			for _ in range(thin): #skipe
