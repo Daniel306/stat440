@@ -42,15 +42,17 @@ def multigibbs(n, Mu, Sigma, j, thin=1, burnin=1):
 			for _ in range(thin): #skipe
 				#TODO: precompute factors
 				# also, you can probably get by faster by forcing Mu=0 during the gibbs sampling since then you avoid having to immediately subtract it off in the next tep, and then doing a single vectorized Y+=Mu at the end (or yield Y+Mu is close enough)
-				Y[:j] = Mu_1 + \
-					         dot(dot(Sigma_12, inv(Sigma_22)), Y[j:]-Mu_2) +\
-					         dot(Sigma_11 - dot(dot(Sigma_12, inv(Sigma_22)), Sigma_12.T),
-					             random.normal(size=j))
-					             
-				Y[j:] = Mu_2 + \
-					         dot(dot(Sigma_12.T, inv(Sigma_11)), Y[:j]-Mu_1) +\
-					         dot(Sigma_22 - dot(dot(Sigma_12.T, inv(Sigma_11)), Sigma_12),
-					             random.normal(size=(d-j)))
+				if j > 0:
+					assert j == 0
+					Y[:j] = Mu_1 + \
+							     dot(dot(Sigma_12, inv(Sigma_22)), Y[j:]-Mu_2) +\
+							     dot(chol(Sigma_11 - dot(dot(Sigma_12, inv(Sigma_22)), Sigma_12.T)),
+							         random.normal(size=j))
+				if j < d:
+					Y[j:] = Mu_2 + \
+							     dot(dot(Sigma_12.T, inv(Sigma_11)), Y[:j]-Mu_1) +\
+							     dot(chol(Sigma_22 - dot(dot(Sigma_12.T, inv(Sigma_11)), Sigma_12)),
+							         random.normal(size=(d-j)))
 			if i>=burnin:
 				yield array(Y)
 				
