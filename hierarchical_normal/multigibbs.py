@@ -5,9 +5,63 @@ from numpy.linalg import cholesky as chol, inv
 
 import matplotlib.pyplot as plt
 
-Mu = array([1,3])
-V = array([[148.84, 142.74], [142.74, 490.63]])
-A = array([[3.38, -.77], [-.77, 2.55]])
+
+def direct_hierarchical_normal(n, V, Mu, A):
+	"""
+	sample
+		(y1,y2) such that
+		y1 ~ N(Mu, A)
+		y2|y1 ~ N(y1, V)
+	directly from the definition
+	(for comparison)
+	"""
+	a = chol(A)
+	v = chol(V)
+	d = len(Mu)
+	
+	def model():
+		z1, z2 = random.normal(size=d), random.normal(size=d)
+		y1 = Mu + dot(a, z1)
+		y2 = y1 + dot(v, z2)
+		return y1, y2
+	
+	return array([model() for i in range(n)])
+
+def multinormal_hierarchical_normal(n, V, Mu, A):
+	"""
+	sample the hierarchical normal according to what I derived 
+	"""
+	d = len(Mu)
+	r = multinormal(n, r_[Mu, Mu], r_[c_[A, A], c_[A, A+V]])
+	r.shape = (n, d, d)
+	return r
+
+def gibbs_hierarchical_normal(n, V, Mu, A):
+	"""
+	sample the hierarchical normal according to what I derived...
+	 but by falling back on the generic multinormal gibbs sampler
+	"""
+	d = len(Mu)
+	r = multigibbs(n, r_[Mu, Mu], r_[c_[A, A], c_[A, A+V]], j=d)
+	r.shape = (n, d, d)
+	return r
+
+def gibbs_hierarchical_normal2(n, V, Mu, A):
+	"""
+	sample the hierarchical normal according to what I derived *with unrolled formulas*
+	((i suspect it is not actually any faster to do it this way))
+	"""
+	raise NotImplementedError
+	
+def gibbs_hierarchical_normal2(n, V, Mu, A):
+	"""
+	sample the hierarchical normal according to what the assignment notes say
+	 I *suspect* that the notes have A and V, and Mu and y2, swapped
+	  (and also have a , typo'd where a + should be)
+	"""
+	raise NotImplementedError
+
+
 
 def multigibbs(n, Mu, Sigma, j, thin=10, burnin=5000):
 	"""
@@ -123,6 +177,52 @@ def test_multigibbs():
 		#import IPython; IPython.embed() #DEBUG
 	finally:
 		return Sd, Sg #so that python -i can do fun things
+
+def test_hierarchical_normal():	
+	Mu = array([0,0]) #xi = 1, B=(0,0), which is a pretty lame test case to be honest
+	V = array([[148.84, 142.74], [142.74, 490.63]])
+	A = array([[3.38, -.77], [-.77, 2.55]])
+	
+	d, d = V.shape
+	n = 27
+	n = 2323
+	
+	# each sample is a 2x2 matrix:
+	Sd = direct_hierarchical_normal(n, V, Mu, A)
+	Sm = multinormal_hierarchical_normal(n, V, Mu, A)
+	
+	original_shape = Sd.shape
+	# flatten so that we can use
+	Sd.shape = Sm.shape = (n, 2*d)
+	# 'cov', which gets confused on non-matrix input 
+	Cd = cov(Sd.T)
+	Cm = cov(Sm.T)
+	Sd.shape = Sm.shape = original_shape
+	
+	assert Cd.shape == (2*d, 2*d)
+	assert Cm.shape == (2*d, 2*d)
+	Cd.shape = Cm.shape = (2, d, 2, d)
+	
+	print("expected covariances:")
+	print(A)
+	print(A)
+	print(A)
+	print(A + V)
+	
+	print()
+	print("direct") 
+	for i in range(2):
+		for j in range(2):
+			print(Cd[i, :, j, :])
+			
+	print()
+	print("multinormal") 
+	for i in range(2):
+		for j in range(2):
+			print(Cm[i, :, j, :])
+	
+	import IPython; IPython.embed() #DEBUG
 	
 if __name__ == '__main__':
-	Sd, Sg = test_multigibbs()
+	#Sd, Sg = test_multigibbs()
+	test_hierarchical_normal()
