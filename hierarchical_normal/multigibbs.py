@@ -62,7 +62,9 @@ def gibbs_hierarchical_normal_unrolled(n, V, Mu, A, thin=10, burnin=5000):
 		a = chol(A)
 		v = chol(V)
 		
-		_a2 = chol(A - dot(dot(A, inv(A+V)), A))
+		B = dot(A, inv(A+V))
+		_a2 = A - dot(B, A)
+		_a2 = chol(_a2)
 		
 		Y, U = array([0.0]*d), array([0.0]*d)
 		
@@ -73,7 +75,7 @@ def gibbs_hierarchical_normal_unrolled(n, V, Mu, A, thin=10, burnin=5000):
 				
 				# sample U | Y ~ N(A(A+V)^-1)(Y-Mu) + Mu,
 				#                  A - A(A+V)^-1A)
-				U = dot(dot(A, inv(A+V)), (Y-Mu))+Mu +\
+				U = dot(B, (Y-Mu)) + Mu +\
 					 + dot(_a2, random.normal(size=d))
 				
 			if i>=burnin:
@@ -81,15 +83,50 @@ def gibbs_hierarchical_normal_unrolled(n, V, Mu, A, thin=10, burnin=5000):
 	
 	return array(list(g()))
 	
-def gibbs_hierarchical_normal_wrong(n, V, Mu, A):
+def gibbs_hierarchical_normal_wrong(n, V, Mu, A, thin=10, burnin=5000):
 	"""
 	sample the hierarchical normal according to what the assignment notes say
 	 I *suspect* that the notes have A and V, and Mu and y2, swapped
 	  (and also have a , typo'd where a + should be)
+  	
+  	this *should* come out with the wrong numbers
+  	though maybe there's a hilarious third derivation that i missed
+  	...huh. 
 	"""
-	raise NotImplementedError
+	def g():
+		d = len(Mu)
+		assert Mu.shape == (d,), "Mu must be a vector"
+		assert A.shape == (d,d), "A must be a square matrix"
+		assert (A.T == A).all(), "and symmetric"
+		assert V.shape == (d,d), "V must be a square matrix"
+		assert (V.T == V).all(), "and symmetric"
+		
+		a = chol(A)
+		v = chol(V)
+		
+		B = dot(V, inv(V + A))
+		_a2 = V - dot(B, V)
+		_a2 = chol(_a2)  
+		
+		Y, U = array([0.0]*d), array([0.0]*d)
+		
+		for i in range(n+burnin):
+			for _ in range(thin): #skipe
+				# sample Y | U ~ N(U, V)
+				Y = U + dot(v, random.normal(size=d))
+				
+				# sample U | Y ~ N(A(A+V)^-1)(Y-Mu) + Mu,
+				#                  A - A(A+V)^-1A)
+				U =  dot(B, (Mu-Y)) + Y +\
+					 + dot(_a2, random.normal(size=d))
+				
+			if i>=burnin:
+				yield [U, Y]
+	
+	return array(list(g()))
+	
 
-
+#----------------------------------------------------
 
 def multigibbs(n, Mu, Sigma, j, thin=10, burnin=5000):
 	"""
@@ -227,7 +264,9 @@ def test_hierarchical_normal():
 	for sampler in [direct_hierarchical_normal,
 					multinormal_hierarchical_normal,
 					gibbs_hierarchical_normal,
-					gibbs_hierarchical_normal_unrolled]:
+					gibbs_hierarchical_normal_unrolled,
+					gibbs_hierarchical_normal_wrong,
+					]:
 		S = sampler(n, V, Mu, A)
 		original_shape = S.shape
 		
