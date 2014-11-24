@@ -46,14 +46,42 @@ def gibbs_hierarchical_normal(n, V, Mu, A):
 	r.shape = (n, d, d)
 	return r
 
-def gibbs_hierarchical_normal2(n, V, Mu, A):
+def gibbs_hierarchical_normal_unrolled(n, V, Mu, A, thin=10, burnin=5000):
 	"""
 	sample the hierarchical normal according to what I derived *with unrolled formulas*
 	((i suspect it is not actually any faster to do it this way))
 	"""
-	raise NotImplementedError
+	def g():
+		d = len(Mu)
+		assert Mu.shape == (d,), "Mu must be a vector"
+		assert A.shape == (d,d), "A must be a square matrix"
+		assert (A.T == A).all(), "and symmetric"
+		assert V.shape == (d,d), "V must be a square matrix"
+		assert (V.T == V).all(), "and symmetric"
+		
+		a = chol(A)
+		v = chol(V)
+		
+		_a2 = chol(A - dot(dot(A, inv(A+V)), A))
+		
+		Y, U = array([0.0]*d), array([0.0]*d)
+		
+		for i in range(n+burnin):
+			for _ in range(thin): #skipe
+				# sample Y | U ~ N(U, V)
+				Y = U + dot(v, random.normal(size=d))
+				
+				# sample U | Y ~ N(A(A+V)^-1)(Y-Mu) + Mu,
+				#                  A - A(A+V)^-1A)
+				U = dot(dot(A, inv(A+V)), (Y-Mu))+Mu +\
+					 + dot(_a2, random.normal(size=d))
+				
+			if i>=burnin:
+				yield [U, Y]
 	
-def gibbs_hierarchical_normal2(n, V, Mu, A):
+	return array(list(g()))
+	
+def gibbs_hierarchical_normal_wrong(n, V, Mu, A):
 	"""
 	sample the hierarchical normal according to what the assignment notes say
 	 I *suspect* that the notes have A and V, and Mu and y2, swapped
@@ -184,27 +212,31 @@ def test_hierarchical_normal():
 	A = array([[3.38, -.77], [-.77, 2.55]])
 	
 	d, d = V.shape
-	n = 27
+	
 	n = 2323
 	
 	# each sample is a 2x2 matrix:
 	Sd = direct_hierarchical_normal(n, V, Mu, A)
 	Sm = multinormal_hierarchical_normal(n, V, Mu, A)
 	Sg = gibbs_hierarchical_normal(n, V, Mu, A)
+	Sg2 = gibbs_hierarchical_normal_unrolled(n, V, Mu, A)
 	
 	original_shape = Sd.shape
 	# flatten so that we can use
-	Sg.shape = Sd.shape = Sm.shape = (n, 2*d)
+	Sg2.shape = Sg.shape = Sd.shape = Sm.shape = (n, 2*d)
 	# 'cov', which gets confused on non-matrix input 
 	Cd = cov(Sd.T)
 	Cm = cov(Sm.T)
 	Cg = cov(Sg.T)
-	Sg.shape = Sd.shape = Sm.shape = original_shape
+	Cg2 = cov(Sg2.T)
+	Sg2.shape = Sg.shape = Sd.shape = Sm.shape = original_shape
 	
 	assert Cd.shape == (2*d, 2*d)
 	assert Cm.shape == (2*d, 2*d)
 	assert Cg.shape == (2*d, 2*d)
-	Cg.shape = Cd.shape = Cm.shape = (2, d, 2, d)
+	assert Cg2.shape == (2*d, 2*d)
+	
+	Cg2.shape = Cg.shape = Cd.shape = Cm.shape = (2, d, 2, d)
 	
 	print("expected covariances:")
 	print(A)
@@ -229,6 +261,12 @@ def test_hierarchical_normal():
 	for i in range(2):
 		for j in range(2):
 			print(Cg[i, :, j, :])
+	
+	print()
+	print("gibbs (v2)") 
+	for i in range(2):
+		for j in range(2):
+			print(Cg2[i, :, j, :])
 	
 	import IPython; IPython.embed() #DEBUG
 	
