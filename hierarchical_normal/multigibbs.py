@@ -190,18 +190,21 @@ def test_hierarchical_normal():
 	# each sample is a 2x2 matrix:
 	Sd = direct_hierarchical_normal(n, V, Mu, A)
 	Sm = multinormal_hierarchical_normal(n, V, Mu, A)
+	Sg = gibbs_hierarchical_normal(n, V, Mu, A)
 	
 	original_shape = Sd.shape
 	# flatten so that we can use
-	Sd.shape = Sm.shape = (n, 2*d)
+	Sg.shape = Sd.shape = Sm.shape = (n, 2*d)
 	# 'cov', which gets confused on non-matrix input 
 	Cd = cov(Sd.T)
 	Cm = cov(Sm.T)
-	Sd.shape = Sm.shape = original_shape
+	Cg = cov(Sg.T)
+	Sg.shape = Sd.shape = Sm.shape = original_shape
 	
 	assert Cd.shape == (2*d, 2*d)
 	assert Cm.shape == (2*d, 2*d)
-	Cd.shape = Cm.shape = (2, d, 2, d)
+	assert Cg.shape == (2*d, 2*d)
+	Cg.shape = Cd.shape = Cm.shape = (2, d, 2, d)
 	
 	print("expected covariances:")
 	print(A)
@@ -220,6 +223,12 @@ def test_hierarchical_normal():
 	for i in range(2):
 		for j in range(2):
 			print(Cm[i, :, j, :])
+	
+	print()
+	print("gibbs (v1)") 
+	for i in range(2):
+		for j in range(2):
+			print(Cg[i, :, j, :])
 	
 	import IPython; IPython.embed() #DEBUG
 	
