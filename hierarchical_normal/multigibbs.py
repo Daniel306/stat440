@@ -216,58 +216,36 @@ def test_hierarchical_normal():
 	n = 2323
 	
 	# each sample is a 2x2 matrix:
-	Sd = direct_hierarchical_normal(n, V, Mu, A)
-	Sm = multinormal_hierarchical_normal(n, V, Mu, A)
-	Sg = gibbs_hierarchical_normal(n, V, Mu, A)
-	Sg2 = gibbs_hierarchical_normal_unrolled(n, V, Mu, A)
-	
-	original_shape = Sd.shape
-	# flatten so that we can use
-	Sg2.shape = Sg.shape = Sd.shape = Sm.shape = (n, 2*d)
-	# 'cov', which gets confused on non-matrix input 
-	Cd = cov(Sd.T)
-	Cm = cov(Sm.T)
-	Cg = cov(Sg.T)
-	Cg2 = cov(Sg2.T)
-	Sg2.shape = Sg.shape = Sd.shape = Sm.shape = original_shape
-	
-	assert Cd.shape == (2*d, 2*d)
-	assert Cm.shape == (2*d, 2*d)
-	assert Cg.shape == (2*d, 2*d)
-	assert Cg2.shape == (2*d, 2*d)
-	
-	Cg2.shape = Cg.shape = Cd.shape = Cm.shape = (2, d, 2, d)
-	
+
 	print("expected covariances:")
 	print(A)
 	print(A)
 	print(A)
 	print(A + V)
-	
 	print()
-	print("direct") 
-	for i in range(2):
-		for j in range(2):
-			print(Cd[i, :, j, :])
-			
-	print()
-	print("multinormal") 
-	for i in range(2):
-		for j in range(2):
-			print(Cm[i, :, j, :])
 	
-	print()
-	print("gibbs (v1)") 
-	for i in range(2):
-		for j in range(2):
-			print(Cg[i, :, j, :])
+	for sampler in [direct_hierarchical_normal,
+					multinormal_hierarchical_normal,
+					gibbs_hierarchical_normal,
+					gibbs_hierarchical_normal_unrolled]:
+		S = sampler(n, V, Mu, A)
+		original_shape = S.shape
+		
+		# flatten so that we can use
+		S.shape = (n, 2*d)	
+		# 'cov', which gets confused on non-matrix input 
+		C = cov(S.T)
+		S.shape = original_shape
 	
-	print()
-	print("gibbs (v2)") 
-	for i in range(2):
-		for j in range(2):
-			print(Cg2[i, :, j, :])
-	
+		assert C.shape == (2*d, 2*d)
+		C.shape = (2, d, 2, d)
+		
+		print(sampler.__name__)
+		for i in range(2):
+			for j in range(2):
+				print(C[i, :, j, :])
+		print()
+		
 	import IPython; IPython.embed() #DEBUG
 	
 if __name__ == '__main__':
