@@ -306,16 +306,16 @@ test.marginalize <- function() {
 
 
 marginals_do <- function(M, f) { #TODO: pull out into util
-  # loop over all the marginals of MultiS M
-  # precondition: M's dim is (a,b,c,d,...,n); marginals are taken of that last dimension, n    
-  # precondition: f is f(idx, v) where idx will be a vector containing the length(dim)-1 indexes and v is the marginal vector
-  # postcondition: nothing; you need to do every with side-effects in f
-  # loop over all interesting_dimensions and plot each marginal
+  # loop over all the marginals of MultiSample M
+  # 
+  # precondition: f is f(idx, v) where idx will be a vector containing the length(sdim(M))-1 indexes and v is the marginal vector
+  #              nothing is returned; your interesting operations carried out by f() need to be side-effects.
+  # TODO: give a flag that marks M as containing only symmetric, 2d matrices, so that this only computes on the upper triangle
+  #       this is a very-very-special-case flag, though... the cleaner (but inefficient) solution might be to force the lower triangle to NA before running marginals_do
+  
   # recursive something someting  
   # This is something like the sum of map() and enumerate() (which are not R functions)
   #   but it is dimensionality aware.
-  # TODO: give a flag that marks M as symmetric, so that this only computes on the upper triangle
-  #       this is a very-very-special-case flag, though... the cleaner (but inefficient) solution might be to force the lower triangle to NA before running marginals_do
   
   kept_dimensions = 1:(length(dim(M))-1) #drop the last dimension
     

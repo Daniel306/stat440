@@ -240,9 +240,10 @@ D+k
 - [ ] move to using RUnit
 - [ ] test for and quantify numerical instability
 - [ ] runtimes
-    - [ ] measure over d (requires randomization to be in place) 
+    - [ ] measure over d (requires random diagonalizable matrix generation to be in place) 
 - [ ] matrix transpose
 - [ ] test naive and extremelynaive under the correctness harness; now that we have analytic formulas, this can actually be telling: are we doing something drastically wrong?
+
 
 Open Questions and Future Work
 ================

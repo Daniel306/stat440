@@ -1,13 +1,40 @@
 
 source("NIW.R")
 
-#typedef: a multidimensional sample (MultiS) is
-#  a matrix M with dim(M) = c(c(a,b, c, ...), n) 
-#  n is the number of samples
-#    (a, b, c, ...) is the dimensionality of the object
+#typedefs:
 
-# TODO: figure out a bloody better way of labelling the various output with which algorithm created it.
+# 
+# a MultiSample S represents a sample of a multidimensional distribution
+#  and consists of an array M with
+#    dim(M) = c(c(a, b, c, ...), n)
+#  In contradiction to base R, we say that
+#   slength(S) = n              , the number of samples
+#   sdim(S)    = c(a, b, c, ...), the dimensionality of the distribution in question (e.g. this is c(1) for univariate, c(d) for the d-dimensional normal, c(d,d) for the corresponding Wishart)
+#  The entries M[x,y,z,] for x,y,z \in range of the size of M (that is, selecting over the last column)
+#   are the marginal samples of the MultiSample.
+#
+# Note that R distinguishes between arrays with dimension-length 1 and vectors (and, if you say dim(V) = length(V), R changes class(V) from "vector" to "array")
+#  a typical univariate sampler in base R (e.g. rchisq()) returns vectors which have dim(.) = NULL
+# In order to keep the complexity of this code in check, we *only* support taking arrays as defined above.
+# However, as a convenience, most methods which take a MultiSample
+#  can also take a single sample, which they handle by up-casting it to a MultiSample
+# (a SingleSample which is what you get if you say
+#   M[,,,...,i], i.e. picks one of the n and it drops the last dimension)
+# TODO: relax this restriction
+#
+# A JointSample is a list containing only MultiSamples, indexed by strings:
+#  in which every contained MultiSample has the same length:
+# n = 13
+# A = rchisq(66*n)
+# dim(A) = c(66, n)
+# Z = rnorm(55*2*n)
+# dim(Z) = c(55,2,n)
+# S = list(A=A, Z=Z)
 
+
+#TODO: actually implement methods which allow us to speak of length and dim of multisamples, and use them to clean up the code
+#TODO: move these docs to a different file.
+# TODO: port 
 
 # utilties
 

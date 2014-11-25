@@ -26,3 +26,11 @@ http://stackoverflow.com/questions/18349053/fastest-way-for-multiplying-a-matrix
 * t(t(mat)*v))
 
 [IBM's BLAS docs](http://publib.boulder.ibm.com/infocenter/clresctr/vxrx/index.jsp?topic=%2Fcom.ibm.cluster.essl.v5r2.essl100.doc%2Fam5gr_sksubs.htm)
+
+
+
+MCMC
+------
+
+* [in several languages](http://darrenjw.wordpress.com/2011/07/16/gibbs-sampler-in-various-languages-revisited/)
+* [in cython](http://pyinsci.blogspot.ca/2010/12/efficcient-mcmc-in-python.html), merging elegant code and fast runtimes
